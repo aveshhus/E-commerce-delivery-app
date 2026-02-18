@@ -1,3 +1,4 @@
+
 # 🛒 Krishna Marketing - Grocery Delivery Platform
 
 A full-stack grocery delivery platform built with Node.js, React.js, and MongoDB. Features real-time order tracking, loyalty points, payment gateway integration, and a comprehensive admin dashboard.
@@ -194,3 +195,6 @@ STRIPE_SECRET_KEY=your_stripe_key
 ## 📄 License
 
 MIT License - Built with ❤️ for Krishna Marketing
+=======
+# E-commerce-delivery-app
+>>>>>>> 6a515417d091ce8019eb25e593404c5d185b8236
