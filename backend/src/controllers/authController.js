@@ -181,12 +181,24 @@ exports.getProfile = async (req, res) => {
 // Update profile
 exports.updateProfile = async (req, res) => {
     try {
-        const { name, email, avatar } = req.body;
-        const user = await User.findByIdAndUpdate(
-            req.user._id,
-            { name, email, avatar },
-            { new: true, runValidators: true }
-        );
+        const allowedUpdates = [
+            'name', 'email', 'avatar', 'dob', 'gender',
+            'notificationSettings', 'favorites'
+        ];
+
+        const updates = Object.keys(req.body);
+        const isValidOperation = updates.every((update) => allowedUpdates.includes(update));
+
+        if (!isValidOperation) {
+            return res.status(400).json({ success: false, message: 'Invalid updates!' });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+        updates.forEach((update) => user[update] = req.body[update]);
+        await user.save();
+
         res.json({ success: true, message: 'Profile updated', data: { user } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -201,5 +213,33 @@ exports.updateFCMToken = async (req, res) => {
         res.json({ success: true, message: 'FCM token updated' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Change Password
+exports.changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        // Find user with password
+        const user = await User.findById(req.user._id).select('+password');
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Verify current password
+        const isMatch = await user.comparePassword(currentPassword);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: 'Incorrect current password' });
+        }
+
+        // Update password
+        user.password = newPassword;
+        await user.save();
+
+        res.json({ success: true, message: 'Password updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 };

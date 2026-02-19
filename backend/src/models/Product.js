@@ -21,6 +21,10 @@ const productSchema = new mongoose.Schema({
         unique: true,
         lowercase: true
     },
+    productUrl: {
+        type: String,
+        trim: true
+    },
     description: {
         type: String,
         trim: true
@@ -115,14 +119,13 @@ productSchema.index({ isFeatured: 1 });
 productSchema.index({ isPopular: 1 });
 productSchema.index({ isActive: 1 });
 
-productSchema.pre('save', function (next) {
+productSchema.pre('save', async function () {
     if (this.isModified('name')) {
         this.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     }
     if (this.mrp > 0 && this.price < this.mrp) {
         this.discount = Math.round(((this.mrp - this.price) / this.mrp) * 100);
     }
-    next();
 });
 
 productSchema.virtual('isLowStock').get(function () {

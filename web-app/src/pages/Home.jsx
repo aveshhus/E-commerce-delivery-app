@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, Zap, Shield, Clock, Truck } from 'lucide-react';
+import { ChevronRight, Zap, Shield, Clock, Truck, Search } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import { productAPI, publicAPI } from '../services/api';
 
@@ -10,8 +10,16 @@ const Home = () => {
     const [popular, setPopular] = useState([]);
     const [bannerIndex, setBannerIndex] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
     const bannerRef = useRef(null);
     const navigate = useNavigate();
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+        }
+    };
 
     const banners = [
         { cls: 'banner-1', tag: '🎉 Festival Offer', heading: 'Fresh Vegetables at 20% Off!', desc: 'Farm-fresh vegetables delivered to your doorstep', emoji: '🥬' },
@@ -63,6 +71,19 @@ const Home = () => {
 
     return (
         <div>
+            {/* Mobile Search Bar */}
+            <div className="mobile-home-search">
+                <form onSubmit={handleSearch}>
+                    <Search className="mobile-search-icon" size={18} />
+                    <input
+                        type="text"
+                        placeholder="Search for 'milk', 'bread'..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </form>
+            </div>
+
             {/* Banner Slider */}
             <section className="hero-section">
                 <div className="banner-slider" ref={bannerRef}>
@@ -128,6 +149,8 @@ const Home = () => {
                 </div>
             </section>
 
+
+
             {/* Featured Products */}
             {featured.length > 0 && (
                 <section className="section">
@@ -171,6 +194,38 @@ const Home = () => {
                     </div>
                 </section>
             )}
+
+            {/* How It Works */}
+            <section className="section">
+                <div className="section-header">
+                    <h2 className="section-title">How It Works</h2>
+                </div>
+                <div className="how-it-works-grid">
+                    <div className="step-card">
+                        <div className="step-icon step-1">1</div>
+                        <h3>Select Products</h3>
+                        <p>Browse from our wide range of fresh products</p>
+                    </div>
+                    <div className="step-connector"></div>
+                    <div className="step-card">
+                        <div className="step-icon step-2">2</div>
+                        <h3>Add to Cart</h3>
+                        <p>Add your favorite items to your shopping cart</p>
+                    </div>
+                    <div className="step-connector"></div>
+                    <div className="step-card">
+                        <div className="step-icon step-3">3</div>
+                        <h3>Fast Delivery</h3>
+                        <p>We deliver your order in 20 minutes</p>
+                    </div>
+                    <div className="step-connector"></div>
+                    <div className="step-card">
+                        <div className="step-icon step-4">4</div>
+                        <h3>Enjoy!</h3>
+                        <p>Enjoy fresh groceries at your doorstep</p>
+                    </div>
+                </div>
+            </section>
 
             {loading && (
                 <div className="loading-spinner">

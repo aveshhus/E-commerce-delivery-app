@@ -26,11 +26,11 @@ const seedData = async () => {
             name: 'Admin',
             email: 'admin@krishnamarketing.com',
             phone: '9999999999',
-            password: 'admin123',
+            password: 'Admin@123',
             role: 'superadmin',
             isVerified: true
         });
-        console.log('Admin created: admin@krishnamarketing.com / admin123');
+        console.log('Admin created: admin@krishnamarketing.com / Admin@123');
 
         // Create test customer
         const customer = await User.create({
@@ -260,8 +260,9 @@ const seedData = async () => {
         console.log('3 coupons created');
 
         console.log('\n✅ Database seeded successfully!');
-        console.log('\nAdmin Login: admin@krishnamarketing.com / admin123');
-        console.log('Customer Login: customer@test.com / customer123\n');
+        console.log('Admin created: admin@krishnamarketing.com / Admin@123');
+
+        console.log('\nAdmin Login: admin@krishnamarketing.com / Admin@123');
 
         process.exit(0);
     } catch (error) {

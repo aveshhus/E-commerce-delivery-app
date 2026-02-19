@@ -61,6 +61,12 @@ export const adminAPI = {
     deleteCoupon: (id) => api.delete(`/admin/coupons/${id}`),
     // Notifications
     sendNotification: (data) => api.post('/admin/notifications', data),
+    // Festivals
+    getFestivals: () => api.get('/festivals'),
+    createFestival: (data) => api.post('/festivals', data),
+    updateFestival: (id, data) => api.put(`/festivals/${id}`, data),
+    deleteFestival: (id) => api.delete(`/festivals/${id}`),
+    toggleFestivalStatus: (id) => api.patch(`/festivals/${id}/toggle`),
 };
 
 export default api;

@@ -2,6 +2,7 @@ import { Plus, Minus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { formatUnit, getQtyLabel } from '../utils/helpers';
 
 const ProductCard = ({ product }) => {
     const { cart, addToCart, updateQuantity } = useCart();
@@ -38,7 +39,10 @@ const ProductCard = ({ product }) => {
             )}
             <div className="product-image">
                 {primaryImage?.url ? (
-                    <img src={`http://localhost:5000${primaryImage.url}`} alt={product.name} />
+                    <img
+                        src={primaryImage.url.startsWith('http') ? primaryImage.url : `http://localhost:5000${primaryImage.url}`}
+                        alt={product.name}
+                    />
                 ) : (
                     <div className="product-image-placeholder">{emoji}</div>
                 )}
@@ -46,7 +50,7 @@ const ProductCard = ({ product }) => {
             <div className="product-info">
                 <div className="product-category">{product.category?.name || 'Grocery'}</div>
                 <h3 className="product-name">{product.name}</h3>
-                <div className="product-unit">{product.unitValue} {product.unit}</div>
+                <div className="product-unit">{formatUnit(product.unitValue, product.unit)}</div>
                 <div className="product-pricing">
                     <span className="product-price">₹{product.price}</span>
                     {product.mrp > product.price && (
@@ -61,7 +65,7 @@ const ProductCard = ({ product }) => {
                         <button className="qty-btn" onClick={(e) => handleQtyChange(e, cartItem.quantity - 1)}>
                             <Minus size={16} />
                         </button>
-                        <span className="qty-value">{cartItem.quantity}</span>
+                        <span className="qty-value">{getQtyLabel(cartItem.quantity, product.unit)}</span>
                         <button className="qty-btn" onClick={(e) => handleQtyChange(e, cartItem.quantity + 1)}>
                             <Plus size={16} />
                         </button>

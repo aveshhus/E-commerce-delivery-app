@@ -12,6 +12,8 @@ import AdminCoupons from './pages/AdminCoupons';
 import AdminNotifications from './pages/AdminNotifications';
 import AdminLogin from './pages/AdminLogin';
 
+import AdminFestivals from './pages/AdminFestivals';
+
 const pageTitles = {
   '/': 'Dashboard',
   '/products': 'Products',
@@ -22,7 +24,8 @@ const pageTitles = {
   '/offers': 'Offers & Banners',
   '/coupons': 'Coupons',
   '/notifications': 'Notifications',
-  '/analytics': 'Analytics & Reports'
+  '/analytics': 'Analytics & Reports',
+  '/festivals': 'Festivals'
 };
 
 const ProtectedRoute = ({ children }) => {
@@ -59,6 +62,7 @@ const AdminLayout = () => {
             <Route path="/coupons" element={<AdminCoupons />} />
             <Route path="/notifications" element={<AdminNotifications />} />
             <Route path="/analytics" element={<Dashboard />} />
+            <Route path="/festivals" element={<AdminFestivals />} />
           </Routes>
         </div>
       </div>

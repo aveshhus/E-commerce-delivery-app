@@ -29,7 +29,9 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             localStorage.removeItem('km_token');
             localStorage.removeItem('km_user');
-            window.location.href = '/login';
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error.response?.data || error);
     }
@@ -43,6 +45,16 @@ export const authAPI = {
     verifyOTP: (data) => api.post('/auth/verify-otp', data),
     getProfile: () => api.get('/auth/profile'),
     updateProfile: (data) => api.put('/auth/profile', data),
+    changePassword: (data) => api.post('/auth/change-password', data),
+};
+
+// User APIs
+export const userAPI = {
+    getWallet: () => api.get('/user/wallet'),
+    addMoney: (data) => api.post('/user/wallet/add', data),
+    getNotifications: () => api.get('/user/notifications'),
+    getFavorites: () => api.get('/user/favorites'),
+    toggleFavorite: (productId) => api.post('/user/favorites/toggle', { productId }),
 };
 
 // Product APIs
@@ -91,6 +103,7 @@ export const publicAPI = {
     validateCoupon: (data) => api.post('/coupons/validate', data),
     getNotifications: () => api.get('/notifications'),
     getLoyalty: () => api.get('/loyalty/history'),
+    getFestival: () => api.get('/festivals/active'),
 };
 
 // Payment APIs

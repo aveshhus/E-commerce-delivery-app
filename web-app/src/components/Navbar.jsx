@@ -35,6 +35,16 @@ const Navbar = ({ onCartOpen }) => {
                     </div>
                 </Link>
 
+                <div className="nav-address">
+                    <div className="nav-address-title">
+                        <MapPin size={18} fill="var(--primary)" color="#fff" strokeWidth={1} />
+                        Home
+                    </div>
+                    <div className="nav-address-subtitle">
+                        Block A, Sector 4, Noida...
+                    </div>
+                </div>
+
                 <form className="navbar-search" onSubmit={handleSearch}>
                     <Search className="navbar-search-icon" size={18} />
                     <input
@@ -66,10 +76,19 @@ const Navbar = ({ onCartOpen }) => {
                             Login
                         </Link>
                     )}
-                    <button className="nav-btn nav-btn-cart" onClick={onCartOpen}>
-                        <ShoppingCart size={18} />
-                        <span>Cart</span>
-                        {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+                    <button className="nav-btn-cart" onClick={onCartOpen}>
+                        <div className="cart-btn-icon">
+                            <ShoppingCart size={18} />
+                        </div>
+                        <div className="cart-btn-label">
+                            {cartCount > 0 ? (
+                                <>
+                                    <span className="cart-btn-count">{cartCount} item{cartCount > 1 ? 's' : ''}</span>
+                                </>
+                            ) : (
+                                <span>My Cart</span>
+                            )}
+                        </div>
                     </button>
                 </div>
             </div>

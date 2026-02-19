@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Plus, Minus, ShoppingCart, Star, Truck, Shield, RotateCcw } from 'lucide-react';
 import { productAPI } from '../services/api';
+import { formatUnit, getQtyLabel } from '../utils/helpers';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -56,7 +57,11 @@ const ProductDetail = () => {
         <div className="product-detail fade-in">
             <div className="product-detail-image">
                 {primaryImage?.url ? (
-                    <img src={`http://localhost:5000${primaryImage.url}`} alt={product.name} style={{ maxHeight: '80%', objectFit: 'contain' }} />
+                    <img
+                        src={primaryImage.url.startsWith('http') ? primaryImage.url : `http://localhost:5000${primaryImage.url}`}
+                        alt={product.name}
+                        style={{ maxHeight: '80%', objectFit: 'contain' }}
+                    />
                 ) : (
                     <span style={{ fontSize: '120px', opacity: 0.3 }}>🛒</span>
                 )}
@@ -65,7 +70,7 @@ const ProductDetail = () => {
             <div className="product-detail-info">
                 <div className="product-category">{product.category?.name}</div>
                 <h1>{product.name}</h1>
-                <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>{product.unitValue} {product.unit}</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>{formatUnit(product.unitValue, product.unit)}</p>
 
                 <div className="product-detail-pricing">
                     <span className="price">₹{currentPrice}</span>
@@ -110,7 +115,7 @@ const ProductDetail = () => {
                             onClick={() => setQty(Math.max(1, qty - 1))}>
                             <Minus size={16} />
                         </button>
-                        <span style={{ width: '44px', textAlign: 'center', fontWeight: 700 }}>{qty}</span>
+                        <span style={{ minWidth: '44px', padding: '0 8px', textAlign: 'center', fontWeight: 700 }}>{getQtyLabel(qty, product.unit)}</span>
                         <button style={{ width: '44px', height: '44px', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: 'none' }}
                             onClick={() => setQty(qty + 1)}>
                             <Plus size={16} />

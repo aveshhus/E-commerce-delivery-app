@@ -9,6 +9,10 @@ router.post('/verify-otp', authController.verifyOTP);
 router.post('/admin/login', authController.adminLogin);
 router.get('/profile', auth, authController.getProfile);
 router.put('/profile', auth, authController.updateProfile);
+// Update FCM Token
 router.put('/fcm-token', auth, authController.updateFCMToken);
+
+// Change Password
+router.post('/change-password', auth, authController.changePassword);
 
 module.exports = router;

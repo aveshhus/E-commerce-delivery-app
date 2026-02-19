@@ -52,6 +52,25 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    // New Profile Fields
+    dob: { type: Date },
+    gender: { type: String, enum: ['male', 'female', 'other', ''] },
+    walletBalance: { type: Number, default: 0 },
+    referralCode: { type: String, unique: true, sparse: true },
+    referralEarnings: { type: Number, default: 0 },
+
+    notificationSettings: {
+        push: { type: Boolean, default: true },
+        sms: { type: Boolean, default: true },
+        email: { type: Boolean, default: true },
+        promo: { type: Boolean, default: true }
+    },
+
+    favorites: {
+        products: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
+        stores: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Store' }] // Future proofing
+    },
+
     loyaltyPoints: {
         type: Number,
         default: 0

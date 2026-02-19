@@ -88,46 +88,86 @@ const Orders = () => {
                     </Link>
                 </div>
             ) : (
-                orders.map(order => (
-                    <div key={order._id} className="order-card">
-                        <div className="order-header">
-                            <div>
-                                <div className="order-number">#{order.orderNumber}</div>
-                                <div className="order-date">{formatDate(order.createdAt)}</div>
+                orders.map(order => {
+                    const steps = ['placed', 'confirmed', 'out_for_delivery', 'delivered'];
+                    const currentStepIndex = steps.indexOf(order.status) === -1 ? 0 : steps.indexOf(order.status);
+                    const isCancelled = order.status === 'cancelled';
+
+                    return (
+                        <div key={order._id} className="order-card">
+                            <div className="order-header">
+                                <div className="order-meta">
+                                    <div className="order-number">ORDER #{order.orderNumber}</div>
+                                    <div className="order-date">{formatDate(order.createdAt)}</div>
+                                </div>
+                                <div className="order-total-badge">₹{order.totalAmount?.toFixed(0)}</div>
                             </div>
-                            <span className={`order-status ${order.status}`}>
-                                {order.status?.replace(/_/g, ' ')}
-                            </span>
-                        </div>
-                        <div className="order-items-summary">
-                            {order.items?.length} item{order.items?.length > 1 ? 's' : ''} •{' '}
-                            {order.items?.map(i => i.name).join(', ')}
-                        </div>
-                        <div className="order-footer">
-                            <div className="order-total">₹{order.totalAmount?.toFixed(2)}</div>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                {['placed', 'confirmed'].includes(order.status) && (
+
+                            {/* Order Timeline */}
+                            {!isCancelled && (
+                                <div className="order-timeline">
+                                    <div className="timeline-track">
+                                        <div
+                                            className="timeline-progress"
+                                            style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                    <div className="timeline-steps">
+                                        <div className={`timeline-step ${currentStepIndex >= 0 ? 'active' : ''}`}>
+                                            <div className="step-dot"></div>
+                                            <span>Placed</span>
+                                        </div>
+                                        <div className={`timeline-step ${currentStepIndex >= 1 ? 'active' : ''}`}>
+                                            <div className="step-dot"></div>
+                                            <span>Packed</span>
+                                        </div>
+                                        <div className={`timeline-step ${currentStepIndex >= 2 ? 'active' : ''}`}>
+                                            <div className="step-dot"></div>
+                                            <span>On Way</span>
+                                        </div>
+                                        <div className={`timeline-step ${currentStepIndex >= 3 ? 'active' : ''}`}>
+                                            <div className="step-dot"></div>
+                                            <span>Delivered</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {isCancelled && (
+                                <div className="order-cancelled-banner">
+                                    <XCircle size={16} /> This order was cancelled
+                                </div>
+                            )}
+
+                            <div className="order-items-list">
+                                {order.items?.map((item, idx) => (
+                                    <div key={idx} className="order-item-row">
+                                        <div className="order-item-qty">{item.quantity}x</div>
+                                        <div className="order-item-name">{item.product?.name || 'Product'}</div>
+                                        <div className="order-item-price">₹{(item.variant?.price || item.price) * item.quantity}</div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="order-footer">
+                                {['placed', 'confirmed', 'preparing', 'out_for_delivery'].includes(order.status) && !isCancelled && (
+                                    <button className="btn btn-primary" style={{ width: '100%', borderRadius: 'var(--radius-md)' }}>
+                                        <Package size={16} /> Track Live
+                                    </button>
+                                )}
+
+                                {['placed', 'confirmed'].includes(order.status) && !isCancelled && (
                                     <button
                                         className="btn btn-outline"
-                                        style={{ padding: '6px 14px', fontSize: '12px', width: 'auto' }}
                                         onClick={() => handleCancel(order._id)}
                                     >
-                                        <XCircle size={14} /> Cancel
-                                    </button>
-                                )}
-                                {order.status === 'delivered' && (
-                                    <button
-                                        className="btn btn-outline"
-                                        style={{ padding: '6px 14px', fontSize: '12px', width: 'auto' }}
-                                        onClick={() => handleReorder(order._id)}
-                                    >
-                                        <RotateCcw size={14} /> Reorder
+                                        Cancel Order
                                     </button>
                                 )}
                             </div>
                         </div>
-                    </div>
-                ))
+                    )
+                })
             )}
         </div>
     );

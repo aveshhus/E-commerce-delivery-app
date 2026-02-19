@@ -33,6 +33,7 @@ const Sidebar = () => {
                 { to: '/offers', icon: <Tag size={18} />, label: 'Offers & Banners' },
                 { to: '/coupons', icon: <Ticket size={18} />, label: 'Coupons' },
                 { to: '/notifications', icon: <Bell size={18} />, label: 'Notifications' },
+                { to: '/festivals', icon: <Tag size={18} />, label: 'Festivals' }, // Used Tag icon again, maybe find another
             ]
         },
         {

@@ -6,7 +6,7 @@ const Coupon = require('../models/Coupon');
 exports.getCart = async (req, res) => {
     try {
         let cart = await Cart.findOne({ user: req.user._id })
-            .populate('items.product', 'name images price mrp discount stock isActive')
+            .populate('items.product', 'name images price mrp discount stock isActive unit unitValue')
             .populate('coupon');
 
         if (!cart) {
@@ -57,7 +57,7 @@ exports.addToCart = async (req, res) => {
         }
 
         await cart.save();
-        await cart.populate('items.product', 'name images price mrp discount stock isActive');
+        await cart.populate('items.product', 'name images price mrp discount stock isActive unit unitValue');
 
         res.json({ success: true, message: 'Item added to cart', data: { cart } });
     } catch (error) {
@@ -92,7 +92,7 @@ exports.updateCartItem = async (req, res) => {
         }
 
         await cart.save();
-        await cart.populate('items.product', 'name images price mrp discount stock isActive');
+        await cart.populate('items.product', 'name images price mrp discount stock isActive unit unitValue');
 
         res.json({ success: true, message: 'Cart updated', data: { cart } });
     } catch (error) {
@@ -110,7 +110,7 @@ exports.removeFromCart = async (req, res) => {
 
         cart.items.pull(req.params.itemId);
         await cart.save();
-        await cart.populate('items.product', 'name images price mrp discount stock isActive');
+        await cart.populate('items.product', 'name images price mrp discount stock isActive unit unitValue');
 
         res.json({ success: true, message: 'Item removed', data: { cart } });
     } catch (error) {

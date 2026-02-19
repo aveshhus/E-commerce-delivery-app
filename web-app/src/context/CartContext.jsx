@@ -14,15 +14,15 @@ export const useCart = () => {
 export const CartProvider = ({ children }) => {
     const [cart, setCart] = useState({ items: [], couponDiscount: 0 });
     const [loading, setLoading] = useState(false);
-    const { isAuthenticated } = useAuth();
+    const auth = useAuth(); // Helper to access auth state safely
 
     useEffect(() => {
-        if (isAuthenticated) {
+        if (auth?.isAuthenticated) {
             fetchCart();
         } else {
             setCart({ items: [], couponDiscount: 0 });
         }
-    }, [isAuthenticated]);
+    }, [auth?.isAuthenticated]);
 
     const fetchCart = async () => {
         try {
