@@ -37,12 +37,12 @@ const seedData = async () => {
             name: 'Test Customer',
             email: 'customer@test.com',
             phone: '8888888888',
-            password: 'customer123',
+            password: 'Customer@123',
             role: 'customer',
             isVerified: true,
             loyaltyPoints: 500
         });
-        console.log('Customer created: customer@test.com / customer123');
+        console.log('Customer created: customer@test.com / Customer@123');
 
         // Create Categories
         const categoriesList = [
