@@ -38,21 +38,38 @@ exports.addToCart = async (req, res) => {
             cart = new Cart({ user: req.user._id, items: [] });
         }
 
-        const itemPrice = variant?.price || product.price;
-        const existingIndex = cart.items.findIndex(
-            item => item.product.toString() === productId &&
-                JSON.stringify(item.variant) === JSON.stringify(variant)
-        );
+        // Sanitize variant: If it's null, undefined, or missing 'name', treat as undefined
+        const cleanVariant = (variant && variant.name) ? variant : undefined;
+
+        const itemPrice = cleanVariant?.price || product.price;
+
+        const existingIndex = cart.items.findIndex(item => {
+            // Compare product IDs
+            if (item.product.toString() !== productId) return false;
+
+            // Compare variants
+            // If both are undefined/null (no variant), they match
+            const itemHasVariant = item.variant && item.variant.name;
+            const reqHasVariant = cleanVariant && cleanVariant.name;
+
+            if (!itemHasVariant && !reqHasVariant) return true;
+            if (itemHasVariant && reqHasVariant) {
+                return item.variant.name === cleanVariant.name &&
+                    item.variant.value === cleanVariant.value;
+            }
+            return false;
+        });
 
         if (existingIndex > -1) {
             cart.items[existingIndex].quantity += quantity;
+            // Update price in case it changed
             cart.items[existingIndex].price = itemPrice;
         } else {
             cart.items.push({
                 product: productId,
                 quantity,
                 price: itemPrice,
-                variant
+                variant: cleanVariant // Will be undefined if no variant, which Mongoose handles well
             });
         }
 

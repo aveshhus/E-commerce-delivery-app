@@ -49,15 +49,22 @@ exports.createOrder = async (req, res) => {
             const itemTotal = itemPrice * item.quantity;
             subtotal += itemTotal;
 
-            orderItems.push({
+            const orderPayloadItem = {
                 product: product._id,
                 name: product.name,
                 image: product.images[0]?.url || '',
-                variant: item.variant,
                 quantity: item.quantity,
                 price: itemPrice,
                 total: itemTotal
-            });
+            };
+            if (item.variant && item.variant.name) {
+                orderPayloadItem.variant = {
+                    name: item.variant.name,
+                    value: item.variant.value,
+                    price: item.variant.price
+                };
+            }
+            orderItems.push(orderPayloadItem);
         }
 
         // Calculate totals

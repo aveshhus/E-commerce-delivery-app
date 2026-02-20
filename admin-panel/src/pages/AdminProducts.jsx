@@ -13,7 +13,7 @@ const AdminProducts = () => {
     const [form, setForm] = useState({
         name: '', description: '', price: '', mrp: '', stock: '',
         category: '', unit: 'kg', unitValue: '1', isFeatured: false,
-        productUrl: ''
+        productUrl: '', variants: []
     });
 
     // Image handling
@@ -80,7 +80,7 @@ const AdminProducts = () => {
         setForm({
             name: '', description: '', price: '', mrp: '', stock: '',
             category: '', unit: 'kg', unitValue: '1', isFeatured: false,
-            productUrl: ''
+            productUrl: '', variants: []
         });
         setImageType('url');
         setCustomImage('');
@@ -95,7 +95,7 @@ const AdminProducts = () => {
             name: product.name, description: product.description || '', price: product.price,
             mrp: product.mrp, stock: product.stock, category: product.category?._id || '',
             unit: product.unit, unitValue: product.unitValue, isFeatured: product.isFeatured,
-            productUrl: product.productUrl || ''
+            productUrl: product.productUrl || '', variants: product.variants || []
         });
 
         // Handle existing image display
@@ -156,6 +156,22 @@ const AdminProducts = () => {
             toast.success('Deleted');
             fetchProducts();
         } catch (err) { toast.error('Failed to delete'); }
+    };
+
+    const addVariant = () => {
+        setForm({ ...form, variants: [...form.variants, { name: 'Size', value: '', price: '', mrp: '', stock: '' }] });
+    };
+
+    const removeVariant = (index) => {
+        const newVariants = [...form.variants];
+        newVariants.splice(index, 1);
+        setForm({ ...form, variants: newVariants });
+    };
+
+    const updateVariant = (index, field, value) => {
+        const newVariants = [...form.variants];
+        newVariants[index][field] = value;
+        setForm({ ...form, variants: newVariants });
     };
 
     return (
@@ -317,6 +333,40 @@ const AdminProducts = () => {
                                         <label className="form-label">Stock</label>
                                         <input className="form-input" type="number" required value={form.stock} onChange={e => setForm({ ...form, stock: e.target.value })} />
                                     </div>
+                                </div>
+
+                                {/* Variants Section */}
+                                <div className="form-group" style={{ background: '#f9fafb', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                        <label className="form-label" style={{ margin: 0 }}>Product Variants (Optional)</label>
+                                        <button type="button" className="btn btn-sm btn-outline" onClick={addVariant}><Plus size={14} /> Add Variant</button>
+                                    </div>
+                                    {form.variants.map((variant, index) => (
+                                        <div key={index} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr auto', gap: '8px', marginBottom: '8px', alignItems: 'end' }}>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: '11px' }}>Name</label>
+                                                <input className="form-input" placeholder="Size/Color" value={variant.name} onChange={e => updateVariant(index, 'name', e.target.value)} />
+                                            </div>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: '11px' }}>Value</label>
+                                                <input className="form-input" placeholder="1kg/Red" value={variant.value} onChange={e => updateVariant(index, 'value', e.target.value)} />
+                                            </div>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: '11px' }}>Price</label>
+                                                <input className="form-input" type="number" placeholder="₹" value={variant.price} onChange={e => updateVariant(index, 'price', e.target.value)} />
+                                            </div>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: '11px' }}>MRP</label>
+                                                <input className="form-input" type="number" placeholder="₹" value={variant.mrp} onChange={e => updateVariant(index, 'mrp', e.target.value)} />
+                                            </div>
+                                            <div>
+                                                <label className="form-label" style={{ fontSize: '11px' }}>Stock</label>
+                                                <input className="form-input" type="number" value={variant.stock} onChange={e => updateVariant(index, 'stock', e.target.value)} />
+                                            </div>
+                                            <button type="button" className="btn btn-danger btn-sm" style={{ height: '38px' }} onClick={() => removeVariant(index)}><Trash2 size={14} /></button>
+                                        </div>
+                                    ))}
+                                    {form.variants.length === 0 && <p style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>No variants added (Standard product)</p>}
                                 </div>
                                 <div className="grid-2">
                                     <div className="form-group">
