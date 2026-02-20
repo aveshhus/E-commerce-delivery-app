@@ -129,11 +129,10 @@ orderSchema.index({ status: 1 });
 orderSchema.index({ deliveryAgent: 1 });
 orderSchema.index({ createdAt: -1 });
 
-orderSchema.pre('save', function (next) {
-    if (this.isNew) {
-        this.statusHistory.push({ status: this.status, note: 'Order placed' });
+orderSchema.pre('save', async function () {
+    if (this.isNew && (!this.statusHistory || this.statusHistory.length === 0)) {
+        this.statusHistory = [{ status: this.status, note: 'Order placed' }];
     }
-    next();
 });
 
 orderSchema.statics.generateOrderNumber = function () {
