@@ -368,12 +368,14 @@ exports.updateOrderStatus = async (req, res) => {
 exports.assignDeliveryAgent = async (req, res) => {
     try {
         const { agentId } = req.body;
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
         const order = await Order.findByIdAndUpdate(
             req.params.id,
             {
                 deliveryAgent: agentId,
                 status: 'out_for_delivery',
-                $push: { statusHistory: { status: 'out_for_delivery', note: 'Delivery agent assigned' } }
+                deliveryOTP: otp,
+                $push: { statusHistory: { status: 'out_for_delivery', note: `Delivery agent assigned. OTP for delivery is ${otp}` } }
             },
             { new: true }
         ).populate('deliveryAgent', 'name phone');

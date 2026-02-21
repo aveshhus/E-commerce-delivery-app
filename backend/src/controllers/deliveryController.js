@@ -2,6 +2,19 @@ const DeliveryAgent = require('../models/DeliveryAgent');
 const Order = require('../models/Order');
 const User = require('../models/User');
 
+// Get agent profile
+exports.getProfile = async (req, res) => {
+    try {
+        const agent = await DeliveryAgent.findOne({ user: req.user._id });
+        if (!agent) {
+            return res.status(404).json({ success: false, message: 'Agent not found' });
+        }
+        res.json({ success: true, data: { agent } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 // Get all delivery agents
 exports.getAgents = async (req, res) => {
     try {
@@ -122,34 +135,86 @@ exports.getCurrentDelivery = async (req, res) => {
     }
 };
 
-// Complete delivery
-exports.completeDelivery = async (req, res) => {
+// Update order status (Agent specific)
+exports.updateStatus = async (req, res) => {
     try {
+        const { orderId, status, note, otp } = req.body;
         const agent = await DeliveryAgent.findOne({ user: req.user._id });
         if (!agent) {
-            return res.status(404).json({ success: false, message: 'Agent not found' });
+            return res.status(404).json({ success: false, message: 'Agent registration not found' });
         }
 
-        const order = await Order.findById(agent.currentOrder);
-        if (order) {
-            order.status = 'delivered';
+        const order = await Order.findOne({ _id: orderId, deliveryAgent: agent._id }).select('+deliveryOTP');
+        if (!order) {
+            return res.status(404).json({ success: false, message: 'Order not found or not assigned to you' });
+        }
+
+        // Validate state transitions
+        const allowedStatuses = ['picked_up', 'arrived', 'delivered', 'cancelled'];
+        if (!allowedStatuses.includes(status)) {
+            return res.status(400).json({ success: false, message: 'Invalid status update' });
+        }
+
+        // OTP verification for delivery
+        if (status === 'delivered') {
+            if (!otp || otp !== order.deliveryOTP) {
+                return res.status(400).json({ success: false, message: 'Invalid or missing OTP' });
+            }
+        }
+
+        order.status = status;
+        order.statusHistory.push({
+            status,
+            note: note || `Status updated to ${status} by delivery agent`,
+            timestamp: new Date()
+        });
+
+        if (status === 'delivered') {
             order.actualDeliveryTime = new Date();
             order.paymentStatus = 'paid';
-            order.statusHistory.push({ status: 'delivered', note: 'Delivered by agent' });
-            await order.save();
+            agent.currentOrder = null;
+            agent.isAvailable = true;
+            agent.totalDeliveries += 1;
+            // Calculate earning based on totalAmount or flat fee
+            const flatFee = 40;
+            agent.earnings.today += flatFee;
+            agent.earnings.total += flatFee;
+            await agent.save();
+        } else if (status === 'picked_up') {
+            // Keep currentOrder as is
+        } else if (status === 'cancelled') {
+            agent.currentOrder = null;
+            agent.isAvailable = true;
+            await agent.save();
         }
 
-        agent.currentOrder = null;
-        agent.isAvailable = true;
-        agent.totalDeliveries += 1;
-        agent.earnings.today += 30; // per delivery earning
-        agent.earnings.total += 30;
-        await agent.save();
-
-        res.json({ success: true, message: 'Delivery completed', data: { order } });
+        await order.save();
+        res.json({ success: true, message: `Order status updated to ${status}`, data: { order } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
+};
+
+// Get agent's order history
+exports.getAgentHistory = async (req, res) => {
+    try {
+        const agent = await DeliveryAgent.findOne({ user: req.user._id });
+        if (!agent) return res.status(404).json({ success: false, message: 'Agent not found' });
+
+        const orders = await Order.find({ deliveryAgent: agent._id })
+            .sort({ createdAt: -1 })
+            .limit(20);
+
+        res.json({ success: true, data: { orders } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Complete delivery (simplified alias or specific logic)
+exports.completeDelivery = async (req, res) => {
+    req.body.status = 'delivered';
+    return exports.updateStatus(req, res);
 };
 
 // Get nearby available agents

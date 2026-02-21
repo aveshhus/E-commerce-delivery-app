@@ -8,10 +8,11 @@ import { useAuth } from '../context/AuthContext';
 const ProfileSidebar = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
 
     const menuItems = [
         { icon: User, label: 'Personal Information', path: '/profile' },
+        ...(user?.role === 'delivery' ? [{ icon: Package, label: 'Delivery Dashboard', path: '/delivery' }] : []),
         { icon: MapPin, label: 'Saved Addresses', path: '/profile/addresses' },
         { icon: ShieldCheck, label: 'Account Security', path: '/profile/security' },
         { icon: CreditCard, label: 'Payment Methods', path: '/profile/payments' },

@@ -100,8 +100,12 @@ const orderSchema = new mongoose.Schema({
     paymentId: String,
     status: {
         type: String,
-        enum: ['placed', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled', 'refunded'],
+        enum: ['placed', 'confirmed', 'preparing', 'out_for_delivery', 'picked_up', 'arrived', 'delivered', 'cancelled', 'refunded'],
         default: 'placed'
+    },
+    deliveryOTP: {
+        type: String,
+        select: false // Only show when specifically requested or for validation
     },
     deliveryAgent: {
         type: mongoose.Schema.Types.ObjectId,

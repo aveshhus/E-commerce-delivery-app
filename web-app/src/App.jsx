@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -25,17 +25,51 @@ import Offers from './pages/profile/Offers';
 import Notifications from './pages/profile/Notifications';
 import Support from './pages/profile/Support';
 import SavedAddresses from './pages/profile/SavedAddresses';
+import DeliveryLayout from './layouts/DeliveryLayout';
+import DeliveryDashboard from './pages/delivery/DeliveryDashboard';
+import DeliveryOrders from './pages/delivery/DeliveryOrders';
+import DeliveryHistory from './pages/delivery/DeliveryHistory';
 
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+  const { isAuthenticated, loading, user } = useAuth();
   if (loading) return <div className="loading-spinner"><div className="spinner"></div></div>;
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  if (!isAuthenticated) return <Navigate to="/login" />;
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
+    return <Navigate to="/" />;
+  }
+  return children;
 };
 
 import FestivalBanner from './components/FestivalBanner';
 
 const AppContent = () => {
   const [cartOpen, setCartOpen] = useState(false);
+  const { user, isAuthenticated } = useAuth();
+  const location = useLocation();
+  const isDeliveryRoute = location.pathname.startsWith('/delivery');
+
+  // Force redirect delivery agents to their portal if they try to access site root
+  if (isAuthenticated && user?.role === 'delivery' && !isDeliveryRoute) {
+    return <Navigate to="/delivery" replace />;
+  }
+
+  if (isDeliveryRoute) {
+    return (
+      <main className="delivery-portal-wrapper">
+        <Routes>
+          <Route path="/delivery" element={
+            <ProtectedRoute allowedRoles={['delivery', 'admin']}>
+              <DeliveryLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<DeliveryDashboard />} />
+            <Route path="orders" element={<DeliveryOrders />} />
+            <Route path="history" element={<DeliveryHistory />} />
+          </Route>
+        </Routes>
+      </main>
+    );
+  }
 
   return (
     <>

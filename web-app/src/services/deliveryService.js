@@ -1,0 +1,37 @@
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+const getAuthHeader = () => {
+    const token = localStorage.getItem('km_token');
+    return { headers: { Authorization: `Bearer ${token}` } };
+};
+
+const deliveryService = {
+    getProfile: async () => {
+        const response = await axios.get(`${API_URL}/delivery/profile`, getAuthHeader());
+        return response.data;
+    },
+    toggleAvailability: async () => {
+        const response = await axios.put(`${API_URL}/delivery/toggle-availability`, {}, getAuthHeader());
+        return response.data;
+    },
+    getCurrentDelivery: async () => {
+        const response = await axios.get(`${API_URL}/delivery/current-delivery`, getAuthHeader());
+        return response.data;
+    },
+    updateStatus: async (orderId, status, note, otp) => {
+        const response = await axios.put(`${API_URL}/delivery/status`, { orderId, status, note, otp }, getAuthHeader());
+        return response.data;
+    },
+    getHistory: async () => {
+        const response = await axios.get(`${API_URL}/delivery/history`, getAuthHeader());
+        return response.data;
+    },
+    updateLocation: async (latitude, longitude) => {
+        const response = await axios.put(`${API_URL}/delivery/location`, { latitude, longitude }, getAuthHeader());
+        return response.data;
+    }
+};
+
+export default deliveryService;

@@ -46,7 +46,7 @@ const AdminDelivery = () => {
                                 <td style={{ textTransform: 'capitalize' }}>{a.vehicleType} {a.vehicleNumber && `• ${a.vehicleNumber}`}</td>
                                 <td><span className={`badge ${a.isAvailable ? 'badge-success' : 'badge-error'}`}>{a.isAvailable ? 'Available' : 'Busy'}</span></td>
                                 <td style={{ fontWeight: 700 }}>{a.totalDeliveries || 0}</td>
-                                <td>⭐ {a.rating?.toFixed(1) || '0.0'}</td>
+                                <td>⭐ {a.rating?.average?.toFixed(1) || (typeof a.rating === 'number' ? a.rating.toFixed(1) : '0.0')}</td>
                                 <td><button className="btn btn-outline btn-sm" onClick={() => openEdit(a)}><Edit size={14} /></button></td>
                             </tr>
                         ))}

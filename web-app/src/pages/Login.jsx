@@ -20,7 +20,14 @@ const Login = () => {
             success = await register(form);
         }
         setLoading(false);
-        if (success) navigate('/');
+        if (success) {
+            const savedUser = JSON.parse(localStorage.getItem('km_user'));
+            if (savedUser?.role === 'delivery') {
+                navigate('/delivery');
+            } else {
+                navigate('/');
+            }
+        }
     };
 
     return (
