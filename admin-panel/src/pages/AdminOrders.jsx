@@ -70,8 +70,11 @@ const AdminOrders = () => {
                                 <tr key={o._id}>
                                     <td style={{ fontWeight: 700 }}>#{o.orderNumber}</td>
                                     <td>
-                                        <div style={{ fontWeight: 600 }}>{o.user?.name || 'Customer'}</div>
-                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{o.user?.phone}</div>
+                                        <div style={{ fontWeight: 600 }}>{o.deliveryAddress?.fullName || o.user?.name}</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{o.deliveryAddress?.phone || o.user?.phone}</div>
+                                        <div style={{ fontSize: '10px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '150px' }}>
+                                            {o.deliveryAddress?.addressLine1}, {o.deliveryAddress?.city}
+                                        </div>
                                     </td>
                                     <td>{o.items?.length} items</td>
                                     <td style={{ fontWeight: 700 }}>₹{o.totalAmount?.toFixed(2)}</td>
@@ -125,9 +128,27 @@ const AdminOrders = () => {
                                 <span className={`badge ${statusColors[selectedOrder.status]}`}>{selectedOrder.status?.replace(/_/g, ' ')}</span>
                                 <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{formatDate(selectedOrder.createdAt)}</span>
                             </div>
-                            <div style={{ marginBottom: '16px' }}>
-                                <h4 style={{ fontSize: '14px', marginBottom: '8px' }}>Customer</h4>
-                                <p style={{ fontSize: '13px' }}>{selectedOrder.user?.name} • {selectedOrder.user?.phone}</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                                <div>
+                                    <h4 style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Customer Info</h4>
+                                    <p style={{ fontSize: '14px', fontWeight: 600 }}>{selectedOrder.user?.name}</p>
+                                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{selectedOrder.user?.phone}</p>
+                                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{selectedOrder.user?.email}</p>
+                                </div>
+                                <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '20px' }}>
+                                    <h4 style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Delivery Address</h4>
+                                    <p style={{ fontSize: '14px', fontWeight: 600 }}>{selectedOrder.deliveryAddress?.fullName}</p>
+                                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                        {selectedOrder.deliveryAddress?.phone}
+                                        {selectedOrder.deliveryAddress?.alternatePhone && <span style={{ opacity: 0.6 }}> | {selectedOrder.deliveryAddress.alternatePhone}</span>}
+                                    </p>
+                                    <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                                        {selectedOrder.deliveryAddress?.addressLine1}<br />
+                                        {selectedOrder.deliveryAddress?.addressLine2 && <>{selectedOrder.deliveryAddress.addressLine2}<br /></>}
+                                        {selectedOrder.deliveryAddress?.landmark && <span style={{ color: 'var(--primary)' }}>Near {selectedOrder.deliveryAddress.landmark}<br /></span>}
+                                        {selectedOrder.deliveryAddress?.city}, {selectedOrder.deliveryAddress?.state} - {selectedOrder.deliveryAddress?.pincode}
+                                    </p>
+                                </div>
                             </div>
                             <div style={{ marginBottom: '16px' }}>
                                 <h4 style={{ fontSize: '14px', marginBottom: '8px' }}>Items</h4>

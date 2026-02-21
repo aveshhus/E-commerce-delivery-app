@@ -92,6 +92,7 @@ exports.createOrder = async (req, res) => {
             deliveryAddress: {
                 fullName: address.fullName,
                 phone: address.phone,
+                alternatePhone: address.alternatePhone,
                 addressLine1: address.addressLine1,
                 addressLine2: address.addressLine2,
                 landmark: address.landmark,

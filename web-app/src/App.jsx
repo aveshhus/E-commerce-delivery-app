@@ -13,6 +13,7 @@ import Login from './pages/Login';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Orders from './pages/Orders';
+import OrderDetail from './pages/OrderDetail';
 import Profile from './pages/Profile';
 import Checkout from './pages/Checkout';
 import ProfileLayout from './layouts/ProfileLayout';
@@ -67,6 +68,7 @@ const AppContent = () => {
           </Route>
 
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+          <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
         </Routes>
       </main>

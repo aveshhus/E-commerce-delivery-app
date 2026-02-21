@@ -20,6 +20,10 @@ const addressSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    alternatePhone: {
+        type: String,
+        trim: true
+    },
     addressLine1: {
         type: String,
         required: true,

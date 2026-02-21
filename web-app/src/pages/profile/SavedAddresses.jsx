@@ -12,8 +12,10 @@ const SavedAddresses = () => {
         label: 'home',
         fullName: '',
         phone: '',
+        alternatePhone: '',
         addressLine1: '',
         addressLine2: '',
+        landmark: '',
         city: '',
         state: '',
         pincode: '',
@@ -71,8 +73,8 @@ const SavedAddresses = () => {
 
     const resetForm = () => {
         setForm({
-            label: 'home', fullName: '', phone: '',
-            addressLine1: '', addressLine2: '',
+            label: 'home', fullName: '', phone: '', alternatePhone: '',
+            addressLine1: '', addressLine2: '', landmark: '',
             city: '', state: '', pincode: '', isDefault: false
         });
         setEditingId(null);
@@ -108,6 +110,10 @@ const SavedAddresses = () => {
                                 <label className="form-label">Phone Number</label>
                                 <input className="form-input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} required />
                             </div>
+                            <div className="form-group">
+                                <label className="form-label">Alternate Phone (Optional)</label>
+                                <input className="form-input" value={form.alternatePhone} onChange={e => setForm({ ...form, alternatePhone: e.target.value })} />
+                            </div>
                             <div className="form-group" style={{ gridColumn: 'span 2' }}>
                                 <label className="form-label">Address Line 1</label>
                                 <input className="form-input" value={form.addressLine1} onChange={e => setForm({ ...form, addressLine1: e.target.value })} required />
@@ -116,9 +122,17 @@ const SavedAddresses = () => {
                                 <label className="form-label">Address Line 2 (Optional)</label>
                                 <input className="form-input" value={form.addressLine2} onChange={e => setForm({ ...form, addressLine2: e.target.value })} />
                             </div>
+                            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                                <label className="form-label">Landmark (Optional)</label>
+                                <input className="form-input" placeholder="e.g. Near Big Bazaar" value={form.landmark} onChange={e => setForm({ ...form, landmark: e.target.value })} />
+                            </div>
                             <div className="form-group">
                                 <label className="form-label">City</label>
                                 <input className="form-input" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} required />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">State</label>
+                                <input className="form-input" value={form.state} onChange={e => setForm({ ...form, state: e.target.value })} required />
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Pincode</label>
@@ -163,10 +177,11 @@ const SavedAddresses = () => {
                             <h4 style={{ marginBottom: '8px', fontSize: '15px' }}>{addr.fullName}</h4>
                             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px', lineHeight: 1.5 }}>
                                 {addr.addressLine1}, {addr.addressLine2 && `${addr.addressLine2}, `}<br />
-                                {addr.city} - {addr.pincode}
+                                {addr.landmark && <span style={{ color: 'var(--primary)' }}>Near {addr.landmark}<br /></span>}
+                                {addr.city}, {addr.state} - {addr.pincode}
                             </p>
                             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                                Phone: {addr.phone}
+                                Phone: {addr.phone} {addr.alternatePhone && <span style={{ opacity: 0.6 }}>| {addr.alternatePhone}</span>}
                             </p>
                             <div className="address-actions">
                                 <button className="btn-text" onClick={() => handleEdit(addr)}>Edit</button>

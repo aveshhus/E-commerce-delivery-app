@@ -43,6 +43,7 @@ const orderSchema = new mongoose.Schema({
     deliveryAddress: {
         fullName: String,
         phone: String,
+        alternatePhone: String,
         addressLine1: String,
         addressLine2: String,
         landmark: String,
