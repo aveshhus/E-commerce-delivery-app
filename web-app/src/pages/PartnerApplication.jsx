@@ -13,6 +13,7 @@ import {
     FiChevronLeft
 } from 'react-icons/fi';
 import deliveryService from '../services/deliveryService';
+import { authAPI } from '../services/api';
 import toast from 'react-hot-toast';
 import './PartnerApplication.css';
 
@@ -25,7 +26,7 @@ const STEPS = [
 ];
 
 const PartnerApplication = () => {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const navigate = useNavigate();
     const [status, setStatus] = useState(null); // 'checking', 'none', 'pending', 'approved', 'rejected'
     const [currentStep, setCurrentStep] = useState(0);
@@ -131,14 +132,31 @@ const PartnerApplication = () => {
     }
 
     if (status === 'approved') {
+        const handleGoToDashboard = async () => {
+            try {
+                setLoading(true);
+                const res = await authAPI.getProfile();
+                if (res.success && res.data.user) {
+                    updateUser(res.data.user);
+                } else {
+                    updateUser({ ...user, role: 'delivery' });
+                }
+                // Force full page reload to clear any cached router state
+                window.location.href = '/delivery';
+            } catch (err) {
+                updateUser({ ...user, role: 'delivery' });
+                window.location.href = '/delivery';
+            }
+        };
+
         return (
             <div className="application-container v-center">
                 <div className="status-card glass">
                     <FiCheckCircle className="status-icon approved" />
                     <h2>Application Approved!</h2>
                     <p>Congratulations, you are now a delivery partner.</p>
-                    <button className="btn btn-primary" onClick={() => navigate('/delivery')} style={{ marginTop: '20px' }}>
-                        Go to Partner Dashboard
+                    <button className="btn btn-primary" onClick={handleGoToDashboard} disabled={loading} style={{ marginTop: '20px' }}>
+                        {loading ? <div className="mini-spinner"></div> : 'Go to Partner Dashboard'}
                     </button>
                 </div>
             </div>
