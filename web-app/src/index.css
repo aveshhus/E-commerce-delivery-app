@@ -1,10 +1,58 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import './festival.css';
 
+/* Global Portal Loader */
+.global-loader-portal {
+    position: fixed;
+    inset: 0;
+    background: #0F0C29;
+    background: linear-gradient(135deg, #0F0C29 0%, #302B63 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    color: #fff;
+}
 
-/* ==================================================================
-   DESIGN SYSTEM — Zepto / Blinkit / Instamart (Polished)
-   ================================================================== */
+.global-loader-portal p {
+    margin-top: 20px;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #14FFEC;
+    animation: pulse-v3 2s infinite;
+}
+
+.loader-v3 {
+    width: 60px;
+    height: 60px;
+    border: 3px solid rgba(20, 255, 236, 0.1);
+    border-radius: 50%;
+    border-top-color: #14FFEC;
+    animation: spin-v3 1s ease-in-out infinite;
+    box-shadow: 0 0 20px rgba(20, 255, 236, 0.2);
+}
+
+@keyframes spin-v3 {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse-v3 {
+
+    0%,
+    100% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
 :root {
     /* Brand */
     --primary: #0C831F;

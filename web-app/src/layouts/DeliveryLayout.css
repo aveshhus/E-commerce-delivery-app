@@ -77,20 +77,22 @@
     background: rgba(20, 255, 236, 0.1);
     color: #14FFEC;
     border-color: rgba(20, 255, 236, 0.3);
+    box-shadow: 0 0 15px rgba(20, 255, 236, 0.1);
 }
 
 .status-pill.offline {
     background: rgba(255, 75, 75, 0.1);
     color: #FF4B4B;
     border-color: rgba(255, 75, 75, 0.3);
+    border-style: dashed;
 }
 
 .status-dot {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: currentColor;
-    box-shadow: 0 0 10px currentColor;
+    box-shadow: 0 0 12px currentColor;
 }
 
 .nav-icon-btn {

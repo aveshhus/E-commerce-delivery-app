@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FiPhone, FiPackage, FiCheckCircle, FiChevronRight, FiMapPin, FiTruck, FiNavigation, FiX } from 'react-icons/fi';
 import deliveryService from '../../services/deliveryService';
 import toast from 'react-hot-toast';
@@ -9,7 +9,8 @@ const DeliveryOrders = () => {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [showOTPModal, setShowOTPModal] = useState(false);
-    const [otp, setOtp] = useState('');
+    const [otp, setOtp] = useState(['', '', '', '']);
+    const otpRefs = [useRef(), useRef(), useRef(), useRef()];
 
     useEffect(() => {
         fetchActiveOrder();
@@ -28,6 +29,23 @@ const DeliveryOrders = () => {
         }
     };
 
+    const handleOtpChange = (index, value) => {
+        if (!/^\d*$/.test(value)) return;
+        const newOtp = [...otp];
+        newOtp[index] = value.slice(-1);
+        setOtp(newOtp);
+
+        if (value && index < 3) {
+            otpRefs[index + 1].current.focus();
+        }
+    };
+
+    const handleKeyDown = (index, e) => {
+        if (e.key === 'Backspace' && !otp[index] && index > 0) {
+            otpRefs[index - 1].current.focus();
+        }
+    };
+
     const handleUpdateStatus = async (status, deliveryOtp = null) => {
         try {
             setActionLoading(true);
@@ -37,7 +55,7 @@ const DeliveryOrders = () => {
                 if (status === 'delivered') {
                     setOrder(null);
                     setShowOTPModal(false);
-                    setOtp('');
+                    setOtp(['', '', '', '']);
                 } else {
                     setOrder(res.data.order);
                 }
@@ -55,15 +73,19 @@ const DeliveryOrders = () => {
         window.open(url, '_blank');
     };
 
-    if (loading) return <div className="loading-state"><div className="spinner"></div><p>Loading active order...</p></div>;
+    if (loading) return <div className="loading-state-v3"><div className="loader-v3"></div><p>Fetching Task Details...</p></div>;
 
     if (!order) {
         return (
-            <div className="empty-orders fade-in">
-                <div className="empty-illustration">🚴</div>
-                <h2>Ready for new orders?</h2>
-                <p>Stay online and keep your location permissions active.</p>
-                <button className="refresh-btn" onClick={fetchActiveOrder}>Check for assignments</button>
+            <div className="empty-orders-v3 fade-in">
+                <div className="radar-v3">
+                    <div className="r-beam"></div>
+                    {[1, 2, 3].map(i => <div key={i} className="r-ring-v3"></div>)}
+                    <div className="r-center-v3"></div>
+                </div>
+                <h2>Waiting for Orders</h2>
+                <p>You are in a high-demand area. New assignments will appear here.</p>
+                <button className="refresh-hero-btn" onClick={fetchActiveOrder}>Refresh Queue</button>
             </div>
         );
     }
@@ -72,10 +94,10 @@ const DeliveryOrders = () => {
         <div className="manage-order-container fade-in">
             <div className="order-top-bar">
                 <h1 className="page-title">Current Task</h1>
-                <span className="order-time-badge">Est. 15 mins</span>
+                <span className="order-time-badge glow-text">Est. 15 mins</span>
             </div>
 
-            <div className="order-details-card glass">
+            <div className="order-details-card glass-v3">
                 <div className="card-header">
                     <div className="tracking-id">ORD #{order.orderNumber}</div>
                     <div className={`status-pill-indicator ${order.status}`}>{order.status.replace('_', ' ')}</div>
@@ -83,122 +105,120 @@ const DeliveryOrders = () => {
 
                 <section className="detail-section">
                     <div className="section-header">
-                        <h3><FiMapPin /> Destination</h3>
-                        <button className="nav-shortcut" onClick={openNavigation}>
+                        <h3><FiMapPin className="icon-gold" /> Destination</h3>
+                        <button className="nav-shortcut-v3" onClick={openNavigation}>
                             <FiNavigation /> Navigate
                         </button>
                     </div>
-                    <div className="address-box-premium">
+                    <div className="address-box-premium-v3">
                         <div className="customer-main">
-                            <p className="customer-name">{order.deliveryAddress.fullName}</p>
-                            <a href={`tel:${order.deliveryAddress.phone}`} className="call-circle">
+                            <div>
+                                <p className="customer-name">{order.deliveryAddress.fullName}</p>
+                                <p className="customer-phone">{order.deliveryAddress.phone}</p>
+                            </div>
+                            <a href={`tel:${order.deliveryAddress.phone}`} className="call-btn-v3">
                                 <FiPhone />
                             </a>
                         </div>
                         <p className="address-text">{order.deliveryAddress.addressLine1}</p>
-                        {order.deliveryAddress.addressLine2 && <p className="address-text secondary">{order.deliveryAddress.addressLine2}</p>}
-                        <div className="landmark-tag">
-                            <span className="dot"></span>
+                        <div className="landmark-tag-v3">
+                            <span className="pulse-dot"></span>
                             Near {order.deliveryAddress.landmark}
                         </div>
                     </div>
                 </section>
 
                 <section className="detail-section">
-                    <h3><FiPackage /> Items Preview</h3>
-                    <div className="items-scroll">
+                    <h3><FiPackage className="icon-blue" /> Items Summary</h3>
+                    <div className="items-list-v3">
                         {order.items.map((item, idx) => (
-                            <div key={idx} className="item-row-minimal">
-                                <span className="item-qty-badge">{item.quantity}</span>
-                                <span className="item-name-text">{item.name}</span>
-                                <span className="item-price-text">₹{item.total}</span>
+                            <div key={idx} className="item-row-v3">
+                                <span className="item-q">x{item.quantity}</span>
+                                <span className="item-n">{item.name}</span>
+                                <span className="item-p">₹{item.total}</span>
                             </div>
                         ))}
                     </div>
-                    <div className="bill-summary">
-                        <div className="bill-row total">
-                            <span>Collect from Customer</span>
-                            <span className="amount">₹{order.totalAmount}</span>
+                    <div className="payment-footer-v3">
+                        <div className="bill-total">
+                            <span>Collect</span>
+                            <span className="amt">₹{order.totalAmount}</span>
                         </div>
                         {order.paymentMethod === 'cod' ? (
-                            <div className="payment-alert cod">
-                                <span className="pulse"></span> CASH PAYMENT REQUIRED
-                            </div>
+                            <div className="payment-tag-v3 cod">CASH ON DELIVERY</div>
                         ) : (
-                            <div className="payment-alert paid">
-                                <FiCheckCircle /> PAID ONLINE
-                            </div>
+                            <div className="payment-tag-v3 paid">PREPAID ORDER</div>
                         )}
                     </div>
                 </section>
 
-                <section className="status-timeline-v2">
-                    <div className="timeline-steps">
-                        {['out_for_delivery', 'picked_up', 'arrived', 'delivered'].map((s, i) => (
-                            <div key={s} className={`t-step ${order.status === s || (['out_for_delivery', 'picked_up', 'arrived', 'delivered'].indexOf(order.status) > i) ? 'completed' : ''}`}>
-                                <div className="t-circle">{i + 1}</div>
-                                <span className="t-label">{s.replace('_', ' ').charAt(0).toUpperCase() + s.replace('_', ' ').slice(1)}</span>
-                            </div>
-                        ))}
+                <div className="timeline-container-v3">
+                    <div className="timeline-v3">
+                        {['out_for_delivery', 'picked_up', 'arrived', 'delivered'].map((s, i) => {
+                            const statuses = ['out_for_delivery', 'picked_up', 'arrived', 'delivered'];
+                            const currentIndex = statuses.indexOf(order.status);
+                            const isCompleted = currentIndex >= i;
+                            const isActive = currentIndex === i;
+                            return (
+                                <div key={s} className={`step-v3 ${isCompleted ? 'done' : ''} ${isActive ? 'active' : ''}`}>
+                                    <div className="circle-v3">{isCompleted ? <FiCheckCircle /> : (i + 1)}</div>
+                                    <span className="label-v3">{s.split('_').join(' ')}</span>
+                                </div>
+                            );
+                        })}
                     </div>
 
-                    <div className="next-action-area">
+                    <div className="action-hub-v3">
                         {order.status === 'out_for_delivery' && (
-                            <button
-                                className="action-btn-main pick"
-                                onClick={() => handleUpdateStatus('picked_up')}
-                                disabled={actionLoading}
-                            >
-                                <FiTruck /> Pickup Completed
+                            <button className="btn-v3 pick" onClick={() => handleUpdateStatus('picked_up')} disabled={actionLoading}>
+                                <FiTruck /> Confirm Pickup
                             </button>
                         )}
                         {order.status === 'picked_up' && (
-                            <button
-                                className="action-btn-main arrive"
-                                onClick={() => handleUpdateStatus('arrived')}
-                                disabled={actionLoading}
-                            >
+                            <button className="btn-v3 arrive" onClick={() => handleUpdateStatus('arrived')} disabled={actionLoading}>
                                 <FiMapPin /> I have Arrived
                             </button>
                         )}
                         {order.status === 'arrived' && (
-                            <button
-                                className="action-btn-main deliver"
-                                onClick={() => setShowOTPModal(true)}
-                                disabled={actionLoading}
-                            >
+                            <button className="btn-v3 deliver" onClick={() => setShowOTPModal(true)} disabled={actionLoading}>
                                 <FiCheckCircle /> Complete Delivery
                             </button>
                         )}
                     </div>
-                </section>
+                </div>
             </div>
 
-            {/* OTP Modal */}
             {showOTPModal && (
-                <div className="otp-modal-overlay">
-                    <div className="otp-modal glass">
-                        <div className="modal-header">
-                            <h2>Verify Delivery</h2>
-                            <button className="close-modal" onClick={() => setShowOTPModal(false)}><FiX /></button>
+                <div className="otp-portal-v3">
+                    <div className="otp-card-v3 glass">
+                        <button className="otp-close-v3" onClick={() => setShowOTPModal(false)}><FiX /></button>
+                        <div className="otp-icon-v3"><FiCheckCircle /></div>
+                        <h2>Verification</h2>
+                        <p>Ask customer for delivery code</p>
+
+                        <div className="otp-boxes-v3">
+                            {otp.map((digit, idx) => (
+                                <input
+                                    key={idx}
+                                    ref={otpRefs[idx]}
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength="1"
+                                    value={digit}
+                                    onChange={(e) => handleOtpChange(idx, e.target.value)}
+                                    onKeyDown={(e) => handleKeyDown(idx, e)}
+                                    className="otp-box-v3"
+                                    autoFocus={idx === 0}
+                                />
+                            ))}
                         </div>
-                        <p>Ask customer for the 4-digit OTP</p>
-                        <div className="otp-input-container">
-                            <input
-                                type="text"
-                                maxLength="4"
-                                placeholder="0 0 0 0"
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                                autoFocus
-                            />
-                        </div>
+
                         <button
-                            className="confirm-delivery-btn"
-                            disabled={otp.length !== 4 || actionLoading}
-                            onClick={() => handleUpdateStatus('delivered', otp)}
+                            className="otp-submit-v3"
+                            disabled={otp.some(d => !d) || actionLoading}
+                            onClick={() => handleUpdateStatus('delivered', otp.join(''))}
                         >
-                            {actionLoading ? 'Verifying...' : 'Confirm Delivery'}
+                            {actionLoading ? 'Verifying...' : 'Finish Delivery'}
                         </button>
                     </div>
                 </div>

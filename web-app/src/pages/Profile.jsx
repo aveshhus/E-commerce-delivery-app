@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authAPI } from '../services/api';
 import toast from 'react-hot-toast';
-import { User, Calendar, Mail, Phone, Lock } from 'lucide-react';
+import { User, Calendar, Mail, Phone, Lock, Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Profile = () => {
     const { user, updateUser } = useAuth();
@@ -131,6 +132,38 @@ const Profile = () => {
                     </div>
                 </form>
             </div>
+
+            {['delivery', 'admin', 'superadmin'].includes(user?.role?.toLowerCase()) ? (
+                <div className="partner-mode-card" style={{ marginTop: '24px', padding: '20px', background: 'linear-gradient(135deg, rgba(20, 255, 236, 0.1) 0%, rgba(0, 210, 255, 0.1) 100%)', borderRadius: '16px', border: '1px solid rgba(20, 255, 236, 0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h3 style={{ margin: 0, fontSize: '18px', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Truck size={20} color="var(--primary)" />
+                            Partner Dashboard
+                        </h3>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                            Manage deliveries and track your earnings.
+                        </p>
+                    </div>
+                    <Link to="/delivery" className="btn btn-primary" style={{ background: 'var(--primary)', color: '#000', textDecoration: 'none', padding: '10px 20px', borderRadius: '12px', fontWeight: '700' }}>
+                        Open Portal
+                    </Link>
+                </div>
+            ) : (
+                <div className="partner-mode-card" style={{ marginTop: '24px', padding: '20px', background: 'linear-gradient(135deg, rgba(255, 159, 28, 0.1) 0%, rgba(255, 75, 75, 0.1) 100%)', borderRadius: '16px', border: '1px solid rgba(255, 159, 28, 0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h3 style={{ margin: 0, fontSize: '18px', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Truck size={20} color="#FF9F1C" />
+                            Earn with Us
+                        </h3>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                            Become a Delivery Partner and start earning today.
+                        </p>
+                    </div>
+                    <Link to="/partner-apply" className="btn btn-primary" style={{ background: '#FF9F1C', color: '#000', textDecoration: 'none', padding: '10px 20px', borderRadius: '12px', fontWeight: '700' }}>
+                        Apply Now
+                    </Link>
+                </div>
+            )}
         </div>
     );
 };

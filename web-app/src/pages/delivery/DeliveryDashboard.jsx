@@ -12,6 +12,7 @@ import {
     FiZap
 } from 'react-icons/fi';
 import deliveryService from '../../services/deliveryService';
+import toast from 'react-hot-toast';
 import './DeliveryDashboard.css';
 
 const DeliveryDashboard = () => {
@@ -22,6 +23,7 @@ const DeliveryDashboard = () => {
         onlineHours: '5.2',
         rating: 4.9
     });
+    const [prevOrderId, setPrevOrderId] = useState(null);
     const [currentOrder, setCurrentOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [greeting, setGreeting] = useState('');
@@ -33,18 +35,68 @@ const DeliveryDashboard = () => {
         else setGreeting('Good Evening');
 
         fetchDashboardData();
-        const interval = setInterval(fetchDashboardData, 30000);
-        return () => clearInterval(interval);
-    }, []);
+        // Poll more frequently when online to catch new orders fast (Zepto speed)
+        const interval = setInterval(fetchDashboardData, 10000);
+        return () => {
+            clearInterval(interval);
+            document.title = "Krishna Marketing";
+        };
+    }, [isOnline]);
+
+    const playNotification = () => {
+        try {
+            const context = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = context.createOscillator();
+            const gainNode = context.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(context.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, context.currentTime);
+            gainNode.gain.setValueAtTime(0, context.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.5, context.currentTime + 0.1);
+            gainNode.gain.linearRampToValueAtTime(0, context.currentTime + 0.4);
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.5);
+        } catch (e) { console.log("Audio not supported"); }
+    };
 
     const fetchDashboardData = async () => {
         try {
-            const res = await deliveryService.getCurrentDelivery();
-            if (res.success) {
-                setCurrentOrder(res.data.order);
+            const [orderRes, profileRes] = await Promise.all([
+                deliveryService.getCurrentDelivery(),
+                deliveryService.getProfile()
+            ]);
+
+            if (orderRes.success) {
+                const newOrder = orderRes.data.order;
+                setCurrentOrder(newOrder);
+
+                if (newOrder && newOrder._id !== prevOrderId) {
+                    setPrevOrderId(newOrder._id);
+                    if (prevOrderId !== null) { // Only notify on subsequent changes
+                        playNotification();
+                        toast.success("🚨 NEW TASK ASSIGNED!", { duration: 6000 });
+                        document.title = "🚨 NEW TASK - KM";
+                    } else if (newOrder) {
+                        setPrevOrderId(newOrder._id);
+                    }
+                } else if (!newOrder) {
+                    setPrevOrderId(null);
+                    document.title = isOnline ? "ONLINE - KM Partner" : "OFFLINE - KM Partner";
+                }
+            }
+
+            if (profileRes.success) {
+                const agent = profileRes.data.agent;
+                setStats({
+                    todayEarnings: agent.earnings?.today || 0,
+                    todayDeliveries: agent.totalDeliveries || 0, // In real app, filter totalDeliveries by today
+                    onlineHours: agent.onlineHours || '0.0',
+                    rating: agent.rating?.average || 5.0
+                });
             }
         } catch (error) {
-            console.error(error);
+            console.error("Dashboard sync error:", error);
         } finally {
             setLoading(false);
         }

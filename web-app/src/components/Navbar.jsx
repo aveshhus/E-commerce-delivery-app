@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, Search, LogOut, Package, MapPin, Heart } from 'lucide-react';
+import { ShoppingCart, User, Search, LogOut, Package, MapPin, Heart, Truck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
@@ -58,6 +58,17 @@ const Navbar = ({ onCartOpen }) => {
                 <div className="navbar-actions">
                     {isAuthenticated ? (
                         <>
+                            {['delivery', 'admin', 'superadmin'].includes(user?.role?.toLowerCase()) ? (
+                                <Link to="/delivery" className="nav-btn" style={{ color: 'var(--primary)', fontWeight: '800' }}>
+                                    <Truck size={18} />
+                                    <span>Partner</span>
+                                </Link>
+                            ) : (
+                                <Link to="/partner-apply" className="nav-btn" style={{ color: '#FF9F1C', fontWeight: '800' }}>
+                                    <Truck size={18} />
+                                    <span>Earn with Us</span>
+                                </Link>
+                            )}
                             <Link to="/orders" className="nav-btn">
                                 <Package size={18} />
                                 <span>Orders</span>

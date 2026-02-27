@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, User, Phone } from 'lucide-react';
+import { Mail, Lock, User, Phone, Truck } from 'lucide-react';
 
 const Login = () => {
     const [isLogin, setIsLogin] = useState(true);
@@ -109,6 +109,13 @@ const Login = () => {
                     ) : (
                         <p>Already have an account? <a onClick={() => setIsLogin(true)} style={{ cursor: 'pointer' }}>Login</a></p>
                     )}
+                </div>
+
+                <div style={{ marginTop: '30px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                    <Link to="/delivery" style={{ color: 'var(--primary)', textDecoration: 'none', fontSize: '13px', fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <Truck size={16} />
+                        Delivery Partner Portal
+                    </Link>
                 </div>
             </div>
         </div>

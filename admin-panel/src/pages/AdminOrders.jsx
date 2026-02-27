@@ -8,8 +8,18 @@ const AdminOrders = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('');
     const [selectedOrder, setSelectedOrder] = useState(null);
+    const [agents, setAgents] = useState([]);
+    const [assigningOrder, setAssigningOrder] = useState(null);
+    const [selectedAgentId, setSelectedAgentId] = useState('');
 
-    useEffect(() => { fetchOrders(); }, [filter]);
+    useEffect(() => { fetchOrders(); fetchAgents(); }, [filter]);
+
+    const fetchAgents = async () => {
+        try {
+            const res = await adminAPI.getAgents({ isAvailable: true, isOnline: true });
+            if (res.success) setAgents(res.data.agents);
+        } catch (err) { console.error(err); }
+    };
 
     const fetchOrders = async () => {
         setLoading(true);
@@ -29,6 +39,19 @@ const AdminOrders = () => {
                 setSelectedOrder(null);
             }
         } catch (err) { toast.error(err.message || 'Failed'); }
+    };
+
+    const handleAssignAgent = async () => {
+        if (!selectedAgentId) return toast.error('Select an agent');
+        try {
+            const res = await adminAPI.assignAgent(assigningOrder._id, { agentId: selectedAgentId });
+            if (res.success) {
+                toast.success('Agent assigned and order sent!');
+                setAssigningOrder(null);
+                setSelectedAgentId('');
+                fetchOrders();
+            }
+        } catch (err) { toast.error(err.message || 'Assignment failed'); }
     };
 
     const statusColors = {
@@ -101,8 +124,9 @@ const AdminOrders = () => {
                                                 </button>
                                             )}
                                             {o.status === 'preparing' && (
-                                                <button className="btn btn-primary btn-sm" onClick={() => updateStatus(o._id, 'out_for_delivery')}>
+                                                <button className="btn btn-primary btn-sm" onClick={() => setAssigningOrder(o)}>
                                                     <Truck size={14} />
+                                                    <span style={{ marginLeft: '4px' }}>Assign</span>
                                                 </button>
                                             )}
                                         </div>
@@ -165,6 +189,56 @@ const AdminOrders = () => {
                                     <span>₹{selectedOrder.totalAmount?.toFixed(2)}</span>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Assign Agent Modal */}
+            {assigningOrder && (
+                <div className="modal-overlay" onClick={() => setAssigningOrder(null)}>
+                    <div className="modal" style={{ maxWidth: '400px' }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3>Assign Agent - #{assigningOrder.orderNumber}</h3>
+                            <button className="modal-close" onClick={() => setAssigningOrder(null)}><XIcon size={16} /></button>
+                        </div>
+                        <div className="modal-body">
+                            <p style={{ fontSize: '14px', marginBottom: '16px', color: 'var(--text-secondary)' }}>
+                                Select an available delivery partner to dispatch this order.
+                            </p>
+                            <div className="form-group" style={{ marginBottom: '16px' }}>
+                                <label className="form-label" style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600 }}>Available Agents ({agents.length})</label>
+                                <select
+                                    className="form-select"
+                                    value={selectedAgentId}
+                                    onChange={e => setSelectedAgentId(e.target.value)}
+                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'inherit' }}
+                                >
+                                    <option value="">-- Choose Agent --</option>
+                                    {agents.map(a => (
+                                        <option key={a._id} value={a._id}>
+                                            {a.name} ({a.vehicleType})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {agents.length === 0 && (
+                                <p style={{ fontSize: '12px', color: '#ff4d4f', marginTop: '8px' }}>
+                                    ⚠️ No agents are currently online and available.
+                                </p>
+                            )}
+                        </div>
+                        <div className="modal-footer" style={{ borderTop: '1px solid var(--border)', padding: '16px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                            <button className="btn btn-outline" onClick={() => setAssigningOrder(null)}>Cancel</button>
+                            <button
+                                className="btn btn-primary"
+                                onClick={handleAssignAgent}
+                                disabled={!selectedAgentId}
+                                style={{ background: 'var(--primary)', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer' }}
+                            >
+                                Dispatch Order
+                            </button>
                         </div>
                     </div>
                 </div>

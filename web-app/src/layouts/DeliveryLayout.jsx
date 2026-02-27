@@ -53,9 +53,12 @@ const DeliveryLayout = () => {
                 toast.success(newStatus ? "You are now ONLINE" : "You are now OFFLINE", {
                     icon: newStatus ? '🟢' : '🔴'
                 });
+            } else {
+                toast.error(res.message || "Failed to toggle status");
             }
         } catch (error) {
-            toast.error("Failed to toggle status");
+            console.error("Toggle error:", error);
+            toast.error(error.response?.data?.message || "Server connection error");
         } finally {
             setLoading(false);
         }

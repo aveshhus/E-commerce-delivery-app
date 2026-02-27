@@ -368,19 +368,36 @@ exports.updateOrderStatus = async (req, res) => {
 exports.assignDeliveryAgent = async (req, res) => {
     try {
         const { agentId } = req.body;
+        const agent = await DeliveryAgent.findById(agentId);
+
+        if (!agent) {
+            return res.status(404).json({ success: false, message: 'Agent not found' });
+        }
+
+        if (!agent.isOnline || !agent.isAvailable) {
+            return res.status(400).json({ success: false, message: 'Agent is not available or offline' });
+        }
+
         const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+        // 1. Update Order
         const order = await Order.findByIdAndUpdate(
             req.params.id,
             {
                 deliveryAgent: agentId,
                 status: 'out_for_delivery',
                 deliveryOTP: otp,
-                $push: { statusHistory: { status: 'out_for_delivery', note: `Delivery agent assigned. OTP for delivery is ${otp}` } }
+                $push: { statusHistory: { status: 'out_for_delivery', note: `Delivery agent ${agent.name} assigned. OTP: ${otp}` } }
             },
             { new: true }
         ).populate('deliveryAgent', 'name phone');
 
-        res.json({ success: true, message: 'Delivery agent assigned', data: { order } });
+        // 2. Update Delivery Agent
+        agent.currentOrder = order._id;
+        agent.isAvailable = false;
+        await agent.save();
+
+        res.json({ success: true, message: 'Delivery agent assigned successfully', data: { order } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

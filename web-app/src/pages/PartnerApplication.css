@@ -1,0 +1,290 @@
+.application-page {
+    min-height: calc(100vh - 70px);
+    background: #0F0C29;
+    background: linear-gradient(135deg, #0F0C29, #302B63, #24243E);
+    padding: 40px 20px;
+    font-family: 'Outfit', sans-serif;
+}
+
+.application-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.v-center {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 60vh;
+}
+
+.application-header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: #fff;
+}
+
+.application-header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    margin: 0 0 10px;
+    background: linear-gradient(135deg, #14FFEC, #00D2FF);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.application-header p {
+    font-size: 15px;
+    opacity: 0.7;
+    margin: 0;
+}
+
+.form-wrapper {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.stepper-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    opacity: 0.5;
+    transition: 0.3s ease;
+}
+
+.step-item.active {
+    opacity: 1;
+}
+
+.step-item.completed {
+    opacity: 1;
+}
+
+.step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #24243E;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    margin-bottom: 10px;
+    transition: 0.3s ease;
+}
+
+.step-item.active .step-icon {
+    border-color: #14FFEC;
+    color: #14FFEC;
+    box-shadow: 0 0 15px rgba(20, 255, 236, 0.3);
+}
+
+.step-item.completed .step-icon {
+    background: #14FFEC;
+    border-color: #14FFEC;
+    color: #0F0C29;
+}
+
+.step-label {
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    position: absolute;
+    bottom: -20px;
+}
+
+.step-line {
+    position: absolute;
+    top: 20px;
+    left: 40px;
+    width: calc(100% - 40px);
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: -1;
+}
+
+.form-content {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-step h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 8px;
+}
+
+.step-desc {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0 0 24px;
+}
+
+.form-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-next,
+.submit-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 14px;
+    transition: 0.3s ease;
+}
+
+.pulse-glow {
+    animation: glow-pulse 2s infinite;
+}
+
+@keyframes glow-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(20, 255, 236, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(20, 255, 236, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(20, 255, 236, 0);
+    }
+}
+
+.slide-in {
+    animation: slideRight 0.3s ease forwards;
+}
+
+@keyframes slideRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Review Section */
+.review-list {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.review-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 14px;
+}
+
+.review-item:last-child {
+    border-bottom: none;
+}
+
+.review-item span {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.review-item strong {
+    color: #fff;
+    font-weight: 600;
+}
+
+/* View States */
+.status-card {
+    text-align: center;
+    padding: 50px 30px;
+    border-radius: 30px;
+    max-width: 450px;
+    width: 100%;
+}
+
+.status-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+}
+
+.status-icon.waiting {
+    color: #FF9F1C;
+}
+
+.status-icon.approved {
+    color: #14FFEC;
+}
+
+.status-icon.rejected {
+    color: #FF4B4B;
+}
+
+.status-card h2 {
+    font-size: 26px;
+    margin: 0 0 12px;
+    color: #fff;
+}
+
+.status-card p {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.6;
+    margin: 0 0 20px;
+}
+
+.status-sub {
+    font-size: 12px !important;
+    opacity: 0.5;
+}
+
+.border-red {
+    border-color: rgba(255, 75, 75, 0.3) !important;
+}
+
+@media (max-width: 600px) {
+    .step-label {
+        display: none;
+    }
+
+    .step-line {
+        width: calc(100% - 20px);
+        left: 30px;
+    }
+
+    .step-icon {
+        width: 30px;
+        height: 30px;
+    }
+
+    .application-page {
+        padding: 20px 15px;
+    }
+}

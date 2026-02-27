@@ -2,12 +2,13 @@ const DeliveryAgent = require('../models/DeliveryAgent');
 const Order = require('../models/Order');
 const User = require('../models/User');
 
-// Get agent profile
+// Get agent profile (or application status)
 exports.getProfile = async (req, res) => {
     try {
         const agent = await DeliveryAgent.findOne({ user: req.user._id });
+
         if (!agent) {
-            return res.status(404).json({ success: false, message: 'Agent not found' });
+            return res.status(404).json({ success: false, message: 'Agent registration not found' });
         }
         res.json({ success: true, data: { agent } });
     } catch (error) {
@@ -15,17 +16,78 @@ exports.getProfile = async (req, res) => {
     }
 };
 
-// Get all delivery agents
+// Get all delivery agents (Admin)
 exports.getAgents = async (req, res) => {
     try {
-        const { isAvailable, isActive, isOnline } = req.query;
+        const { isAvailable, isActive, isOnline, status } = req.query;
         const filter = {};
         if (isAvailable !== undefined) filter.isAvailable = isAvailable === 'true';
         if (isActive !== undefined) filter.isActive = isActive === 'true';
         if (isOnline !== undefined) filter.isOnline = isOnline === 'true';
+        if (status) filter.status = status;
 
         const agents = await DeliveryAgent.find(filter).populate('user', 'name email phone').lean();
         res.json({ success: true, data: { agents } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Apply to be a delivery partner (Customer)
+exports.applyForPartner = async (req, res) => {
+    try {
+        const { vehicleType, vehicleNumber, licenseNumber, aadhaarNumber, panNumber, bankDetails } = req.body;
+
+        let agent = await DeliveryAgent.findOne({ user: req.user._id });
+        if (agent) {
+            return res.status(400).json({ success: false, message: 'Application already submitted' });
+        }
+
+        agent = await DeliveryAgent.create({
+            user: req.user._id,
+            name: req.user.name || 'Partner applicant',
+            phone: req.user.phone || '0000000000',
+            email: req.user.email || '',
+            vehicleType,
+            vehicleNumber,
+            licenseNumber,
+            aadhaarNumber,
+            panNumber,
+            bankDetails,
+            status: 'pending',
+            isOnline: false,
+            isAvailable: false,
+            isActive: false
+        });
+
+        res.status(201).json({ success: true, message: 'Application submitted successfully', data: { agent } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Admin updates application status
+exports.updateApplicationStatus = async (req, res) => {
+    try {
+        const { status } = req.body; // 'approved' or 'rejected'
+        const agent = await DeliveryAgent.findById(req.params.id);
+        if (!agent) return res.status(404).json({ success: false, message: 'Application not found' });
+
+        agent.status = status;
+        if (status === 'approved') {
+            agent.isActive = true;
+            // Upgrade user role to delivery if they are just a customer
+            const user = await User.findById(agent.user);
+            if (user && user.role === 'customer') {
+                user.role = 'delivery';
+                await user.save();
+            }
+        } else {
+            agent.isActive = false;
+        }
+        await agent.save();
+
+        res.json({ success: true, message: `Application ${status}`, data: { agent } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -59,7 +121,9 @@ exports.createAgent = async (req, res) => {
             email,
             vehicleType,
             vehicleNumber,
-            licenseNumber
+            licenseNumber,
+            status: 'approved',
+            isActive: true
         });
 
         res.status(201).json({ success: true, message: 'Delivery agent created', data: { agent } });
@@ -78,6 +142,19 @@ exports.updateAgent = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Agent not found' });
         }
         res.json({ success: true, message: 'Agent updated', data: { agent } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Delete agent
+exports.deleteAgent = async (req, res) => {
+    try {
+        const agent = await DeliveryAgent.findByIdAndDelete(req.params.id);
+        if (!agent) {
+            return res.status(404).json({ success: false, message: 'Agent not found' });
+        }
+        res.json({ success: true, message: 'Delivery agent deleted successfully' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -106,7 +183,8 @@ exports.updateLocation = async (req, res) => {
 // Toggle availability
 exports.toggleAvailability = async (req, res) => {
     try {
-        const agent = await DeliveryAgent.findOne({ user: req.user._id });
+        let agent = await DeliveryAgent.findOne({ user: req.user._id });
+
         if (!agent) {
             return res.status(404).json({ success: false, message: 'Agent not found' });
         }

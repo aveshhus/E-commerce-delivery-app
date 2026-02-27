@@ -29,6 +29,7 @@ import DeliveryLayout from './layouts/DeliveryLayout';
 import DeliveryDashboard from './pages/delivery/DeliveryDashboard';
 import DeliveryOrders from './pages/delivery/DeliveryOrders';
 import DeliveryHistory from './pages/delivery/DeliveryHistory';
+import PartnerApplication from './pages/PartnerApplication';
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { isAuthenticated, loading, user } = useAuth();
@@ -44,21 +45,39 @@ import FestivalBanner from './components/FestivalBanner';
 
 const AppContent = () => {
   const [cartOpen, setCartOpen] = useState(false);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const location = useLocation();
   const isDeliveryRoute = location.pathname.startsWith('/delivery');
 
-  // Force redirect delivery agents to their portal if they try to access site root
+  // 1. Prevent everything until Auth is ready
+  if (authLoading) {
+    return (
+      <div className="global-loader-portal">
+        <div className="loader-v3"></div>
+        <p>Krishna Marketing</p>
+      </div>
+    );
+  }
+
+  // 2. Absolute Redirection for Delivery Agents
+  // If logged in as delivery, they CANNOT see the customer site
   if (isAuthenticated && user?.role === 'delivery' && !isDeliveryRoute) {
     return <Navigate to="/delivery" replace />;
   }
 
+  // 3. Absolute Redirection for Customers
+  // Customers cannot see the delivery portal
+  if (isAuthenticated && !['delivery', 'admin', 'superadmin'].includes(user?.role) && isDeliveryRoute) {
+    return <Navigate to="/" replace />;
+  }
+
+  // customers are redirected from delivery routes
   if (isDeliveryRoute) {
     return (
       <main className="delivery-portal-wrapper">
         <Routes>
           <Route path="/delivery" element={
-            <ProtectedRoute allowedRoles={['delivery', 'admin']}>
+            <ProtectedRoute allowedRoles={['delivery', 'admin', 'superadmin']}>
               <DeliveryLayout />
             </ProtectedRoute>
           }>
@@ -66,6 +85,7 @@ const AppContent = () => {
             <Route path="orders" element={<DeliveryOrders />} />
             <Route path="history" element={<DeliveryHistory />} />
           </Route>
+          <Route path="*" element={<Navigate to="/delivery" replace />} />
         </Routes>
       </main>
     );
@@ -104,6 +124,9 @@ const AppContent = () => {
           <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
           <Route path="/orders/:id" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/partner-apply" element={<ProtectedRoute><PartnerApplication /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+
         </Routes>
       </main>
       <Footer />
