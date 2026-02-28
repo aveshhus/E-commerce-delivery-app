@@ -2,14 +2,6 @@ const router = require('express').Router();
 const deliveryController = require('../controllers/deliveryController');
 const { auth, authorize } = require('../middleware/auth');
 
-// Admin routes
-router.get('/', auth, authorize('admin', 'superadmin'), deliveryController.getAgents);
-router.post('/', auth, authorize('admin', 'superadmin'), deliveryController.createAgent);
-router.put('/:id', auth, authorize('admin', 'superadmin'), deliveryController.updateAgent);
-router.delete('/:id', auth, authorize('admin', 'superadmin'), deliveryController.deleteAgent);
-router.put('/admin/application/:id/status', auth, authorize('admin', 'superadmin'), deliveryController.updateApplicationStatus);
-router.get('/nearby', auth, authorize('admin', 'superadmin'), deliveryController.getNearbyAgents);
-
 // General auth routes for applying
 router.post('/apply', auth, deliveryController.applyForPartner);
 router.get('/application-status', auth, deliveryController.getProfile);
@@ -22,5 +14,13 @@ router.get('/current-delivery', auth, authorize('delivery', 'admin', 'superadmin
 router.put('/status', auth, authorize('delivery', 'admin', 'superadmin'), deliveryController.updateStatus);
 router.get('/history', auth, authorize('delivery', 'admin', 'superadmin'), deliveryController.getAgentHistory);
 router.post('/complete-delivery', auth, authorize('delivery', 'admin', 'superadmin'), deliveryController.completeDelivery);
+
+// Admin routes (Params routes must be last)
+router.get('/', auth, authorize('admin', 'superadmin'), deliveryController.getAgents);
+router.post('/', auth, authorize('admin', 'superadmin'), deliveryController.createAgent);
+router.get('/nearby', auth, authorize('admin', 'superadmin'), deliveryController.getNearbyAgents);
+router.put('/admin/application/:id/status', auth, authorize('admin', 'superadmin'), deliveryController.updateApplicationStatus);
+router.put('/:id', auth, authorize('admin', 'superadmin'), deliveryController.updateAgent);
+router.delete('/:id', auth, authorize('admin', 'superadmin'), deliveryController.deleteAgent);
 
 module.exports = router;

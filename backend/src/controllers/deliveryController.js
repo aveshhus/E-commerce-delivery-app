@@ -186,14 +186,17 @@ exports.toggleAvailability = async (req, res) => {
         let agent = await DeliveryAgent.findOne({ user: req.user._id });
 
         if (!agent) {
+            console.log("Toggle failed: Agent not found for user ID", req.user._id);
             return res.status(404).json({ success: false, message: 'Agent not found' });
         }
         agent.isOnline = !agent.isOnline;
         if (!agent.isOnline) agent.isAvailable = false;
         else agent.isAvailable = true;
         await agent.save();
+        console.log("Toggle success! isOnline:", agent.isOnline, "Agent ID:", agent._id);
         res.json({ success: true, data: { agent } });
     } catch (error) {
+        console.log("Toggle error in DB save:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
