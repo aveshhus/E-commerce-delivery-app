@@ -98,19 +98,19 @@ const OrderDetail = () => {
                         )}
                     </div>
 
-                    {/* Delivery Agent (Fake/Placeholder for MVP feel) */}
-                    {order.status === 'out_for_delivery' && (
+                    {/* Delivery Agent */}
+                    {order.deliveryAgent && ['out_for_delivery', 'picked_up', 'arrived'].includes(order.status) && (
                         <div className="agent-card">
                             <div className="agent-info">
                                 <div className="agent-avatar">
-                                    <img src="https://i.pravatar.cc/100?u=rider" alt="Rider" />
+                                    <img src={order.deliveryAgent.avatar || "https://i.pravatar.cc/100?u=rider"} alt="Rider" />
                                 </div>
                                 <div className="agent-details">
-                                    <h3>Ramesh Kumar</h3>
+                                    <h3>{order.deliveryAgent.name}</h3>
                                     <p>Your delivery partner</p>
                                 </div>
                             </div>
-                            <a href="tel:0000000000" className="call-btn">
+                            <a href={`tel:${order.deliveryAgent.phone}`} className="call-btn">
                                 <Phone size={18} />
                                 Call
                             </a>

@@ -40,7 +40,7 @@ const ProductCard = ({ product }) => {
             <div className="product-image">
                 {primaryImage?.url ? (
                     <img
-                        src={primaryImage.url.startsWith('http') ? primaryImage.url : `http://localhost:5000${primaryImage.url}`}
+                        src={primaryImage.url.startsWith('http') ? primaryImage.url : `http://${window.location.hostname}:5000${primaryImage.url}`}
                         alt={product.name}
                     />
                 ) : (
