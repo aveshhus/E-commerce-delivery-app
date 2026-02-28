@@ -133,8 +133,9 @@ const Checkout = () => {
                                 <input className="p-input full" placeholder="Landmark (Optional e.g. Near Big Bazaar)" value={newAddress.landmark} onChange={e => setNewAddress({ ...newAddress, landmark: e.target.value })} />
                                 <div className="split">
                                     <input className="p-input" placeholder="City" required value={newAddress.city} onChange={e => setNewAddress({ ...newAddress, city: e.target.value })} />
-                                    <input className="p-input" placeholder="Pincode" required value={newAddress.pincode} onChange={e => setNewAddress({ ...newAddress, pincode: e.target.value })} />
+                                    <input className="p-input" placeholder="State" required value={newAddress.state} onChange={e => setNewAddress({ ...newAddress, state: e.target.value })} />
                                 </div>
+                                <input className="p-input full" placeholder="Pincode" required value={newAddress.pincode} onChange={e => setNewAddress({ ...newAddress, pincode: e.target.value })} />
                                 <div className="label-selector">
                                     <p>Address Type:</p>
                                     <div className="label-chips">
@@ -294,6 +295,23 @@ const Checkout = () => {
                 .h-icon { color: var(--primary); }
                 .card-header h3 { font-size: 18px; font-weight: 800; margin: 0; }
                 .text-btn { background: none; border: none; color: var(--primary); font-weight: 700; cursor: pointer; font-size: 14px; }
+
+                .form-grid { display: flex; flex-direction: column; gap: 16px; width: 100%; box-sizing: border-box; }
+                .p-input { width: 100%; padding: 14px; border: 1px solid #e5e7eb; border-radius: 12px; font-size: 14px; background: #f9fafb; outline: none; transition: all 0.2s; box-sizing: border-box; }
+                .p-input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(255, 78, 12, 0.1); }
+                .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; }
+                
+                .label-selector { margin-top: 8px; }
+                .label-selector p { font-size: 14px; font-weight: 700; color: #4b5563; margin-bottom: 12px; }
+                .label-chips { display: flex; gap: 12px; }
+                .l-chip { padding: 8px 16px; border-radius: 20px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; font-size: 13px; font-weight: 600; color: #6b7280; transition: all 0.2s; }
+                .l-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+                
+                .form-actions { display: flex; gap: 16px; margin-top: 24px; padding-top: 20px; border-top: 1px solid #f1f1f1; }
+                .p-btn-save { flex: 1; padding: 14px; border-radius: 12px; background: var(--primary); color: #fff; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+                .p-btn-save:hover { opacity: 0.9; }
+                .p-btn-cancel { flex: 1; padding: 14px; border-radius: 12px; background: #f3f4f6; color: #4b5563; border: none; font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+                .p-btn-cancel:hover { background: #e5e7eb; }
 
                 .address-scroll { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 10px; }
                 .address-item {

@@ -30,8 +30,9 @@ const server = http.createServer(app);
 // Socket.IO for real-time tracking
 const io = new Server(server, {
     cors: {
-        origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:5174'],
-        methods: ['GET', 'POST']
+        origin: true,
+        methods: ['GET', 'POST'],
+        credentials: true
     }
 });
 
@@ -43,7 +44,7 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:5174'],
+    origin: true, // Allow any origin for local Wi-Fi testing
     credentials: true
 }));
 
