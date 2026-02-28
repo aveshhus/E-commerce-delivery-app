@@ -205,6 +205,7 @@ exports.getOrder = async (req, res) => {
             $or: [{ _id: req.params.id }, { orderNumber: req.params.id }],
             user: req.user._id
         })
+            .select('+deliveryOTP')
             .populate('deliveryAgent', 'name phone currentLocation')
             .populate('items.product', 'name images');
 

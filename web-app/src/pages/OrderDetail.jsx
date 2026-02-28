@@ -110,10 +110,18 @@ const OrderDetail = () => {
                                     <p>Your delivery partner</p>
                                 </div>
                             </div>
-                            <a href={`tel:${order.deliveryAgent.phone}`} className="call-btn">
-                                <Phone size={18} />
-                                Call
-                            </a>
+                            <div className="agent-actions">
+                                {order.deliveryOTP && (
+                                    <div className="otp-badge">
+                                        <span>OTP:</span>
+                                        <strong>{order.deliveryOTP}</strong>
+                                    </div>
+                                )}
+                                <a href={`tel:${order.deliveryAgent.phone}`} className="call-btn">
+                                    <Phone size={18} />
+                                    Call
+                                </a>
+                            </div>
                         </div>
                     )}
 
@@ -330,6 +338,10 @@ const OrderDetail = () => {
                     align-items: center;
                     gap: 8px;
                 }
+                .agent-actions { display: flex; align-items: center; gap: 12px; }
+                .otp-badge { background: rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 12px; display: flex; align-items: center; gap: 6px; font-size: 14px; }
+                .otp-badge span { opacity: 0.7; }
+                .otp-badge strong { font-size: 16px; letter-spacing: 2px; color: var(--primary); }
 
                 .detail-item-row { display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid #f9fafb; }
                 .item-img img { width: 60px; height: 60px; object-fit: contain; border-radius: 12px; background: #f9fafb; padding: 8px; }
