@@ -4,6 +4,7 @@ const Product = require('../models/Product');
 const User = require('../models/User');
 const LoyaltyPoints = require('../models/LoyaltyPoints');
 const Address = require('../models/Address');
+const DeliveryAgent = require('../models/DeliveryAgent');
 const { calculateLoyaltyPoints, pointsToRupees } = require('../utils/helpers');
 
 // Create order
