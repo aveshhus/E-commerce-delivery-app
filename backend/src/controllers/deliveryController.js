@@ -10,7 +10,34 @@ exports.getProfile = async (req, res) => {
         if (!agent) {
             return res.status(404).json({ success: false, message: 'Agent registration not found' });
         }
-        res.json({ success: true, data: { agent } });
+
+        const agentObj = agent.toObject();
+
+        // Calculate exact real data
+        // 1. Total deliveries completed by this agent
+        const completedOrders = await Order.find({ deliveryAgent: agent._id, status: 'delivered' });
+        agentObj.totalDeliveries = completedOrders.length;
+
+        // 2. Average Delivery Time
+        let totalTimeMinutes = 0;
+        let validOrdersCount = 0;
+        completedOrders.forEach(o => {
+            if (o.actualDeliveryTime && o.createdAt) {
+                const diff = (new Date(o.actualDeliveryTime) - new Date(o.createdAt)) / 60000;
+                totalTimeMinutes += diff;
+                validOrdersCount++;
+            }
+        });
+        agentObj.avgDeliveryTime = validOrdersCount > 0 ? Math.round(totalTimeMinutes / validOrdersCount) + ' mins' : 'N/A';
+
+        // 3. Store Pending Orders (orders waiting to be picked up)
+        const pendingStoreOrders = await Order.countDocuments({ status: { $in: ['pending', 'processing', 'packed'] } });
+        agentObj.pendingOrders = pendingStoreOrders;
+
+        // 4. Online Hours (For now, exact track would require shift logs, default to 0)
+        agentObj.onlineHours = '0.0';
+
+        res.json({ success: true, data: { agent: agentObj } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -256,10 +283,6 @@ exports.updateStatus = async (req, res) => {
             agent.currentOrder = null;
             agent.isAvailable = true;
             agent.totalDeliveries += 1;
-            // Calculate earning based on totalAmount or flat fee
-            const flatFee = 40;
-            agent.earnings.today += flatFee;
-            agent.earnings.total += flatFee;
             await agent.save();
         } else if (status === 'picked_up') {
             // Keep currentOrder as is

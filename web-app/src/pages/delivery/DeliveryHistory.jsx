@@ -3,10 +3,11 @@ import {
     FiCheckCircle,
     FiXCircle,
     FiCalendar,
-    FiDollarSign,
     FiMapPin,
     FiArrowRight,
-    FiFilter
+    FiFilter,
+    FiClock,
+    FiBox
 } from 'react-icons/fi';
 import deliveryService from '../../services/deliveryService';
 import './DeliveryHistory.css';
@@ -41,28 +42,32 @@ const DeliveryHistory = () => {
                 <button className="filter-btn"><FiFilter /></button>
             </div>
 
-            <div className="history-summary-marquee glass">
+            <div className="history-summary-marquee">
                 <div className="h-card-mini">
-                    <span className="h-lbl">Total Earnings</span>
-                    <span className="h-val">₹{history.length * 40}</span>
+                    <span className="h-lbl">Total Deliveries</span>
+                    <span className="h-val">{history.length}</span>
                 </div>
                 <div className="h-divider"></div>
                 <div className="h-card-mini">
-                    <span className="h-lbl">Completed</span>
-                    <span className="h-val">{history.length}</span>
+                    <span className="h-lbl">Avg Time</span>
+                    <span className="h-val">
+                        {history.length > 0 && history.some(o => o.actualDeliveryTime) ? (
+                            Math.round(history.filter(o => o.actualDeliveryTime).reduce((acc, curr) => acc + (new Date(curr.actualDeliveryTime) - new Date(curr.createdAt)) / 60000, 0) / history.filter(o => o.actualDeliveryTime).length) + ' mins'
+                        ) : '--'}
+                    </span>
                 </div>
             </div>
 
             <div className="history-timeline">
                 {history.length === 0 ? (
-                    <div className="empty-history glass">
+                    <div className="empty-history">
                         <FiCalendar className="empty-icon" />
                         <h3>No records found</h3>
                         <p>Your completed deliveries will appear here.</p>
                     </div>
                 ) : (
                     history.map((order) => (
-                        <div key={order._id} className="history-record-premium glass">
+                        <div key={order._id} className="history-record-premium">
                             <div className="record-header-v2">
                                 <div className="record-main-info">
                                     <span className="order-number">ORD #{order.orderNumber}</span>
@@ -77,11 +82,21 @@ const DeliveryHistory = () => {
                             <div className="record-body-v2">
                                 <div className="location-info">
                                     <FiMapPin />
-                                    <span>{order.deliveryAddress.city}, {order.deliveryAddress.pincode}</span>
+                                    <span>
+                                        {[
+                                            order.deliveryAddress.addressLine1,
+                                            order.deliveryAddress.addressLine2,
+                                            order.deliveryAddress.landmark,
+                                            order.deliveryAddress.city,
+                                            order.deliveryAddress.pincode
+                                        ].filter(Boolean).join(', ')}
+                                    </span>
                                 </div>
                                 <div className="earning-info-v2">
-                                    <span className="earning-lbl">Earned</span>
-                                    <span className="earning-val">₹40</span>
+                                    <span className="earning-lbl">Time Taken</span>
+                                    <span className="earning-val">
+                                        {order.actualDeliveryTime ? Math.round((new Date(order.actualDeliveryTime) - new Date(order.createdAt)) / 60000) + ' min' : '--'}
+                                    </span>
                                 </div>
                             </div>
 

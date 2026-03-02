@@ -17,12 +17,12 @@ import './DeliveryDashboard.css';
 const DeliveryDashboard = () => {
     const { isOnline } = useOutletContext();
     const [stats, setStats] = useState({
-        todayDeliveries: 12,
-        pendingOrders: 3,
-        onlineHours: '5.2',
-        avgDeliveryTime: '14 mins',
-        rating: 4.9,
-        shiftGoal: 20
+        todayDeliveries: 0,
+        pendingOrders: 0,
+        onlineHours: '0.0',
+        avgDeliveryTime: '--',
+        rating: 5.0,
+        shiftGoal: 20 // Fixed shift target
     });
     const [prevOrderId, setPrevOrderId] = useState(null);
     const [currentOrder, setCurrentOrder] = useState(null);

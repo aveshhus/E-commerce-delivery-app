@@ -77,6 +77,22 @@ const deliveryAgentSchema = new mongoose.Schema({
     earnings: {
         today: { type: Number, default: 0 },
         total: { type: Number, default: 0 }
+    },
+    dailyTarget: {
+        type: Number,
+        default: 20
+    },
+    kmDriven: {
+        today: { type: Number, default: 0 },
+        total: { type: Number, default: 0 }
+    },
+    attendance: [{
+        date: String,
+        status: { type: String, enum: ['present', 'absent', 'half-day'], default: 'present' }
+    }],
+    onlineHours: {
+        today: { type: Number, default: 0 },
+        total: { type: Number, default: 0 }
     }
 }, {
     timestamps: true
