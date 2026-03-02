@@ -17,9 +17,10 @@ import './DeliveryDashboard.css';
 const DeliveryDashboard = () => {
     const { isOnline } = useOutletContext();
     const [stats, setStats] = useState({
-        todayEarnings: 450,
         todayDeliveries: 12,
+        pendingOrders: 3,
         onlineHours: '5.2',
+        avgDeliveryTime: '14 mins',
         rating: 4.9,
         shiftGoal: 20
     });
@@ -89,9 +90,10 @@ const DeliveryDashboard = () => {
                 const agent = profileRes.data.agent;
                 setStats(prev => ({
                     ...prev,
-                    todayEarnings: agent.earnings?.today || prev.todayEarnings,
                     todayDeliveries: agent.totalDeliveries || prev.todayDeliveries,
+                    pendingOrders: agent.pendingOrders || prev.pendingOrders,
                     onlineHours: agent.onlineHours || prev.onlineHours,
+                    avgDeliveryTime: agent.avgDeliveryTime || prev.avgDeliveryTime,
                     rating: agent.rating?.average || prev.rating
                 }));
             }
@@ -108,41 +110,34 @@ const DeliveryDashboard = () => {
                 <div className="zep-offline-hero">
                     <div className="zep-offline-badge">Currently Offline</div>
                     <h1>{greeting}, Partner!</h1>
-                    <p>You've earned <strong>₹{stats.todayEarnings}</strong> today. Go online to hit your shift goals.</p>
+                    <p>You've completed <strong>{stats.todayDeliveries} orders</strong> today. Go online to start your shift.</p>
                 </div>
 
                 <div className="zep-stats-overview">
-                    <div className="zep-stat-box">
-                        <div className="zep-stat-val">₹{stats.todayEarnings}</div>
-                        <div className="zep-stat-lbl">Earnings</div>
-                    </div>
                     <div className="zep-stat-box">
                         <div className="zep-stat-val">{stats.todayDeliveries}</div>
                         <div className="zep-stat-lbl">Orders</div>
                     </div>
                     <div className="zep-stat-box">
+                        <div className="zep-stat-val">{stats.avgDeliveryTime}</div>
+                        <div className="zep-stat-lbl">Avg Time</div>
+                    </div>
+                    <div className="zep-stat-box">
                         <div className="zep-stat-val">{stats.onlineHours}h</div>
-                        <div className="zep-stat-lbl">Time</div>
+                        <div className="zep-stat-lbl">Active Time</div>
                     </div>
                 </div>
 
                 <div className="zep-section">
-                    <h3 className="zep-section-title">Incentives & Features</h3>
-                    <div className="zep-feature-card">
-                        <div className="zep-fc-icon"><FiZap /></div>
-                        <div className="zep-fc-content">
-                            <h4>Peak Hour Bonus</h4>
-                            <p>Earn extra ₹15/order between 7 PM - 11 PM</p>
-                        </div>
-                    </div>
+                    <h3 className="zep-section-title">Shift Performance</h3>
                     <div className="zep-feature-card">
                         <div className="zep-fc-icon target"><FiTarget /></div>
                         <div className="zep-fc-content">
-                            <h4>Daily Goal</h4>
-                            <p>Complete {stats.shiftGoal} orders to earn ₹150 bonus</p>
+                            <h4>Daily Target</h4>
+                            <p>Maintain an average delivery time under 15 mins</p>
                             <div className="zep-progress-wrap">
-                                <div className="zep-pb"><div className="zep-fill" style={{ width: `${(stats.todayDeliveries / stats.shiftGoal) * 100}%` }}></div></div>
-                                <span>{stats.todayDeliveries}/{stats.shiftGoal}</span>
+                                <div className="zep-pb"><div className="zep-fill" style={{ width: `${Math.min((stats.todayDeliveries / stats.shiftGoal) * 100, 100)}%` }}></div></div>
+                                <span>{stats.todayDeliveries}/{stats.shiftGoal} Orders</span>
                             </div>
                         </div>
                     </div>
@@ -155,17 +150,17 @@ const DeliveryDashboard = () => {
         <div className="zep-dashboard-content">
             <div className="zep-header-stats">
                 <div className="zep-hs-left">
-                    <span className="zep-hs-lbl">Today's Earnings</span>
-                    <h2 className="zep-hs-val">₹{stats.todayEarnings}</h2>
+                    <span className="zep-hs-lbl">Completed Orders</span>
+                    <h2 className="zep-hs-val">{stats.todayDeliveries}</h2>
                 </div>
                 <div className="zep-hs-right">
                     <div className="zep-mini-stat">
-                        <span>Orders</span>
-                        <strong>{stats.todayDeliveries}</strong>
+                        <span>Avg Time</span>
+                        <strong>{stats.avgDeliveryTime}</strong>
                     </div>
                     <div className="zep-mini-stat">
-                        <span>Rating</span>
-                        <strong>⭐ {stats.rating}</strong>
+                        <span>Active</span>
+                        <strong>{stats.onlineHours}h</strong>
                     </div>
                 </div>
             </div>
@@ -191,12 +186,12 @@ const DeliveryDashboard = () => {
                                     <strong>{currentOrder.items.length}</strong>
                                 </div>
                                 <div className="zep-tm-item">
-                                    <span>Collect</span>
-                                    <strong>₹{currentOrder.totalAmount}</strong>
+                                    <span>Assigned</span>
+                                    <strong>{new Date(currentOrder.updatedAt || currentOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
                                 </div>
                                 <div className="zep-tm-item">
-                                    <span>Est. Time</span>
-                                    <strong className="zep-highlight">12 mins</strong>
+                                    <span>Target</span>
+                                    <strong className="zep-highlight">15 mins</strong>
                                 </div>
                             </div>
                         </div>
@@ -222,14 +217,20 @@ const DeliveryDashboard = () => {
 
             <div className="zep-section">
                 <div className="zep-section-header">
-                    <h3 className="zep-section-title">Hotzones Map</h3>
-                    <span className="zep-link-btn">View Full <FiChevronRight /></span>
+                    <h3 className="zep-section-title">Store Operations</h3>
                 </div>
-                <div className="zep-hotzone-map">
-                    <div className="zep-hz-overlay">
-                        <FiMap className="zep-hz-icon" />
-                        <span>High Demand in Sector 14</span>
-                        <small>+₹20 Surge Active</small>
+                <div className="zep-stats-overview" style={{ marginBottom: 0 }}>
+                    <div className="zep-stat-box">
+                        <div className="zep-stat-val" style={{ color: '#E23744' }}>{stats.pendingOrders}</div>
+                        <div className="zep-stat-lbl">Pending</div>
+                    </div>
+                    <div className="zep-stat-box">
+                        <div className="zep-stat-val">{stats.avgDeliveryTime}</div>
+                        <div className="zep-stat-lbl">Store Avg</div>
+                    </div>
+                    <div className="zep-stat-box">
+                        <div className="zep-stat-val">⭐ {stats.rating}</div>
+                        <div className="zep-stat-lbl">Rating</div>
                     </div>
                 </div>
             </div>
@@ -239,16 +240,16 @@ const DeliveryDashboard = () => {
                 <div className="zep-target-card">
                     <div className="zep-tc-header">
                         <div>
-                            <h4>Daily Goal: 20 Orders</h4>
-                            <p>Win ₹150 extra directly in payout</p>
+                            <h4>Daily Goal: {stats.shiftGoal} Orders</h4>
+                            <p>Maintain fast and safe deliveries</p>
                         </div>
-                        <div className="zep-tc-badge">₹150 Bonus</div>
+                        <div className="zep-tc-badge" style={{ background: '#E3F2FD', color: '#1E88E5' }}>On Track</div>
                     </div>
                     <div className="zep-progress-wrap large">
                         <div className="zep-pb">
-                            <div className="zep-fill" style={{ width: `${(stats.todayDeliveries / stats.shiftGoal) * 100}%` }}></div>
+                            <div className="zep-fill" style={{ width: `${Math.min((stats.todayDeliveries / stats.shiftGoal) * 100, 100)}%` }}></div>
                         </div>
-                        <span className="zep-prog-text">{stats.todayDeliveries} / {stats.shiftGoal} left</span>
+                        <span className="zep-prog-text">{stats.todayDeliveries} / {stats.shiftGoal} Orders Completed</span>
                     </div>
                 </div>
             </div>
