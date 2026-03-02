@@ -94,10 +94,10 @@ const DeliveryOrders = () => {
         <div className="manage-order-container fade-in">
             <div className="order-top-bar">
                 <h1 className="page-title">Current Task</h1>
-                <span className="order-time-badge glow-text">Est. 15 mins</span>
+                <span className="order-time-badge">Est. 15 mins</span>
             </div>
 
-            <div className="order-details-card glass-v3">
+            <div className="order-details-card">
                 <div className="card-header">
                     <div className="tracking-id">ORD #{order.orderNumber}</div>
                     <div className={`status-pill-indicator ${order.status}`}>{order.status.replace('_', ' ')}</div>
@@ -190,7 +190,7 @@ const DeliveryOrders = () => {
 
             {showOTPModal && (
                 <div className="otp-portal-v3">
-                    <div className="otp-card-v3 glass">
+                    <div className="otp-card-v3">
                         <button className="otp-close-v3" onClick={() => setShowOTPModal(false)}><FiX /></button>
                         <div className="otp-icon-v3"><FiCheckCircle /></div>
                         <h2>Verification</h2>

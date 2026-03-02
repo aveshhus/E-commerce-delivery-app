@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import {
-    FiTrendingUp,
-    FiCheckCircle,
-    FiDollarSign,
     FiNavigation,
-    FiPhone,
     FiMapPin,
-    FiAward,
     FiClock,
-    FiZap
+    FiZap,
+    FiTarget,
+    FiChevronRight,
+    FiActivity,
+    FiMap
 } from 'react-icons/fi';
 import deliveryService from '../../services/deliveryService';
 import toast from 'react-hot-toast';
@@ -18,10 +17,11 @@ import './DeliveryDashboard.css';
 const DeliveryDashboard = () => {
     const { isOnline } = useOutletContext();
     const [stats, setStats] = useState({
-        todayEarnings: 160,
-        todayDeliveries: 4,
+        todayEarnings: 450,
+        todayDeliveries: 12,
         onlineHours: '5.2',
-        rating: 4.9
+        rating: 4.9,
+        shiftGoal: 20
     });
     const [prevOrderId, setPrevOrderId] = useState(null);
     const [currentOrder, setCurrentOrder] = useState(null);
@@ -35,7 +35,6 @@ const DeliveryDashboard = () => {
         else setGreeting('Good Evening');
 
         fetchDashboardData();
-        // Poll more frequently when online to catch new orders fast (Zepto speed)
         const interval = setInterval(fetchDashboardData, 10000);
         return () => {
             clearInterval(interval);
@@ -73,7 +72,7 @@ const DeliveryDashboard = () => {
 
                 if (newOrder && newOrder._id !== prevOrderId) {
                     setPrevOrderId(newOrder._id);
-                    if (prevOrderId !== null) { // Only notify on subsequent changes
+                    if (prevOrderId !== null) {
                         playNotification();
                         toast.success("🚨 NEW TASK ASSIGNED!", { duration: 6000 });
                         document.title = "🚨 NEW TASK - KM";
@@ -88,12 +87,13 @@ const DeliveryDashboard = () => {
 
             if (profileRes.success) {
                 const agent = profileRes.data.agent;
-                setStats({
-                    todayEarnings: agent.earnings?.today || 0,
-                    todayDeliveries: agent.totalDeliveries || 0, // In real app, filter totalDeliveries by today
-                    onlineHours: agent.onlineHours || '0.0',
-                    rating: agent.rating?.average || 5.0
-                });
+                setStats(prev => ({
+                    ...prev,
+                    todayEarnings: agent.earnings?.today || prev.todayEarnings,
+                    todayDeliveries: agent.totalDeliveries || prev.todayDeliveries,
+                    onlineHours: agent.onlineHours || prev.onlineHours,
+                    rating: agent.rating?.average || prev.rating
+                }));
             }
         } catch (error) {
             console.error("Dashboard sync error:", error);
@@ -104,34 +104,46 @@ const DeliveryDashboard = () => {
 
     if (!isOnline && !currentOrder) {
         return (
-            <div className="offline-state-container fade-in">
-                <div className="offline-card glass">
-                    <div className="status-badge-offline">Currently Resting</div>
+            <div className="zep-dashboard-content">
+                <div className="zep-offline-hero">
+                    <div className="zep-offline-badge">Currently Offline</div>
                     <h1>{greeting}, Partner!</h1>
-                    <p>You've completed <strong>{stats.todayDeliveries} orders</strong> today. Go online to earn more!</p>
+                    <p>You've earned <strong>₹{stats.todayEarnings}</strong> today. Go online to hit your shift goals.</p>
+                </div>
 
-                    <div className="mini-stats-grid">
-                        <div className="m-stat glass">
-                            <FiDollarSign />
-                            <span>₹{stats.todayEarnings}</span>
-                        </div>
-                        <div className="m-stat glass">
-                            <FiCheckCircle />
-                            <span>{stats.todayDeliveries}</span>
-                        </div>
-                        <div className="m-stat glass">
-                            <FiClock />
-                            <span>{stats.onlineHours}h</span>
-                        </div>
+                <div className="zep-stats-overview">
+                    <div className="zep-stat-box">
+                        <div className="zep-stat-val">₹{stats.todayEarnings}</div>
+                        <div className="zep-stat-lbl">Earnings</div>
+                    </div>
+                    <div className="zep-stat-box">
+                        <div className="zep-stat-val">{stats.todayDeliveries}</div>
+                        <div className="zep-stat-lbl">Orders</div>
+                    </div>
+                    <div className="zep-stat-box">
+                        <div className="zep-stat-val">{stats.onlineHours}h</div>
+                        <div className="zep-stat-lbl">Time</div>
                     </div>
                 </div>
 
-                <div className="offline-info-cards">
-                    <div className="info-card glass">
-                        <FiZap />
-                        <div className="info-txt">
-                            <h4>Peak Hours</h4>
-                            <p>6:00 PM - 10:00 PM</p>
+                <div className="zep-section">
+                    <h3 className="zep-section-title">Incentives & Features</h3>
+                    <div className="zep-feature-card">
+                        <div className="zep-fc-icon"><FiZap /></div>
+                        <div className="zep-fc-content">
+                            <h4>Peak Hour Bonus</h4>
+                            <p>Earn extra ₹15/order between 7 PM - 11 PM</p>
+                        </div>
+                    </div>
+                    <div className="zep-feature-card">
+                        <div className="zep-fc-icon target"><FiTarget /></div>
+                        <div className="zep-fc-content">
+                            <h4>Daily Goal</h4>
+                            <p>Complete {stats.shiftGoal} orders to earn ₹150 bonus</p>
+                            <div className="zep-progress-wrap">
+                                <div className="zep-pb"><div className="zep-fill" style={{ width: `${(stats.todayDeliveries / stats.shiftGoal) * 100}%` }}></div></div>
+                                <span>{stats.todayDeliveries}/{stats.shiftGoal}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -140,90 +152,103 @@ const DeliveryDashboard = () => {
     }
 
     return (
-        <div className="dashboard-content fade-in">
-            <div className="welcome-section">
-                <span>{greeting},</span>
-                <h1>Delivery Partner</h1>
-            </div>
-
-            <div className="stats-marquee glass">
-                <div className="marquee-item">
-                    <div className="m-icon earnings"><FiDollarSign /></div>
-                    <div className="m-data">
-                        <span className="m-val">₹{stats.todayEarnings}</span>
-                        <span className="m-lbl">Earnings</span>
-                    </div>
+        <div className="zep-dashboard-content">
+            <div className="zep-header-stats">
+                <div className="zep-hs-left">
+                    <span className="zep-hs-lbl">Today's Earnings</span>
+                    <h2 className="zep-hs-val">₹{stats.todayEarnings}</h2>
                 </div>
-                <div className="m-divider"></div>
-                <div className="marquee-item">
-                    <div className="m-icon orders"><FiCheckCircle /></div>
-                    <div className="m-data">
-                        <span className="m-val">{stats.todayDeliveries}</span>
-                        <span className="m-lbl">Orders</span>
+                <div className="zep-hs-right">
+                    <div className="zep-mini-stat">
+                        <span>Orders</span>
+                        <strong>{stats.todayDeliveries}</strong>
                     </div>
-                </div>
-                <div className="m-divider"></div>
-                <div className="marquee-item">
-                    <div className="m-icon rating"><FiAward /></div>
-                    <div className="m-data">
-                        <span className="m-val">{stats.rating}</span>
-                        <span className="m-lbl">Rating</span>
+                    <div className="zep-mini-stat">
+                        <span>Rating</span>
+                        <strong>⭐ {stats.rating}</strong>
                     </div>
                 </div>
             </div>
 
             {currentOrder ? (
-                <div className="order-notification-hero glass pulse-border">
-                    <div className="notif-header">
-                        <span className="active-dot"></span>
-                        <h3>Active Delivery Assigned</h3>
-                    </div>
-                    <div className="order-preview-card">
-                        <div className="order-loc">
-                            <FiMapPin className="pin-icon" />
-                            <div>
-                                <h4>{currentOrder.deliveryAddress.fullName}</h4>
-                                <p>{currentOrder.deliveryAddress.landmark}, {currentOrder.deliveryAddress.city}</p>
+                <div className="zep-active-task-wrapper">
+                    <div className="zep-active-task-card">
+                        <div className="zep-atc-header">
+                            <div className="zep-pulse-dot"></div>
+                            <span>Active Order Assigned</span>
+                        </div>
+                        <div className="zep-atc-body">
+                            <div className="zep-location-row">
+                                <FiMapPin className="zep-icon-pin" />
+                                <div>
+                                    <h4>{currentOrder.deliveryAddress.fullName}</h4>
+                                    <p>{currentOrder.deliveryAddress.landmark}, {currentOrder.deliveryAddress.city}</p>
+                                </div>
+                            </div>
+                            <div className="zep-task-meta">
+                                <div className="zep-tm-item">
+                                    <span>Items</span>
+                                    <strong>{currentOrder.items.length}</strong>
+                                </div>
+                                <div className="zep-tm-item">
+                                    <span>Collect</span>
+                                    <strong>₹{currentOrder.totalAmount}</strong>
+                                </div>
+                                <div className="zep-tm-item">
+                                    <span>Est. Time</span>
+                                    <strong className="zep-highlight">12 mins</strong>
+                                </div>
                             </div>
                         </div>
-                        <div className="order-meta">
-                            <span>{currentOrder.items.length} Items</span>
-                            <span className="dot"></span>
-                            <span>₹{currentOrder.totalAmount}</span>
-                        </div>
+                        <Link to="/delivery/orders" className="zep-btn-primary">
+                            View Task Details <FiChevronRight />
+                        </Link>
                     </div>
-                    <Link to="/delivery/orders" className="hero-action-btn">
-                        Manage Task <FiNavigation />
-                    </Link>
                 </div>
             ) : (
-                <div className="searching-hero glass">
-                    <div className="radar-v2">
-                        <div className="r-ring"></div>
-                        <div className="r-ring"></div>
-                        <div className="r-center"></div>
+                <div className="zep-scanning-wrapper">
+                    <div className="zep-radar-container">
+                        <div className="zep-radar-ring r1"></div>
+                        <div className="zep-radar-ring r2"></div>
+                        <div className="zep-radar-ring r3"></div>
+                        <div className="zep-radar-core">
+                            <FiActivity />
+                        </div>
                     </div>
-                    <h2>Scanning Your Area</h2>
-                    <p>New orders will appear here automatically</p>
+                    <h3>Finding nearby orders</h3>
+                    <p>Stay near the dark store for faster pairing</p>
                 </div>
             )}
 
-            <div className="performance-section">
-                <h2 className="section-title">Your Performance</h2>
-                <div className="perf-grid">
-                    <div className="perf-card glass">
-                        <div className="perf-header">
-                            <span className="perf-lbl">Ontime Delivery</span>
-                            <span className="perf-val">98%</span>
-                        </div>
-                        <div className="progress-bar"><div className="fill" style={{ width: '98%' }}></div></div>
+            <div className="zep-section">
+                <div className="zep-section-header">
+                    <h3 className="zep-section-title">Hotzones Map</h3>
+                    <span className="zep-link-btn">View Full <FiChevronRight /></span>
+                </div>
+                <div className="zep-hotzone-map">
+                    <div className="zep-hz-overlay">
+                        <FiMap className="zep-hz-icon" />
+                        <span>High Demand in Sector 14</span>
+                        <small>+₹20 Surge Active</small>
                     </div>
-                    <div className="perf-card glass">
-                        <div className="perf-header">
-                            <span className="perf-lbl">Acceptance Rate</span>
-                            <span className="perf-val">92%</span>
+                </div>
+            </div>
+
+            <div className="zep-section">
+                <h3 className="zep-section-title">Shift Progress</h3>
+                <div className="zep-target-card">
+                    <div className="zep-tc-header">
+                        <div>
+                            <h4>Daily Goal: 20 Orders</h4>
+                            <p>Win ₹150 extra directly in payout</p>
                         </div>
-                        <div className="progress-bar"><div className="fill" style={{ width: '92%' }}></div></div>
+                        <div className="zep-tc-badge">₹150 Bonus</div>
+                    </div>
+                    <div className="zep-progress-wrap large">
+                        <div className="zep-pb">
+                            <div className="zep-fill" style={{ width: `${(stats.todayDeliveries / stats.shiftGoal) * 100}%` }}></div>
+                        </div>
+                        <span className="zep-prog-text">{stats.todayDeliveries} / {stats.shiftGoal} left</span>
                     </div>
                 </div>
             </div>
