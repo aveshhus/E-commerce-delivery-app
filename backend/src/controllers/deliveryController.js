@@ -34,8 +34,34 @@ exports.getProfile = async (req, res) => {
         const pendingStoreOrders = await Order.countDocuments({ status: { $in: ['pending', 'processing', 'packed'] } });
         agentObj.pendingOrders = pendingStoreOrders;
 
-        // 4. Online Hours (For now, exact track would require shift logs, default to 0)
-        agentObj.onlineHours = '0.0';
+        // 4. Online Hours & Driving Metrics
+        // 4. Online Hours & Driving Metrics
+        let currentOnlineHours = agent.onlineHours?.today || 0;
+        if (agent.isOnline && agent.lastOnlineAt) {
+            currentOnlineHours += (new Date() - new Date(agent.lastOnlineAt)) / (1000 * 60 * 60);
+        }
+        agentObj.onlineHours = currentOnlineHours.toFixed(1);
+        agentObj.kmDriven = agent.kmDriven?.today || 0;
+
+        // Populate fallback for ID if not generated
+        if (!agentObj.employeeId) {
+            agentObj.employeeId = 'KM-' + agent._id.toString().slice(-6).toUpperCase();
+        }
+
+        // 5. Attendance Calendar
+        agentObj.attendance = agent.attendance || [];
+
+        // 6. Career Stats
+        const totalHoursWorked = agent.attendance ? agent.attendance.reduce((acc, curr) => acc + (curr.hours || 0), 0) : 0;
+        const totalDays = agent.attendance && agent.attendance.length > 0 ? agent.attendance.length : 1;
+        const presentDays = agent.attendance ? agent.attendance.filter(a => a.status === 'present').length : 0;
+        const presentPercentage = Math.round((presentDays / totalDays) * 100);
+
+        agentObj.careerStats = {
+            joinedDate: agent.createdAt,
+            totalHoursWorked: totalHoursWorked.toFixed(1),
+            presentPercentage: presentPercentage
+        };
 
         res.json({ success: true, data: { agent: agentObj } });
     } catch (error) {
@@ -207,6 +233,29 @@ exports.updateLocation = async (req, res) => {
     }
 };
 
+// Toggle break
+exports.toggleBreak = async (req, res) => {
+    try {
+        let agent = await DeliveryAgent.findOne({ user: req.user._id });
+        if (!agent) return res.status(404).json({ success: false, message: 'Agent not found' });
+
+        if (!agent.isOnline) {
+            return res.status(400).json({ success: false, message: 'You must be online to take a break' });
+        }
+
+        agent.isOnBreak = !agent.isOnBreak;
+        if (agent.isOnBreak) {
+            agent.isAvailable = false;
+        } else {
+            agent.isAvailable = agent.currentOrder ? false : true;
+        }
+        await agent.save();
+        res.json({ success: true, data: { agent } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 // Toggle availability
 exports.toggleAvailability = async (req, res) => {
     try {
@@ -216,9 +265,39 @@ exports.toggleAvailability = async (req, res) => {
             console.log("Toggle failed: Agent not found for user ID", req.user._id);
             return res.status(404).json({ success: false, message: 'Agent not found' });
         }
+
         agent.isOnline = !agent.isOnline;
-        if (!agent.isOnline) agent.isAvailable = false;
-        else agent.isAvailable = true;
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        if (!agent.isOnline) {
+            agent.isAvailable = false;
+            agent.isOnBreak = false; // reset break on go offline
+            // Went offline, calculate hours
+            if (agent.lastOnlineAt) {
+                const hoursPassed = (new Date() - new Date(agent.lastOnlineAt)) / (1000 * 60 * 60);
+                agent.onlineHours.today = (agent.onlineHours.today || 0) + hoursPassed;
+                agent.onlineHours.total = (agent.onlineHours.total || 0) + hoursPassed;
+
+                // update attendance
+                const attIndex = agent.attendance.findIndex(a => a.date === todayStr);
+                if (attIndex >= 0) {
+                    agent.attendance[attIndex].hours += hoursPassed;
+                } else {
+                    agent.attendance.push({ date: todayStr, status: 'present', hours: hoursPassed });
+                }
+            }
+            agent.lastOfflineAt = new Date();
+        } else {
+            agent.isAvailable = true;
+            agent.lastOnlineAt = new Date();
+
+            // create attendance if not exists
+            const attIndex = agent.attendance.findIndex(a => a.date === todayStr);
+            if (attIndex === -1) {
+                agent.attendance.push({ date: todayStr, status: 'present', hours: 0 });
+            }
+        }
+
         await agent.save();
         console.log("Toggle success! isOnline:", agent.isOnline, "Agent ID:", agent._id);
         res.json({ success: true, data: { agent } });

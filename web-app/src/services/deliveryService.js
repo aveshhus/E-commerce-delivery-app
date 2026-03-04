@@ -29,6 +29,10 @@ const deliveryService = {
         const response = await axios.put(`${API_URL}/delivery/toggle-availability`, {}, getAuthHeader());
         return response.data;
     },
+    toggleBreak: async () => {
+        const response = await axios.put(`${API_URL}/delivery/toggle-break`, {}, getAuthHeader());
+        return response.data;
+    },
     getCurrentDelivery: async () => {
         const response = await axios.get(`${API_URL}/delivery/current-delivery`, getAuthHeader());
         return response.data;

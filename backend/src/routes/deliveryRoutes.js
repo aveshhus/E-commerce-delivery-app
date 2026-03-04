@@ -10,6 +10,7 @@ router.get('/application-status', auth, deliveryController.getProfile);
 router.get('/profile', auth, authorize('delivery', 'admin', 'superadmin'), deliveryController.getProfile);
 router.put('/location', auth, authorize('delivery', 'admin', 'superadmin'), deliveryController.updateLocation);
 router.put('/toggle-availability', auth, authorize('delivery', 'admin', 'superadmin'), deliveryController.toggleAvailability);
+router.put('/toggle-break', auth, authorize('delivery', 'admin', 'superadmin'), deliveryController.toggleBreak);
 router.get('/current-delivery', auth, authorize('delivery', 'admin', 'superadmin'), deliveryController.getCurrentDelivery);
 router.put('/status', auth, authorize('delivery', 'admin', 'superadmin'), deliveryController.updateStatus);
 router.get('/history', auth, authorize('delivery', 'admin', 'superadmin'), deliveryController.getAgentHistory);

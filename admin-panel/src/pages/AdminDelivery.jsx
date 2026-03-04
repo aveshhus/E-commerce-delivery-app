@@ -9,7 +9,7 @@ const AdminDelivery = () => {
     const [activeTab, setActiveTab] = useState('agents'); // 'agents' or 'applications'
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
-    const [form, setForm] = useState({ name: '', phone: '', email: '', vehicleType: 'bike', vehicleNumber: '' });
+    const [form, setForm] = useState({ name: '', phone: '', email: '', vehicleType: 'bike', vehicleNumber: '', dailyTarget: 20 });
 
     useEffect(() => {
         fetchAgents();
@@ -53,8 +53,8 @@ const AdminDelivery = () => {
         } catch (err) { toast.error(err.message || 'Action failed'); }
     };
 
-    const openNew = () => { setEditing(null); setForm({ name: '', phone: '', email: '', vehicleType: 'bike', vehicleNumber: '' }); setShowModal(true); };
-    const openEdit = (a) => { setEditing(a._id); setForm({ name: a.name, phone: a.phone, email: a.email || '', vehicleType: a.vehicleType, vehicleNumber: a.vehicleNumber || '' }); setShowModal(true); };
+    const openNew = () => { setEditing(null); setForm({ name: '', phone: '', email: '', vehicleType: 'bike', vehicleNumber: '', dailyTarget: 20 }); setShowModal(true); };
+    const openEdit = (a) => { setEditing(a._id); setForm({ name: a.name, phone: a.phone, email: a.email || '', vehicleType: a.vehicleType, vehicleNumber: a.vehicleNumber || '', dailyTarget: a.dailyTarget || 20 }); setShowModal(true); };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -90,7 +90,7 @@ const AdminDelivery = () => {
             <div className="card">
                 {activeTab === 'agents' ? (
                     <table className="admin-table">
-                        <thead><tr><th>Agent</th><th>Phone</th><th>Vehicle</th><th>Status</th><th>Deliveries</th><th>Rating</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>Agent</th><th>Phone</th><th>Vehicle</th><th>Status</th><th>Target</th><th>Deliveries</th><th>Rating</th><th>Actions</th></tr></thead>
                         <tbody>
                             {agents.map(a => (
                                 <tr key={a._id}>
@@ -107,6 +107,7 @@ const AdminDelivery = () => {
                                             </span>
                                         </div>
                                     </td>
+                                    <td style={{ fontWeight: 700, color: 'var(--primary)' }}>{a.dailyTarget || 20}</td>
                                     <td style={{ fontWeight: 700 }}>{a.totalDeliveries || 0}</td>
                                     <td>⭐ {a.rating?.average?.toFixed(1) || (typeof a.rating === 'number' ? a.rating.toFixed(1) : '0.0')}</td>
                                     <td>
@@ -119,7 +120,7 @@ const AdminDelivery = () => {
                                     </td>
                                 </tr>
                             ))}
-                            {agents.length === 0 && <tr><td colSpan={7} className="empty-state">No active delivery agents found</td></tr>}
+                            {agents.length === 0 && <tr><td colSpan={8} className="empty-state">No active delivery agents found</td></tr>}
                         </tbody>
                     </table>
                 ) : (
@@ -179,6 +180,10 @@ const AdminDelivery = () => {
                                         </select>
                                     </div>
                                     <div className="form-group"><label className="form-label">Vehicle Number</label><input className="form-input" value={form.vehicleNumber} onChange={e => setForm({ ...form, vehicleNumber: e.target.value })} /></div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Daily Target (Orders)</label>
+                                    <input className="form-input" type="number" min="1" required value={form.dailyTarget} onChange={e => setForm({ ...form, dailyTarget: Number(e.target.value) })} />
                                 </div>
                             </div>
                             <div className="modal-footer">

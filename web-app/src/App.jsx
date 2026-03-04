@@ -29,6 +29,9 @@ import DeliveryLayout from './layouts/DeliveryLayout';
 import DeliveryDashboard from './pages/delivery/DeliveryDashboard';
 import DeliveryOrders from './pages/delivery/DeliveryOrders';
 import DeliveryHistory from './pages/delivery/DeliveryHistory';
+import DeliveryRoutePage from './pages/delivery/DeliveryRoute';
+import DeliveryPerformance from './pages/delivery/DeliveryPerformance';
+import DeliveryMenu from './pages/delivery/DeliveryMenu';
 import PartnerApplication from './pages/PartnerApplication';
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
@@ -84,6 +87,9 @@ const AppContent = () => {
             <Route index element={<DeliveryDashboard />} />
             <Route path="orders" element={<DeliveryOrders />} />
             <Route path="history" element={<DeliveryHistory />} />
+            <Route path="route" element={<DeliveryRoutePage />} />
+            <Route path="performance" element={<DeliveryPerformance />} />
+            <Route path="menu" element={<DeliveryMenu />} />
           </Route>
           <Route path="*" element={<Navigate to="/delivery" replace />} />
         </Routes>

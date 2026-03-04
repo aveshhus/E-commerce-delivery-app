@@ -8,23 +8,32 @@ import {
     FiTarget,
     FiChevronRight,
     FiActivity,
-    FiMap
+    FiMap,
+    FiCalendar,
+    FiCheckCircle,
+    FiXCircle,
+    FiCoffee,
+    FiPower,
+    FiTruck
 } from 'react-icons/fi';
 import deliveryService from '../../services/deliveryService';
 import toast from 'react-hot-toast';
 import './DeliveryDashboard.css';
 
 const DeliveryDashboard = () => {
-    const { isOnline } = useOutletContext();
+    const { isOnline, isOnBreak, agentData, toggleStatus, toggleBreakMode, loading: contextLoading } = useOutletContext();
     const [stats, setStats] = useState({
         todayDeliveries: 0,
-        pendingOrders: 0,
-        onlineHours: '0.0',
+        kmDriven: 0,
         avgDeliveryTime: '--',
         rating: 5.0,
-        shiftGoal: 20 // Fixed shift target
+        performance: {
+            onTimePercentage: 100,
+            grade: 'A'
+        },
+        attendance: []
     });
-    const [prevOrderId, setPrevOrderId] = useState(null);
+
     const [currentOrder, setCurrentOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [greeting, setGreeting] = useState('');
@@ -39,9 +48,9 @@ const DeliveryDashboard = () => {
         const interval = setInterval(fetchDashboardData, 10000);
         return () => {
             clearInterval(interval);
-            document.title = "Krishna Marketing";
+            document.title = "KM Operations";
         };
-    }, [isOnline]);
+    }, [isOnline, isOnBreak]);
 
     const playNotification = () => {
         try {
@@ -69,33 +78,23 @@ const DeliveryDashboard = () => {
 
             if (orderRes.success) {
                 const newOrder = orderRes.data.order;
-                setCurrentOrder(newOrder);
-
-                if (newOrder && newOrder._id !== prevOrderId) {
-                    setPrevOrderId(newOrder._id);
-                    if (prevOrderId !== null) {
-                        playNotification();
-                        toast.success("🚨 NEW TASK ASSIGNED!", { duration: 6000 });
-                        document.title = "🚨 NEW TASK - KM";
-                    } else if (newOrder) {
-                        setPrevOrderId(newOrder._id);
-                    }
-                } else if (!newOrder) {
-                    setPrevOrderId(null);
-                    document.title = isOnline ? "ONLINE - KM Partner" : "OFFLINE - KM Partner";
+                if (!currentOrder && newOrder) {
+                    playNotification();
+                    toast.success("🚨 NEW TASK ASSIGNED!", { duration: 6000 });
                 }
+                setCurrentOrder(newOrder);
             }
 
             if (profileRes.success) {
                 const agent = profileRes.data.agent;
-                setStats(prev => ({
-                    ...prev,
-                    todayDeliveries: agent.totalDeliveries || prev.todayDeliveries,
-                    pendingOrders: agent.pendingOrders || prev.pendingOrders,
-                    onlineHours: agent.onlineHours || prev.onlineHours,
-                    avgDeliveryTime: agent.avgDeliveryTime || prev.avgDeliveryTime,
-                    rating: agent.rating?.average || prev.rating
-                }));
+                setStats({
+                    todayDeliveries: agent.totalDeliveries || 0,
+                    kmDriven: agent.kmDriven || 0,
+                    avgDeliveryTime: agent.avgDeliveryTime || '--',
+                    rating: agent.rating?.average || 5.0,
+                    performance: agent.performance || { onTimePercentage: 100, grade: 'A' },
+                    attendance: agent.attendance || [],
+                });
             }
         } catch (error) {
             console.error("Dashboard sync error:", error);
@@ -104,155 +103,150 @@ const DeliveryDashboard = () => {
         }
     };
 
-    if (!isOnline && !currentOrder) {
-        return (
-            <div className="zep-dashboard-content">
-                <div className="zep-offline-hero">
-                    <div className="zep-offline-badge">Currently Offline</div>
-                    <h1>{greeting}, Partner!</h1>
-                    <p>You've completed <strong>{stats.todayDeliveries} orders</strong> today. Go online to start your shift.</p>
-                </div>
-
-                <div className="zep-stats-overview">
-                    <div className="zep-stat-box">
-                        <div className="zep-stat-val">{stats.todayDeliveries}</div>
-                        <div className="zep-stat-lbl">Orders</div>
-                    </div>
-                    <div className="zep-stat-box">
-                        <div className="zep-stat-val">{stats.avgDeliveryTime}</div>
-                        <div className="zep-stat-lbl">Avg Time</div>
-                    </div>
-                    <div className="zep-stat-box">
-                        <div className="zep-stat-val">{stats.onlineHours}h</div>
-                        <div className="zep-stat-lbl">Active Time</div>
-                    </div>
-                </div>
-
-                <div className="zep-section">
-                    <h3 className="zep-section-title">Shift Performance</h3>
-                    <div className="zep-feature-card">
-                        <div className="zep-fc-icon target"><FiTarget /></div>
-                        <div className="zep-fc-content">
-                            <h4>Daily Target</h4>
-                            <p>Maintain an average delivery time under 15 mins</p>
-                            <div className="zep-progress-wrap">
-                                <div className="zep-pb"><div className="zep-fill" style={{ width: `${Math.min((stats.todayDeliveries / stats.shiftGoal) * 100, 100)}%` }}></div></div>
-                                <span>{stats.todayDeliveries}/{stats.shiftGoal} Orders</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
+    // Derived Status state
+    let activeStatus = 'offline';
+    if (isOnline) {
+        if (currentOrder) activeStatus = 'delivery';
+        else if (isOnBreak) activeStatus = 'break';
+        else activeStatus = 'available';
     }
 
+    const todayStr = new Date().toISOString().split('T')[0];
+    const presentToday = stats.attendance.find(a => a.date === todayStr);
+
     return (
-        <div className="zep-dashboard-content">
-            <div className="zep-header-stats">
-                <div className="zep-hs-left">
-                    <span className="zep-hs-lbl">Completed Orders</span>
-                    <h2 className="zep-hs-val">{stats.todayDeliveries}</h2>
-                </div>
-                <div className="zep-hs-right">
-                    <div className="zep-mini-stat">
-                        <span>Avg Time</span>
-                        <strong>{stats.avgDeliveryTime}</strong>
+        <div className="op-dashboard-container">
+            {/* Top Identity Section */}
+            <div className="op-welcome-card">
+                <div className="op-welcome-header">
+                    <h2>👋 {greeting}, {agentData?.name?.split(' ')[0] || 'Partner'}</h2>
+                    <br />
+                    <span className="op-emp-badge">EMP: {agentData?.employeeId || 'KM-PENDING'}</span>
+
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                        <div style={{ background: 'rgba(255,184,0,0.1)', color: '#FFB800', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '800' }}>⭐ 5 Star Hero</div>
+                        <div style={{ background: 'rgba(0,177,79,0.1)', color: '#00B14F', padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '800' }}>🚀 100 Orders Club</div>
                     </div>
-                    <div className="zep-mini-stat">
-                        <span>Active</span>
-                        <strong>{stats.onlineHours}h</strong>
+                </div>
+                <div className="op-shift-details">
+                    <div className="op-shift-item">
+                        <FiMapPin /> <span>{agentData?.hubName || 'Main Hub'}</span>
+                    </div>
+                    <div className="op-shift-item">
+                        <FiClock /> <span>{agentData?.shiftTime || '09:00 AM - 06:00 PM'}</span>
                     </div>
                 </div>
             </div>
 
+            {/* Current Status Toggle Grid */}
+            <div className="op-status-grid">
+                <button
+                    disabled={contextLoading || currentOrder}
+                    onClick={() => { if (!isOnline) toggleStatus(); else if (isOnBreak) toggleBreakMode(); }}
+                    className={`op-status-btn ${activeStatus === 'available' ? 'active available' : ''}`}
+                >
+                    <div className="op-s-dot s-green"></div>
+                    Available
+                </button>
+                <div className={`op-status-btn disabled ${activeStatus === 'delivery' ? 'active delivery' : ''}`}>
+                    <div className="op-s-dot s-yellow"></div>
+                    On Delivery
+                </div>
+                <button
+                    disabled={contextLoading || currentOrder || !isOnline}
+                    onClick={toggleBreakMode}
+                    className={`op-status-btn ${activeStatus === 'break' ? 'active break' : ''}`}
+                >
+                    <div className="op-s-dot s-red"></div>
+                    Break
+                </button>
+                <button
+                    disabled={contextLoading || currentOrder}
+                    onClick={() => { if (isOnline) toggleStatus(); }}
+                    className={`op-status-btn ${activeStatus === 'offline' ? 'active offline' : ''}`}
+                >
+                    <div className="op-s-dot s-black"></div>
+                    Offline
+                </button>
+            </div>
+
+            {/* Performance Snapshot */}
+            <h3 className="op-section-title">Performance Snapshot</h3>
+            <div className="op-perf-grid">
+                <div className="op-perf-box">
+                    <strong>{stats.todayDeliveries}</strong>
+                    <span>Orders Today</span>
+                </div>
+                <div className="op-perf-box">
+                    <strong style={{ color: stats.performance.onTimePercentage > 90 ? '#0C831F' : '#E23744' }}>
+                        {stats.performance.onTimePercentage}%
+                    </strong>
+                    <span>On-Time %</span>
+                </div>
+                <div className="op-perf-box">
+                    <strong>{stats.avgDeliveryTime}</strong>
+                    <span>Avg Time</span>
+                </div>
+                <div className="op-perf-box">
+                    <strong>{stats.kmDriven} km</strong>
+                    <span>KM Covered</span>
+                </div>
+                <div className="op-perf-box">
+                    <strong>⭐ {stats.rating.toFixed(1)}</strong>
+                    <span>Rating</span>
+                </div>
+                <div className="op-perf-box">
+                    <strong style={{ color: presentToday ? '#0C831F' : '#E23744' }}>
+                        {presentToday ? 'Present' : 'Absent'}
+                    </strong>
+                    <span>Attendance</span>
+                </div>
+            </div>
+
+            {/* Task Router Card */}
             {currentOrder ? (
-                <div className="zep-active-task-wrapper">
-                    <div className="zep-active-task-card">
-                        <div className="zep-atc-header">
-                            <div className="zep-pulse-dot"></div>
-                            <span>Active Order Assigned</span>
-                        </div>
-                        <div className="zep-atc-body">
-                            <div className="zep-location-row">
-                                <FiMapPin className="zep-icon-pin" />
-                                <div>
-                                    <h4>{currentOrder.deliveryAddress.fullName}</h4>
-                                    <p>{currentOrder.deliveryAddress.landmark}, {currentOrder.deliveryAddress.city}</p>
-                                </div>
-                            </div>
-                            <div className="zep-task-meta">
-                                <div className="zep-tm-item">
-                                    <span>Items</span>
-                                    <strong>{currentOrder.items.length}</strong>
-                                </div>
-                                <div className="zep-tm-item">
-                                    <span>Assigned</span>
-                                    <strong>{new Date(currentOrder.updatedAt || currentOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
-                                </div>
-                                <div className="zep-tm-item">
-                                    <span>Target</span>
-                                    <strong className="zep-highlight">15 mins</strong>
-                                </div>
-                            </div>
-                        </div>
-                        <Link to="/delivery/orders" className="zep-btn-primary">
-                            View Task Details <FiChevronRight />
-                        </Link>
+                <div className="op-task-card">
+                    <div className="op-tc-head">
+                        <span className="op-tc-badge">Active Task</span>
+                        <div className="op-tc-timer">15m Left</div>
                     </div>
+                    <h4>Delivery to {currentOrder.deliveryAddress?.fullName}</h4>
+                    <p>{currentOrder.deliveryAddress?.landmark}, {currentOrder.deliveryAddress?.city}</p>
+                    <Link to="/delivery/orders" className="op-btn-primary">
+                        Open Order Screen <FiChevronRight />
+                    </Link>
                 </div>
             ) : (
-                <div className="zep-scanning-wrapper">
-                    <div className="zep-radar-container">
-                        <div className="zep-radar-ring r1"></div>
-                        <div className="zep-radar-ring r2"></div>
-                        <div className="zep-radar-ring r3"></div>
-                        <div className="zep-radar-core">
-                            <FiActivity />
+                <div className="op-radar-card">
+                    {isOnline && !isOnBreak ? (
+                        <>
+                            <div className="op-radar-anim">
+                                <FiActivity />
+                            </div>
+                            <h4>Scanning for Orders</h4>
+                            <p>Stay within 2km of {agentData?.hubName || 'Main Hub'}</p>
+                        </>
+                    ) : (
+                        <div className="op-radar-inactive">
+                            {isOnBreak ? <FiCoffee className="inactive-icon" /> : <FiPower className="inactive-icon" />}
+                            <h4>{isOnBreak ? "You're on Break" : "Currently Offline"}</h4>
+                            <p>{isOnBreak ? "Enjoy your coffee. End break to resume." : "Go online to start receiving orders."}</p>
                         </div>
-                    </div>
-                    <h3>Finding nearby orders</h3>
-                    <p>Stay near the dark store for faster pairing</p>
+                    )}
                 </div>
             )}
 
-            <div className="zep-section">
-                <div className="zep-section-header">
-                    <h3 className="zep-section-title">Store Operations</h3>
+            <div className="op-perf-warning-card">
+                <div className="op-pwc-left">
+                    <span>Performance Grade</span>
+                    <h1 style={{ color: stats.performance.grade === 'A' ? '#0C831F' : '#E23744' }}>{stats.performance.grade}</h1>
                 </div>
-                <div className="zep-stats-overview" style={{ marginBottom: 0 }}>
-                    <div className="zep-stat-box">
-                        <div className="zep-stat-val" style={{ color: '#E23744' }}>{stats.pendingOrders}</div>
-                        <div className="zep-stat-lbl">Pending</div>
-                    </div>
-                    <div className="zep-stat-box">
-                        <div className="zep-stat-val">{stats.avgDeliveryTime}</div>
-                        <div className="zep-stat-lbl">Store Avg</div>
-                    </div>
-                    <div className="zep-stat-box">
-                        <div className="zep-stat-val">⭐ {stats.rating}</div>
-                        <div className="zep-stat-lbl">Rating</div>
-                    </div>
+                <div className="op-pwc-right">
+                    <p>Keep your On-Time delivery above 95% to maintain Grade A.</p>
                 </div>
             </div>
 
-            <div className="zep-section">
-                <h3 className="zep-section-title">Shift Progress</h3>
-                <div className="zep-target-card">
-                    <div className="zep-tc-header">
-                        <div>
-                            <h4>Daily Goal: {stats.shiftGoal} Orders</h4>
-                            <p>Maintain fast and safe deliveries</p>
-                        </div>
-                        <div className="zep-tc-badge" style={{ background: '#E3F2FD', color: '#1E88E5' }}>On Track</div>
-                    </div>
-                    <div className="zep-progress-wrap large">
-                        <div className="zep-pb">
-                            <div className="zep-fill" style={{ width: `${Math.min((stats.todayDeliveries / stats.shiftGoal) * 100, 100)}%` }}></div>
-                        </div>
-                        <span className="zep-prog-text">{stats.todayDeliveries} / {stats.shiftGoal} Orders Completed</span>
-                    </div>
-                </div>
-            </div>
+            <br /><br /><br />
         </div>
     );
 };

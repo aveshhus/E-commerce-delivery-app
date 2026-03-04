@@ -2,8 +2,8 @@
 
 .delivery-container {
     min-height: 100vh;
-    background: #F2F2F7;
-    color: #1C1C1E;
+    background: #111315;
+    color: #FFFFFF;
     padding-bottom: 90px;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
@@ -13,13 +13,13 @@
     justify-content: space-between;
     align-items: center;
     padding: 16px 20px;
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(28, 30, 32, 0.85);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     position: sticky;
     top: 0;
     z-index: 100;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid #2C2F33;
 }
 
 .header-left {
@@ -123,15 +123,14 @@
     left: 0;
     right: 0;
     height: 84px;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(28, 30, 32, 0.95);
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     display: flex;
     justify-content: space-around;
     align-items: center;
-    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    border-top: 1px solid #2C2F33;
     padding: 0 10px 16px;
-    /* extra bottom padding for iOS home indicator */
     z-index: 1000;
 }
 
@@ -157,7 +156,7 @@
 }
 
 .nav-item.active {
-    color: #007AFF;
+    color: #00B14F;
 }
 
 .logout-btn:active {

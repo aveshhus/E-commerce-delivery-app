@@ -39,6 +39,22 @@ const deliveryAgentSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    isOnBreak: {
+        type: Boolean,
+        default: false
+    },
+    employeeId: {
+        type: String,
+        trim: true
+    },
+    hubName: {
+        type: String,
+        default: 'Main Hub'
+    },
+    shiftTime: {
+        type: String,
+        default: '9:00 AM - 6:00 PM'
+    },
     currentLocation: {
         type: {
             type: String,
@@ -61,6 +77,14 @@ const deliveryAgentSchema = new mongoose.Schema({
     rating: {
         average: { type: Number, default: 5.0 },
         count: { type: Number, default: 0 }
+    },
+    performance: {
+        onTimePercentage: { type: Number, default: 100 },
+        failedDeliveriesPercentage: { type: Number, default: 0 },
+        complaintsCount: { type: Number, default: 0 },
+        returnedCount: { type: Number, default: 0 },
+        grade: { type: String, enum: ['A', 'B', 'C', 'D'], default: 'A' },
+        badges: [{ type: String }] // e.g., 'Fastest Rider', '5 Star Hero'
     },
     status: {
         type: String,
@@ -87,13 +111,16 @@ const deliveryAgentSchema = new mongoose.Schema({
         total: { type: Number, default: 0 }
     },
     attendance: [{
-        date: String,
-        status: { type: String, enum: ['present', 'absent', 'half-day'], default: 'present' }
+        date: String, // e.g. YYYY-MM-DD
+        status: { type: String, enum: ['present', 'absent', 'half-day'], default: 'present' },
+        hours: { type: Number, default: 0 } // Hours worked on this specific date
     }],
     onlineHours: {
         today: { type: Number, default: 0 },
         total: { type: Number, default: 0 }
-    }
+    },
+    lastOnlineAt: { type: Date },
+    lastOfflineAt: { type: Date }
 }, {
     timestamps: true
 });
