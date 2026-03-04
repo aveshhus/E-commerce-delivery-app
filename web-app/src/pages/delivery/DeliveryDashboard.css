@@ -12,10 +12,11 @@
     --op-black: #000000;
 }
 
-body {
+.delivery-portal-wrapper {
     background-color: var(--op-bg);
     color: var(--op-text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+    min-height: 100vh;
 }
 
 .op-dashboard-container {
