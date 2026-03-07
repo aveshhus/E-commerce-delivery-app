@@ -113,7 +113,13 @@ const deliveryAgentSchema = new mongoose.Schema({
     attendance: [{
         date: String, // e.g. YYYY-MM-DD
         status: { type: String, enum: ['present', 'absent', 'half-day'], default: 'present' },
-        hours: { type: Number, default: 0 } // Hours worked on this specific date
+        hours: { type: Number, default: 0 }, // Total shift hours (Check-in to Check-out)
+        onlineHours: { type: Number, default: 0 }, // Total time spent Online
+        breakMinutes: { type: Number, default: 0 }, // Total time spent on Break
+        logs: [{
+            event: { type: String, enum: ['check-in', 'check-out', 'go-online', 'go-offline', 'break-start', 'break-end'] },
+            time: { type: Date, default: Date.now }
+        }]
     }],
     onlineHours: {
         today: { type: Number, default: 0 },
@@ -121,6 +127,7 @@ const deliveryAgentSchema = new mongoose.Schema({
     },
     lastOnlineAt: { type: Date },
     lastOfflineAt: { type: Date },
+    lastBreakAt: { type: Date },
     checkInTime: { type: Date },
     checkOutTime: { type: Date }
 }, {

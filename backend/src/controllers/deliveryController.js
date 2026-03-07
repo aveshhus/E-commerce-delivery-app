@@ -239,12 +239,28 @@ exports.toggleBreak = async (req, res) => {
             return res.status(400).json({ success: false, message: 'You must be online to take a break' });
         }
 
+        const todayStr = new Date().toISOString().split('T')[0];
+        let attIndex = agent.attendance.findIndex(a => a.date === todayStr);
+        if (attIndex === -1) {
+            agent.attendance.push({ date: todayStr, status: 'present', logs: [] });
+            attIndex = agent.attendance.length - 1;
+        }
+
         agent.isOnBreak = !agent.isOnBreak;
+
         if (agent.isOnBreak) {
             agent.isAvailable = false;
+            agent.lastBreakAt = new Date();
+            agent.attendance[attIndex].logs.push({ event: 'break-start', time: new Date() });
         } else {
             agent.isAvailable = agent.currentOrder ? false : true;
+            if (agent.lastBreakAt) {
+                const breakMins = (new Date() - new Date(agent.lastBreakAt)) / (1000 * 60);
+                agent.attendance[attIndex].breakMinutes = (agent.attendance[attIndex].breakMinutes || 0) + breakMins;
+            }
+            agent.attendance[attIndex].logs.push({ event: 'break-end', time: new Date() });
         }
+
         await agent.save();
         res.json({ success: true, data: { agent } });
     } catch (error) {
@@ -252,53 +268,47 @@ exports.toggleBreak = async (req, res) => {
     }
 };
 
-// Toggle availability
+// Toggle availability (Online/Offline)
 exports.toggleAvailability = async (req, res) => {
     try {
         let agent = await DeliveryAgent.findOne({ user: req.user._id });
+        if (!agent) return res.status(404).json({ success: false, message: 'Agent not found' });
 
-        if (!agent) {
-            console.log("Toggle failed: Agent not found for user ID", req.user._id);
-            return res.status(404).json({ success: false, message: 'Agent not found' });
+        const todayStr = new Date().toISOString().split('T')[0];
+        let attIndex = agent.attendance.findIndex(a => a.date === todayStr);
+        if (attIndex === -1) {
+            agent.attendance.push({ date: todayStr, status: 'present', logs: [] });
+            attIndex = agent.attendance.length - 1;
         }
 
         agent.isOnline = !agent.isOnline;
-        const todayStr = new Date().toISOString().split('T')[0];
 
         if (!agent.isOnline) {
+            // Going Offline
             agent.isAvailable = false;
-            agent.isOnBreak = false; // reset break on go offline
-            // Went offline, calculate hours
+            agent.isOnBreak = false;
+
             if (agent.lastOnlineAt) {
                 const hoursPassed = (new Date() - new Date(agent.lastOnlineAt)) / (1000 * 60 * 60);
                 agent.onlineHours.today = (agent.onlineHours.today || 0) + hoursPassed;
                 agent.onlineHours.total = (agent.onlineHours.total || 0) + hoursPassed;
-
-                // update attendance
-                const attIndex = agent.attendance.findIndex(a => a.date === todayStr);
-                if (attIndex >= 0) {
-                    agent.attendance[attIndex].hours += hoursPassed;
-                } else {
-                    agent.attendance.push({ date: todayStr, status: 'present', hours: hoursPassed });
-                }
+                agent.attendance[attIndex].onlineHours = (agent.attendance[attIndex].onlineHours || 0) + hoursPassed;
             }
             agent.lastOfflineAt = new Date();
+            agent.attendance[attIndex].logs.push({ event: 'go-offline', time: new Date() });
         } else {
+            // Going Online
+            if (!agent.checkInTime) {
+                return res.status(400).json({ success: false, message: 'Please Check In before going online' });
+            }
             agent.isAvailable = true;
             agent.lastOnlineAt = new Date();
-
-            // create attendance if not exists
-            const attIndex = agent.attendance.findIndex(a => a.date === todayStr);
-            if (attIndex === -1) {
-                agent.attendance.push({ date: todayStr, status: 'present', hours: 0 });
-            }
+            agent.attendance[attIndex].logs.push({ event: 'go-online', time: new Date() });
         }
 
         await agent.save();
-        console.log("Toggle success! isOnline:", agent.isOnline, "Agent ID:", agent._id);
         res.json({ success: true, data: { agent } });
     } catch (error) {
-        console.log("Toggle error in DB save:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -396,50 +406,71 @@ exports.completeDelivery = async (req, res) => {
     return exports.updateStatus(req, res);
 };
 
-// Check In
+// Check In (Start of Day)
 exports.checkIn = async (req, res) => {
     try {
         const agent = await DeliveryAgent.findOne({ user: req.user._id });
         if (!agent) return res.status(404).json({ success: false, message: 'Agent not found' });
 
-        agent.checkInTime = new Date();
-        agent.checkOutTime = null; // Reset checkout on new check-in
+        const now = new Date();
+        agent.checkInTime = now;
+        agent.checkOutTime = null;
 
-        const todayStr = new Date().toISOString().split('T')[0];
-        const attIndex = agent.attendance.findIndex(a => a.date === todayStr);
+        const todayStr = now.toISOString().split('T')[0];
+        let attIndex = agent.attendance.findIndex(a => a.date === todayStr);
         if (attIndex === -1) {
-            agent.attendance.push({ date: todayStr, status: 'present', hours: 0 });
+            agent.attendance.push({
+                date: todayStr,
+                status: 'present',
+                hours: 0,
+                onlineHours: 0,
+                breakMinutes: 0,
+                logs: [{ event: 'check-in', time: now }]
+            });
+        } else {
+            agent.attendance[attIndex].logs.push({ event: 'check-in', time: now });
         }
 
         await agent.save();
-        res.json({ success: true, message: 'Checked in successfully', data: { agent } });
+        res.json({ success: true, message: 'Shift started!', data: { agent } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// Check Out
+// Check Out (End of Day)
 exports.checkOut = async (req, res) => {
     try {
         const agent = await DeliveryAgent.findOne({ user: req.user._id });
         if (!agent) return res.status(404).json({ success: false, message: 'Agent not found' });
 
-        agent.checkOutTime = new Date();
+        if (agent.isOnline) {
+            return res.status(400).json({ success: false, message: 'Please go Offline before Checking Out' });
+        }
+
+        const now = new Date();
+        agent.checkOutTime = now;
         agent.isOnline = false;
         agent.isAvailable = false;
         agent.isOnBreak = false;
 
-        if (agent.checkInTime) {
-            const hoursWorked = (new Date() - new Date(agent.checkInTime)) / (1000 * 60 * 60);
-            const todayStr = new Date().toISOString().split('T')[0];
-            const attIndex = agent.attendance.findIndex(a => a.date === todayStr);
-            if (attIndex >= 0) {
-                agent.attendance[attIndex].hours = hoursWorked;
+        const todayStr = now.toISOString().split('T')[0];
+        const attIndex = agent.attendance.findIndex(a => a.date === todayStr);
+
+        if (attIndex >= 0) {
+            // Calculate total shift hours (Check-in to Check-out)
+            if (agent.checkInTime) {
+                const totalShiftHours = (now - new Date(agent.checkInTime)) / (1000 * 60 * 60);
+                agent.attendance[attIndex].hours = totalShiftHours;
             }
+            agent.attendance[attIndex].logs.push({ event: 'check-out', time: now });
         }
 
+        // Reset daily times for next shift
+        agent.checkInTime = null;
+
         await agent.save();
-        res.json({ success: true, message: 'Checked out successfully', data: { agent } });
+        res.json({ success: true, message: 'Shift ended. Great work today!', data: { agent } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

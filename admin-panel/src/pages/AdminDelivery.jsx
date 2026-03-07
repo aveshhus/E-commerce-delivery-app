@@ -11,6 +11,7 @@ const AdminDelivery = () => {
     const [editing, setEditing] = useState(null);
     const [announcements, setAnnouncements] = useState([]);
     const [showAnnModal, setShowAnnModal] = useState(false);
+    const [viewingLogs, setViewingLogs] = useState(null); // agentId to show logs for
     const [annForm, setAnnForm] = useState({ title: '', content: '', targetAudience: 'delivery' });
     const [form, setForm] = useState({ name: '', phone: '', email: '', vehicleType: 'bike', vehicleNumber: '', dailyTarget: 20 });
 
@@ -125,6 +126,12 @@ const AdminDelivery = () => {
                 >
                     Announcements ({announcements.length})
                 </button>
+                <button
+                    style={{ background: 'none', border: 'none', borderBottom: activeTab === 'attendance' ? '2px solid var(--primary)' : '2px solid transparent', color: activeTab === 'attendance' ? 'var(--primary)' : 'var(--text-secondary)', padding: '10px 15px', fontWeight: '600', cursor: 'pointer' }}
+                    onClick={() => setActiveTab('attendance')}
+                >
+                    Attendance Logs
+                </button>
             </div>
 
             <div className="card">
@@ -141,11 +148,14 @@ const AdminDelivery = () => {
                                     <td>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             <span className={`badge ${a.isOnline ? 'badge-success' : 'badge-outline'}`} style={{ fontSize: '10px' }}>
-                                                {a.isOnline ? 'ONLINE' : 'OFFLINE'}
+                                                {a.isOnline ? (a.isOnBreak ? 'ON BREAK' : 'ONLINE') : 'OFFLINE'}
                                             </span>
-                                            {a.checkInTime && (
-                                                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                                                    Clock In: {new Date(a.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                                                {a.checkInTime ? `Clock In: ${new Date(a.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Not Checked In'}
+                                            </div>
+                                            {a.isOnline && (
+                                                <div style={{ fontSize: '10px', color: 'var(--success)', fontWeight: 600 }}>
+                                                    Online: {a.onlineHours?.today?.toFixed(1) || 0}h
                                                 </div>
                                             )}
                                         </div>
@@ -177,7 +187,6 @@ const AdminDelivery = () => {
                     <table className="admin-table">
                         <thead><tr><th>Applicant</th><th>Documents</th><th>Vehicle</th><th>Date</th><th>Actions</th></tr></thead>
                         <tbody>
-                            {/* ... existing applications mapping ... */}
                             {applications.map(a => (
                                 <tr key={a._id}>
                                     <td>
@@ -209,7 +218,7 @@ const AdminDelivery = () => {
                             {applications.length === 0 && <tr><td colSpan={5} className="empty-state">No pending applications</td></tr>}
                         </tbody>
                     </table>
-                ) : (
+                ) : activeTab === 'announcements' ? (
                     <table className="admin-table">
                         <thead><tr><th>Announcement</th><th>Audience</th><th>Date</th><th>Actions</th></tr></thead>
                         <tbody>
@@ -231,6 +240,59 @@ const AdminDelivery = () => {
                             {announcements.length === 0 && <tr><td colSpan={4} className="empty-state">No announcements sent</td></tr>}
                         </tbody>
                     </table>
+                ) : (
+                    <div style={{ padding: '20px' }}>
+                        <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h4 style={{ margin: 0 }}>Attendance History (Recent)</h4>
+                        </div>
+                        <table className="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Agent</th>
+                                    <th>Date</th>
+                                    <th>Shift Hours</th>
+                                    <th>Online Hours</th>
+                                    <th>Break (Mins)</th>
+                                    <th>Logs</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {agents.flatMap(agent =>
+                                    (agent.attendance || []).toReversed().map((att, idx) => (
+                                        <tr key={`${agent._id}-${idx}`}>
+                                            <td style={{ fontWeight: 600 }}>{agent.name}</td>
+                                            <td>{att.date}</td>
+                                            <td style={{ fontWeight: 700 }}>{att.hours?.toFixed(2) || 0}h</td>
+                                            <td style={{ color: 'var(--success)', fontWeight: 700 }}>{att.onlineHours?.toFixed(2) || 0}h</td>
+                                            <td style={{ color: 'var(--danger)' }}>{Math.round(att.breakMinutes || 0)}m</td>
+                                            <td>
+                                                <button
+                                                    className="btn btn-outline btn-sm"
+                                                    onClick={() => setViewingLogs(viewingLogs === `${agent._id}-${att.date}` ? null : `${agent._id}-${att.date}`)}
+                                                >
+                                                    {viewingLogs === `${agent._id}-${att.date}` ? 'Hide Logs' : 'View Detailed Logs'}
+                                                </button>
+                                                {viewingLogs === `${agent._id}-${att.date}` && (
+                                                    <div style={{ marginTop: '10px', background: 'var(--bg-light)', padding: '10px', borderRadius: '8px', fontSize: '11px' }}>
+                                                        {att.logs?.map((log, lIdx) => (
+                                                            <div key={lIdx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', borderBottom: '1px solid var(--border-light)' }}>
+                                                                <span style={{ textTransform: 'uppercase', fontWeight: 700 }}>{log.event}</span>
+                                                                <span>{new Date(log.time).toLocaleTimeString()}</span>
+                                                            </div>
+                                                        ))}
+                                                        {(!att.logs || att.logs.length === 0) && <div>No logs found</div>}
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                                {agents.every(a => !a.attendance || a.attendance.length === 0) && (
+                                    <tr><td colSpan={6} className="empty-state">No attendance records found</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 
