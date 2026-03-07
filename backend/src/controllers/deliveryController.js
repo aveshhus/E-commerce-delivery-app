@@ -460,3 +460,25 @@ exports.getAnnouncements = async (req, res) => {
     }
 };
 
+// Get nearby available agents
+exports.getNearbyAgents = async (req, res) => {
+    try {
+        const { longitude, latitude, maxDistance = 4000 } = req.query;
+        const agents = await DeliveryAgent.find({
+            isAvailable: true,
+            isActive: true,
+            isOnline: true,
+            currentLocation: {
+                $near: {
+                    $geometry: { type: 'Point', coordinates: [parseFloat(longitude), parseFloat(latitude)] },
+                    $maxDistance: parseInt(maxDistance)
+                }
+            }
+        });
+        res.json({ success: true, data: { agents } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
