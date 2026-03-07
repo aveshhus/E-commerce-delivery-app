@@ -31,7 +31,10 @@ const DeliveryDashboard = () => {
             onTimePercentage: 100,
             grade: 'A'
         },
-        attendance: []
+        attendance: [],
+        announcements: [],
+        checkInTime: null,
+        checkOutTime: null
     });
 
     const [currentOrder, setCurrentOrder] = useState(null);
@@ -86,14 +89,16 @@ const DeliveryDashboard = () => {
             }
 
             if (profileRes.success) {
-                const agent = profileRes.data.agent;
                 setStats({
                     todayDeliveries: agent.totalDeliveries || 0,
-                    kmDriven: agent.kmDriven || 0,
+                    kmDriven: agent.kmDriven?.today || 0,
                     avgDeliveryTime: agent.avgDeliveryTime || '--',
                     rating: agent.rating?.average || 5.0,
                     performance: agent.performance || { onTimePercentage: 100, grade: 'A' },
                     attendance: agent.attendance || [],
+                    announcements: agent.announcements || [],
+                    checkInTime: agent.checkInTime,
+                    checkOutTime: agent.checkOutTime
                 });
             }
         } catch (error) {
@@ -113,6 +118,30 @@ const DeliveryDashboard = () => {
 
     const todayStr = new Date().toISOString().split('T')[0];
     const presentToday = stats.attendance.find(a => a.date === todayStr);
+
+    const handleCheckIn = async () => {
+        try {
+            const res = await deliveryService.checkIn();
+            if (res.success) {
+                toast.success("Shift started! Good luck.");
+                fetchDashboardData();
+            }
+        } catch (error) {
+            toast.error("Check-in failed");
+        }
+    };
+
+    const handleCheckOut = async () => {
+        try {
+            const res = await deliveryService.checkOut();
+            if (res.success) {
+                toast.success("Shift ended. Great work!");
+                fetchDashboardData();
+            }
+        } catch (error) {
+            toast.error("Check-out failed");
+        }
+    };
 
     return (
         <div className="op-dashboard-container">
@@ -135,6 +164,27 @@ const DeliveryDashboard = () => {
                     <div className="op-shift-item">
                         <FiClock /> <span>{agentData?.shiftTime || '09:00 AM - 06:00 PM'}</span>
                     </div>
+                </div>
+
+                <div className="shift-controls" style={{ marginTop: '20px', display: 'flex', gap: '12px' }}>
+                    {!stats.checkInTime ? (
+                        <button className="op-btn-primary" style={{ background: '#0C831F' }} onClick={handleCheckIn}>
+                            Check In
+                        </button>
+                    ) : !stats.checkOutTime ? (
+                        <div style={{ display: 'flex', gap: '12px', width: '100%', alignItems: 'center' }}>
+                            <div className="check-in-info" style={{ fontSize: '13px', color: 'var(--op-text-secondary)' }}>
+                                Checked in at: <strong>{new Date(stats.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
+                            </div>
+                            <button className="op-btn-primary" style={{ background: '#E23744', padding: '8px 16px' }} onClick={handleCheckOut}>
+                                Check Out
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="check-out-info" style={{ fontSize: '13px', color: 'var(--op-text-secondary)', background: 'rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '8px', width: '100%' }}>
+                            Shift ended at {new Date(stats.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -245,6 +295,24 @@ const DeliveryDashboard = () => {
                     <p>Keep your On-Time delivery above 95% to maintain Grade A.</p>
                 </div>
             </div>
+
+            {/* Announcements Section */}
+            {stats.announcements && stats.announcements.length > 0 && (
+                <div className="announcements-section" style={{ marginTop: '32px' }}>
+                    <h3 className="op-section-title">📢 Announcements</h3>
+                    <div className="announcements-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {stats.announcements.map(ann => (
+                            <div key={ann._id} className="announcement-card" style={{ background: 'var(--op-card-bg)', border: '1px solid var(--op-border)', borderRadius: '12px', padding: '16px' }}>
+                                <h4 style={{ color: '#FFB800', marginBottom: '8px', fontSize: '15px' }}>{ann.title}</h4>
+                                <p style={{ color: 'var(--op-text-secondary)', fontSize: '13px', lineHeight: '1.4' }}>{ann.content}</p>
+                                <small style={{ color: 'var(--op-border)', fontSize: '11px', marginTop: '8px', display: 'block' }}>
+                                    {new Date(ann.createdAt).toLocaleDateString()}
+                                </small>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <br /><br /><br />
         </div>

@@ -120,7 +120,9 @@ const deliveryAgentSchema = new mongoose.Schema({
         total: { type: Number, default: 0 }
     },
     lastOnlineAt: { type: Date },
-    lastOfflineAt: { type: Date }
+    lastOfflineAt: { type: Date },
+    checkInTime: { type: Date },
+    checkOutTime: { type: Date }
 }, {
     timestamps: true
 });

@@ -23,6 +23,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 const festivalRoutes = require('./routes/festivalRoutes');
+const announcementRoutes = require('./routes/announcementRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -81,6 +82,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', publicRoutes);
 app.use('/api/festivals', festivalRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

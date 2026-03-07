@@ -69,6 +69,11 @@ export const adminAPI = {
     updateFestival: (id, data) => api.put(`/festivals/${id}`, data),
     deleteFestival: (id) => api.delete(`/festivals/${id}`),
     toggleFestivalStatus: (id) => api.patch(`/festivals/${id}/toggle`),
+    // Announcements
+    getAnnouncements: () => api.get('/announcements'),
+    createAnnouncement: (data) => api.post('/announcements', data),
+    updateAnnouncement: (id, data) => api.put(`/announcements/${id}`, data),
+    deleteAnnouncement: (id) => api.delete(`/announcements/${id}`),
 };
 
 export default api;

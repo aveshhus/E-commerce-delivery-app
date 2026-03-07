@@ -15,6 +15,9 @@ router.get('/current-delivery', auth, authorize('delivery', 'admin', 'superadmin
 router.put('/status', auth, authorize('delivery', 'admin', 'superadmin'), deliveryController.updateStatus);
 router.get('/history', auth, authorize('delivery', 'admin', 'superadmin'), deliveryController.getAgentHistory);
 router.post('/complete-delivery', auth, authorize('delivery', 'admin', 'superadmin'), deliveryController.completeDelivery);
+router.put('/check-in', auth, authorize('delivery'), deliveryController.checkIn);
+router.put('/check-out', auth, authorize('delivery'), deliveryController.checkOut);
+router.get('/announcements', auth, authorize('delivery'), deliveryController.getAnnouncements);
 
 // Admin routes (Params routes must be last)
 router.get('/', auth, authorize('admin', 'superadmin'), deliveryController.getAgents);

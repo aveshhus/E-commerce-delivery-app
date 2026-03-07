@@ -14,9 +14,12 @@ exports.getProfile = async (req, res) => {
         const agentObj = agent.toObject();
 
         // Calculate exact real data
-        // 1. Total deliveries completed by this agent
         const completedOrders = await Order.find({ deliveryAgent: agent._id, status: 'delivered' });
         agentObj.totalDeliveries = completedOrders.length;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        agentObj.todayDeliveries = completedOrders.filter(o => o.actualDeliveryTime && new Date(o.actualDeliveryTime) >= today).length;
 
         // 2. Average Delivery Time
         let totalTimeMinutes = 0;
@@ -48,20 +51,13 @@ exports.getProfile = async (req, res) => {
             agentObj.employeeId = 'KM-' + agent._id.toString().slice(-6).toUpperCase();
         }
 
-        // 5. Attendance Calendar
-        agentObj.attendance = agent.attendance || [];
-
-        // 6. Career Stats
-        const totalHoursWorked = agent.attendance ? agent.attendance.reduce((acc, curr) => acc + (curr.hours || 0), 0) : 0;
-        const totalDays = agent.attendance && agent.attendance.length > 0 ? agent.attendance.length : 1;
-        const presentDays = agent.attendance ? agent.attendance.filter(a => a.status === 'present').length : 0;
-        const presentPercentage = Math.round((presentDays / totalDays) * 100);
-
-        agentObj.careerStats = {
-            joinedDate: agent.createdAt,
-            totalHoursWorked: totalHoursWorked.toFixed(1),
-            presentPercentage: presentPercentage
-        };
+        // 7. Recent Announcements
+        const Announcement = require('../models/Announcement');
+        const announcements = await Announcement.find({
+            isActive: true,
+            targetAudience: { $in: ['all', 'delivery'] }
+        }).sort({ createdAt: -1 }).limit(5);
+        agentObj.announcements = announcements;
 
         res.json({ success: true, data: { agent: agentObj } });
     } catch (error) {
@@ -400,23 +396,67 @@ exports.completeDelivery = async (req, res) => {
     return exports.updateStatus(req, res);
 };
 
-// Get nearby available agents
-exports.getNearbyAgents = async (req, res) => {
+// Check In
+exports.checkIn = async (req, res) => {
     try {
-        const { longitude, latitude, maxDistance = 4000 } = req.query;
-        const agents = await DeliveryAgent.find({
-            isAvailable: true,
-            isActive: true,
-            isOnline: true,
-            currentLocation: {
-                $near: {
-                    $geometry: { type: 'Point', coordinates: [parseFloat(longitude), parseFloat(latitude)] },
-                    $maxDistance: parseInt(maxDistance)
-                }
-            }
-        });
-        res.json({ success: true, data: { agents } });
+        const agent = await DeliveryAgent.findOne({ user: req.user._id });
+        if (!agent) return res.status(404).json({ success: false, message: 'Agent not found' });
+
+        agent.checkInTime = new Date();
+        agent.checkOutTime = null; // Reset checkout on new check-in
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const attIndex = agent.attendance.findIndex(a => a.date === todayStr);
+        if (attIndex === -1) {
+            agent.attendance.push({ date: todayStr, status: 'present', hours: 0 });
+        }
+
+        await agent.save();
+        res.json({ success: true, message: 'Checked in successfully', data: { agent } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// Check Out
+exports.checkOut = async (req, res) => {
+    try {
+        const agent = await DeliveryAgent.findOne({ user: req.user._id });
+        if (!agent) return res.status(404).json({ success: false, message: 'Agent not found' });
+
+        agent.checkOutTime = new Date();
+        agent.isOnline = false;
+        agent.isAvailable = false;
+        agent.isOnBreak = false;
+
+        if (agent.checkInTime) {
+            const hoursWorked = (new Date() - new Date(agent.checkInTime)) / (1000 * 60 * 60);
+            const todayStr = new Date().toISOString().split('T')[0];
+            const attIndex = agent.attendance.findIndex(a => a.date === todayStr);
+            if (attIndex >= 0) {
+                agent.attendance[attIndex].hours = hoursWorked;
+            }
+        }
+
+        await agent.save();
+        res.json({ success: true, message: 'Checked out successfully', data: { agent } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Get Announcements
+exports.getAnnouncements = async (req, res) => {
+    try {
+        const Announcement = require('../models/Announcement');
+        const announcements = await Announcement.find({
+            isActive: true,
+            targetAudience: { $in: ['all', 'delivery'] }
+        }).sort({ createdAt: -1 });
+
+        res.json({ success: true, data: { announcements } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+

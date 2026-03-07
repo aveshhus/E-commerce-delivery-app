@@ -48,6 +48,18 @@ const deliveryService = {
     updateLocation: async (latitude, longitude) => {
         const response = await axios.put(`${API_URL}/delivery/location`, { latitude, longitude }, getAuthHeader());
         return response.data;
+    },
+    checkIn: async () => {
+        const response = await axios.put(`${API_URL}/delivery/check-in`, {}, getAuthHeader());
+        return response.data;
+    },
+    checkOut: async () => {
+        const response = await axios.put(`${API_URL}/delivery/check-out`, {}, getAuthHeader());
+        return response.data;
+    },
+    getAnnouncements: async () => {
+        const response = await axios.get(`${API_URL}/delivery/announcements`, getAuthHeader());
+        return response.data;
     }
 };
 

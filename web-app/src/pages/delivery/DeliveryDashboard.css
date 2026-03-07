@@ -458,3 +458,33 @@
     color: var(--op-red);
     border-color: rgba(250, 62, 62, 0.3);
 }
+
+/* New Dashboard Elements */
+.check-in-info {
+    border-left: 2px solid var(--op-green);
+    padding-left: 12px;
+    margin: 4px 0;
+}
+
+.announcement-card {
+    transition: transform 0.2s ease;
+}
+
+.announcement-card:hover {
+    transform: translateX(4px);
+    border-color: var(--op-yellow) !important;
+}
+
+.shift-controls button {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.shift-controls button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.shift-controls button:active {
+    transform: translateY(0);
+}
