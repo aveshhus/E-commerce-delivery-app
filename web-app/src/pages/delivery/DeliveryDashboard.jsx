@@ -119,29 +119,7 @@ const DeliveryDashboard = () => {
     const todayStr = new Date().toISOString().split('T')[0];
     const presentToday = stats.attendance.find(a => a.date === todayStr);
 
-    const handleCheckIn = async () => {
-        try {
-            const res = await deliveryService.checkIn();
-            if (res.success) {
-                toast.success("Shift started! Good luck.");
-                fetchDashboardData();
-            }
-        } catch (error) {
-            toast.error("Check-in failed");
-        }
-    };
-
-    const handleCheckOut = async () => {
-        try {
-            const res = await deliveryService.checkOut();
-            if (res.success) {
-                toast.success("Shift ended. Great work!");
-                fetchDashboardData();
-            }
-        } catch (error) {
-            toast.error("Check-out failed");
-        }
-    };
+    // Unified status logic is handled via toggleStatus in Layout context
 
     return (
         <div className="op-dashboard-container">
@@ -166,23 +144,13 @@ const DeliveryDashboard = () => {
                     </div>
                 </div>
 
-                <div className="shift-controls" style={{ marginTop: '20px', display: 'flex', gap: '12px' }}>
-                    {!stats.checkInTime ? (
-                        <button className="op-btn-primary" style={{ background: '#0C831F' }} onClick={handleCheckIn}>
-                            Check In
-                        </button>
-                    ) : !stats.checkOutTime ? (
-                        <div style={{ display: 'flex', gap: '12px', width: '100%', alignItems: 'center' }}>
-                            <div className="check-in-info" style={{ fontSize: '13px', color: 'var(--op-text-secondary)' }}>
-                                Checked in at: <strong>{new Date(stats.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
-                            </div>
-                            <button className="op-btn-primary" style={{ background: '#E23744', padding: '8px 16px' }} onClick={handleCheckOut}>
-                                Check Out
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="check-out-info" style={{ fontSize: '13px', color: 'var(--op-text-secondary)', background: 'rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '8px', width: '100%' }}>
-                            Shift ended at {new Date(stats.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <div className="op-work-meta" style={{ marginTop: '20px', display: 'flex', gap: '12px' }}>
+                    <div className={`status-tag ${isOnline ? 'online' : 'offline'}`}>
+                        {isOnline ? 'SHIFT ACTIVE' : 'SHIFT INACTIVE'}
+                    </div>
+                    {stats.checkInTime && (
+                        <div className="check-in-info" style={{ fontSize: '12px', color: 'var(--op-text-secondary)' }}>
+                            Started at: <strong>{new Date(stats.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong>
                         </div>
                     )}
                 </div>
@@ -254,37 +222,39 @@ const DeliveryDashboard = () => {
             </div>
 
             {/* Task Router Card */}
-            {currentOrder ? (
-                <div className="op-task-card">
-                    <div className="op-tc-head">
-                        <span className="op-tc-badge">Active Task</span>
-                        <div className="op-tc-timer">15m Left</div>
-                    </div>
-                    <h4>Delivery to {currentOrder.deliveryAddress?.fullName}</h4>
-                    <p>{currentOrder.deliveryAddress?.landmark}, {currentOrder.deliveryAddress?.city}</p>
-                    <Link to="/delivery/orders" className="op-btn-primary">
-                        Open Order Screen <FiChevronRight />
-                    </Link>
-                </div>
-            ) : (
-                <div className="op-radar-card">
-                    {isOnline && !isOnBreak ? (
-                        <>
-                            <div className="op-radar-anim">
-                                <FiActivity />
-                            </div>
-                            <h4>Scanning for Orders</h4>
-                            <p>Stay within 2km of {agentData?.hubName || 'Main Hub'}</p>
-                        </>
-                    ) : (
-                        <div className="op-radar-inactive">
-                            {isOnBreak ? <FiCoffee className="inactive-icon" /> : <FiPower className="inactive-icon" />}
-                            <h4>{isOnBreak ? "You're on Break" : "Currently Offline"}</h4>
-                            <p>{isOnBreak ? "Enjoy your coffee. End break to resume." : "Go online to start receiving orders."}</p>
+            {
+                currentOrder ? (
+                    <div className="op-task-card">
+                        <div className="op-tc-head">
+                            <span className="op-tc-badge">Active Task</span>
+                            <div className="op-tc-timer">15m Left</div>
                         </div>
-                    )}
-                </div>
-            )}
+                        <h4>Delivery to {currentOrder.deliveryAddress?.fullName}</h4>
+                        <p>{currentOrder.deliveryAddress?.landmark}, {currentOrder.deliveryAddress?.city}</p>
+                        <Link to="/delivery/orders" className="op-btn-primary">
+                            Open Order Screen <FiChevronRight />
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="op-radar-card">
+                        {isOnline && !isOnBreak ? (
+                            <>
+                                <div className="op-radar-anim">
+                                    <FiActivity />
+                                </div>
+                                <h4>Scanning for Orders</h4>
+                                <p>Stay within 2km of {agentData?.hubName || 'Main Hub'}</p>
+                            </>
+                        ) : (
+                            <div className="op-radar-inactive">
+                                {isOnBreak ? <FiCoffee className="inactive-icon" /> : <FiPower className="inactive-icon" />}
+                                <h4>{isOnBreak ? "You're on Break" : "Currently Offline"}</h4>
+                                <p>{isOnBreak ? "Enjoy your coffee. End break to resume." : "Go online to start receiving orders."}</p>
+                            </div>
+                        )}
+                    </div>
+                )
+            }
 
             <div className="op-perf-warning-card">
                 <div className="op-pwc-left">
@@ -297,25 +267,27 @@ const DeliveryDashboard = () => {
             </div>
 
             {/* Announcements Section */}
-            {stats.announcements && stats.announcements.length > 0 && (
-                <div className="announcements-section" style={{ marginTop: '32px' }}>
-                    <h3 className="op-section-title">📢 Announcements</h3>
-                    <div className="announcements-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {stats.announcements.map(ann => (
-                            <div key={ann._id} className="announcement-card" style={{ background: 'var(--op-card-bg)', border: '1px solid var(--op-border)', borderRadius: '12px', padding: '16px' }}>
-                                <h4 style={{ color: '#FFB800', marginBottom: '8px', fontSize: '15px' }}>{ann.title}</h4>
-                                <p style={{ color: 'var(--op-text-secondary)', fontSize: '13px', lineHeight: '1.4' }}>{ann.content}</p>
-                                <small style={{ color: 'var(--op-border)', fontSize: '11px', marginTop: '8px', display: 'block' }}>
-                                    {new Date(ann.createdAt).toLocaleDateString()}
-                                </small>
-                            </div>
-                        ))}
+            {
+                stats.announcements && stats.announcements.length > 0 && (
+                    <div className="announcements-section" style={{ marginTop: '32px' }}>
+                        <h3 className="op-section-title">📢 Announcements</h3>
+                        <div className="announcements-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {stats.announcements.map(ann => (
+                                <div key={ann._id} className="announcement-card" style={{ background: 'var(--op-card-bg)', border: '1px solid var(--op-border)', borderRadius: '12px', padding: '16px' }}>
+                                    <h4 style={{ color: '#FFB800', marginBottom: '8px', fontSize: '15px' }}>{ann.title}</h4>
+                                    <p style={{ color: 'var(--op-text-secondary)', fontSize: '13px', lineHeight: '1.4' }}>{ann.content}</p>
+                                    <small style={{ color: 'var(--op-border)', fontSize: '11px', marginTop: '8px', display: 'block' }}>
+                                        {new Date(ann.createdAt).toLocaleDateString()}
+                                    </small>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <br /><br /><br />
-        </div>
+        </div >
     );
 };
 

@@ -148,7 +148,10 @@ const AdminDelivery = () => {
                                     <td>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             <span className={`badge ${a.isOnline ? 'badge-success' : 'badge-outline'}`} style={{ fontSize: '10px' }}>
-                                                {a.isOnline ? (a.isOnBreak ? 'ON BREAK' : 'ONLINE') : 'OFFLINE'}
+                                                {a.isOnline ?
+                                                    (a.currentOrder ? 'ON DELIVERY' :
+                                                        (a.isOnBreak ? 'ON BREAK' : 'ONLINE'))
+                                                    : 'OFFLINE'}
                                             </span>
                                             <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
                                                 {a.checkInTime ? `Clock In: ${new Date(a.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Not Checked In'}
