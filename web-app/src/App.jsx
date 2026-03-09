@@ -31,13 +31,18 @@ import DeliveryOrders from './pages/delivery/DeliveryOrders';
 import DeliveryHistory from './pages/delivery/DeliveryHistory';
 import DeliveryRoutePage from './pages/delivery/DeliveryRoute';
 import DeliveryPerformance from './pages/delivery/DeliveryPerformance';
+import DeliveryEarnings from './pages/delivery/DeliveryEarnings';
+import DeliveryIssueReport from './pages/delivery/DeliveryIssueReport';
+import DeliveryNotifications from './pages/delivery/DeliveryNotifications';
+import DeliveryProfile from './pages/delivery/DeliveryProfile';
 import DeliveryMenu from './pages/delivery/DeliveryMenu';
+import DeliveryLogin from './pages/delivery/DeliveryLogin';
 import PartnerApplication from './pages/PartnerApplication';
 
-const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+const ProtectedRoute = ({ children, allowedRoles = [], redirect = "/login" }) => {
   const { isAuthenticated, loading, user } = useAuth();
   if (loading) return <div className="loading-spinner"><div className="spinner"></div></div>;
-  if (!isAuthenticated) return <Navigate to="/login" />;
+  if (!isAuthenticated) return <Navigate to={redirect} />;
   if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
     return <Navigate to="/" />;
   }
@@ -79,8 +84,9 @@ const AppContent = () => {
     return (
       <main className="delivery-portal-wrapper">
         <Routes>
+          <Route path="/delivery/login" element={<DeliveryLogin />} />
           <Route path="/delivery" element={
-            <ProtectedRoute allowedRoles={['delivery', 'admin', 'superadmin']}>
+            <ProtectedRoute allowedRoles={['delivery', 'admin', 'superadmin']} redirect="/delivery/login">
               <DeliveryLayout />
             </ProtectedRoute>
           }>
@@ -89,6 +95,10 @@ const AppContent = () => {
             <Route path="history" element={<DeliveryHistory />} />
             <Route path="route" element={<DeliveryRoutePage />} />
             <Route path="performance" element={<DeliveryPerformance />} />
+            <Route path="earnings" element={<DeliveryEarnings />} />
+            <Route path="issue-report" element={<DeliveryIssueReport />} />
+            <Route path="notifications" element={<DeliveryNotifications />} />
+            <Route path="profile" element={<DeliveryProfile />} />
             <Route path="menu" element={<DeliveryMenu />} />
           </Route>
           <Route path="*" element={<Navigate to="/delivery" replace />} />

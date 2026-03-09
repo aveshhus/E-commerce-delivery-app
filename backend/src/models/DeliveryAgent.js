@@ -99,7 +99,12 @@ const deliveryAgentSchema = new mongoose.Schema({
         bankName: { type: String, trim: true }
     },
     earnings: {
+        baseSalary: { type: Number, default: 15000 },
+        perDeliveryBonus: { type: Number, default: 20 },
+        attendanceBonus: { type: Number, default: 50 },
+        penaltyRate: { type: Number, default: 10 },
         today: { type: Number, default: 0 },
+        monthly: { type: Number, default: 0 },
         total: { type: Number, default: 0 }
     },
     dailyTarget: {

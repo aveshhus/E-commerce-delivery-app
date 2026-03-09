@@ -9,6 +9,7 @@ const DeliveryOrders = () => {
 
     // Active states
     const [order, setOrder] = useState(null);
+    const [hasAccepted, setHasAccepted] = useState(false);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
     const [showOTPModal, setShowOTPModal] = useState(false);
@@ -28,11 +29,10 @@ const DeliveryOrders = () => {
     }, []);
 
     useEffect(() => {
-        if (!order) return;
+        if (!order || !hasAccepted) return;
         const interval = setInterval(() => {
-            // "Common Sense" Timer: Count down from when the order was last updated/assigned, not created
             const referenceTime = new Date(order.updatedAt || order.createdAt).getTime();
-            const targetTime = referenceTime + 30 * 60 * 1000; // 30 minutes from last status change
+            const targetTime = referenceTime + 30 * 60 * 1000;
             const now = new Date().getTime();
             const difference = targetTime - now;
 
@@ -46,13 +46,17 @@ const DeliveryOrders = () => {
             setTimeLeft(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
         }, 1000);
         return () => clearInterval(interval);
-    }, [order]);
+    }, [order, hasAccepted]);
 
     const fetchActiveOrder = async () => {
         try {
             const res = await deliveryService.getCurrentDelivery();
             if (res.success) {
                 setOrder(res.data.order);
+                // If the order status is beyond out_for_delivery, consider it already accepted
+                if (res.data.order && !['placed', 'confirmed', 'preparing', 'out_for_delivery'].includes(res.data.order.status)) {
+                    setHasAccepted(true);
+                }
             }
         } catch (error) {
             console.error(error);
@@ -69,6 +73,28 @@ const DeliveryOrders = () => {
             }
         } catch (error) {
             console.error(error);
+        }
+    };
+
+    const handleAccept = async () => {
+        try {
+            setActionLoading(true);
+            // In a real system, this would call a backend 'accept' endpoint
+            // For now, we'll just update the local state to show the active view
+            setHasAccepted(true);
+            toast.success("Order Accepted! Head to the store.");
+        } catch (error) {
+            toast.error("Failed to accept");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleReject = () => {
+        if (window.confirm("Rejecting orders might affect your performance score. Are you sure?")) {
+            setOrder(null);
+            setHasAccepted(false);
+            toast.error("Assignment Rejected. Finding next agent...");
         }
     };
 
@@ -92,6 +118,7 @@ const DeliveryOrders = () => {
                 toast.success(`Order marked as ${status.replace('_', ' ')}`);
                 if (status === 'delivered' || status === 'cancelled') {
                     setOrder(null);
+                    setHasAccepted(false);
                     setShowOTPModal(false);
                     setShowFailModal(false);
                     setOtp(['', '', '', '']);
@@ -125,25 +152,70 @@ const DeliveryOrders = () => {
 
     return (
         <div className="manage-order-container fade-in">
-            {/* Unified Operations Tabs */}
-            <div className="op-tabs">
-                <button
-                    className={`op-tab-btn ${view === 'active' ? 'active' : ''}`}
-                    onClick={() => setView('active')}
-                >
-                    📦 Active Task
-                </button>
-                <button
-                    className={`op-tab-btn ${view === 'history' ? 'active' : ''}`}
-                    onClick={() => setView('history')}
-                >
-                    📜 Order History
-                </button>
-            </div>
+            {/* Unified Operations Tabs (Only show if not in incoming request mode) */}
+            {(!order || hasAccepted) && (
+                <div className="op-tabs">
+                    <button
+                        className={`op-tab-btn ${view === 'active' ? 'active' : ''}`}
+                        onClick={() => setView('active')}
+                    >
+                        📦 Active Task
+                    </button>
+                    <button
+                        className={`op-tab-btn ${view === 'history' ? 'active' : ''}`}
+                        onClick={() => setView('history')}
+                    >
+                        📜 Order History
+                    </button>
+                </div>
+            )}
 
             {view === 'active' ? (
                 <>
-                    {!order ? (
+                    {order && !hasAccepted ? (
+                        /* NEW ORDER NOTIFICATION SCREEN */
+                        <div className="incoming-order-overlay fade-in">
+                            <div className="incoming-card">
+                                <div className="timer-ring">
+                                    <svg>
+                                        <circle cx="35" cy="35" r="30"></circle>
+                                    </svg>
+                                    <div className="time-num">15s</div>
+                                </div>
+
+                                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                                    <div className="new-badge">NEW ASSIGNMENT</div>
+                                    <h2 style={{ fontSize: '28px', color: 'white', margin: '12px 0 4px' }}>ORD #{order.orderNumber}</h2>
+                                    <p style={{ color: '#00B14F', fontWeight: '800', fontSize: '14px' }}>₹{order.totalAmount} • {order.items.length} Items</p>
+                                </div>
+
+                                <div className="assignment-details">
+                                    <div className="assign-row">
+                                        <div className="assign-icon store"><FiPackage /></div>
+                                        <div className="assign-info">
+                                            <label>PICKUP FROM</label>
+                                            <strong>Hub Location - Main Store</strong>
+                                        </div>
+                                    </div>
+                                    <div className="assign-row">
+                                        <div className="assign-icon dest"><FiMapPin /></div>
+                                        <div className="assign-info">
+                                            <label>DELIVER TO</label>
+                                            <strong>{order.deliveryAddress.fullName}</strong>
+                                            <p>{order.deliveryAddress.addressLine1}, {order.deliveryAddress.city}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="action-grid">
+                                    <button className="reject-btn" onClick={handleReject}>Reject</button>
+                                    <button className="accept-btn" onClick={handleAccept} disabled={actionLoading}>
+                                        {actionLoading ? 'Connecting...' : 'Accept Order'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : !order ? (
                         <div className="empty-orders-v3 fade-in">
                             <div className="radar-v3">
                                 <div className="r-center-v3"></div>

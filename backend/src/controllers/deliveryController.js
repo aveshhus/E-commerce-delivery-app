@@ -1,6 +1,7 @@
 const DeliveryAgent = require('../models/DeliveryAgent');
 const Order = require('../models/Order');
 const User = require('../models/User');
+const IssueReport = require('../models/IssueReport');
 
 // Get agent profile (or application status)
 exports.getProfile = async (req, res) => {
@@ -528,6 +529,63 @@ exports.getNearbyAgents = async (req, res) => {
             }
         });
         res.json({ success: true, data: { agents } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Report an issue (Agent)
+exports.reportIssue = async (req, res) => {
+    try {
+        const agent = await DeliveryAgent.findOne({ user: req.user._id });
+        if (!agent) {
+            return res.status(404).json({ success: false, message: 'Agent not found' });
+        }
+
+        const { type, severity, description, orderId, location } = req.body;
+
+        const report = await IssueReport.create({
+            agent: agent._id,
+            order: orderId,
+            type,
+            severity,
+            description,
+            location
+        });
+
+        res.status(201).json({ success: true, data: { report } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Get all issue reports (Admin)
+exports.getIssueReports = async (req, res) => {
+    try {
+        const reports = await IssueReport.find()
+            .populate('agent', 'name phone employeeId')
+            .populate('order', 'orderNumber status')
+            .sort({ createdAt: -1 });
+        res.json({ success: true, data: { reports } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Update issue status (Admin)
+exports.updateIssueStatus = async (req, res) => {
+    try {
+        const { status, adminNotes } = req.body;
+        const report = await IssueReport.findByIdAndUpdate(
+            req.params.id,
+            {
+                status,
+                adminNotes,
+                resolvedAt: status === 'resolved' ? new Date() : undefined
+            },
+            { new: true }
+        );
+        res.json({ success: true, data: { report } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

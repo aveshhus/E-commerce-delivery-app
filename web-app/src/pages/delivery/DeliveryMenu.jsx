@@ -20,24 +20,41 @@ const DeliveryMenu = () => {
 
     return (
         <div className="op-dashboard-container fade-in" style={{ paddingBottom: '90px' }}>
-            <div className="op-welcome-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '32px', border: '1px solid #2C2F33' }}>
+            <div
+                className="op-welcome-card"
+                onClick={() => navigate('/delivery/profile')}
+                style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '32px', border: '1px solid #2C2F33', cursor: 'pointer' }}
+            >
                 <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#111315', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: '800', color: '#00B14F', border: '2px solid rgba(0, 177, 79, 0.3)' }}>
                     {agentData?.name?.charAt(0) || 'KM'}
                 </div>
-                <div>
+                <div style={{ flex: 1 }}>
                     <h3 style={{ color: 'white', margin: 0, fontSize: '22px' }}>{agentData?.name || 'Partner Agent'}</h3>
                     <p style={{ color: '#00B14F', fontSize: '14px', margin: '4px 0 0', fontWeight: '700' }}>EMP ID: {agentData?.employeeId || 'KM-PENDING'}</p>
                 </div>
+                <FiChevronRight style={{ color: '#949CA4' }} />
             </div>
 
             {/* 6. Notifications Panel */}
+            <h3 className="op-section-title">Finance & Payroll</h3>
+            <div className="op-menu-group" style={{ marginBottom: '32px' }}>
+                <button className="op-menu-item" onClick={() => navigate('/delivery/earnings')}>
+                    <div className="op-menu-icon" style={{ color: '#00B14F', background: 'rgba(0,177,79,0.1)' }}><FiDollarSign /></div>
+                    <div className="op-menu-text">
+                        <span>Earnings & Salary</span>
+                        <small>Monthly pay, bonuses & deductions</small>
+                    </div>
+                    <FiChevronRight className="op-menu-arrow" />
+                </button>
+            </div>
+
             <h3 className="op-section-title">Ops & Alerts</h3>
             <div className="op-menu-group">
-                <button className="op-menu-item" onClick={() => notImplemented("Hub Announcements")}>
+                <button className="op-menu-item" onClick={() => navigate('/delivery/notifications')}>
                     <div className="op-menu-icon" style={{ color: '#1A73E8', background: 'rgba(26,115,232,0.1)' }}><FiBell /></div>
                     <div className="op-menu-text">
-                        <span>Hub Announcements</span>
-                        <small>Shift reminders & Route changes</small>
+                        <span>Ops & Announcements</span>
+                        <small>Shift reminders, policy updates & more</small>
                     </div>
                     <FiChevronRight className="op-menu-arrow" />
                 </button>
@@ -46,7 +63,7 @@ const DeliveryMenu = () => {
             {/* 7. Incident / Support System */}
             <h3 className="op-section-title">Field Support & SOS</h3>
             <div className="op-menu-group">
-                <button className="op-menu-item" onClick={() => notImplemented("Incident Report")}>
+                <button className="op-menu-item" onClick={() => navigate('/delivery/issue-report')}>
                     <div className="op-menu-icon" style={{ color: '#FFB800', background: 'rgba(255,184,0,0.1)' }}><FiAlertCircle /></div>
                     <div className="op-menu-text">
                         <span>Report an Issue</span>

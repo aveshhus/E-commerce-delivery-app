@@ -139,8 +139,8 @@ const DeliveryDashboard = () => {
                     <div className="op-shift-item">
                         <FiMapPin /> <span>{agentData?.hubName || 'Main Hub'}</span>
                     </div>
-                    <div className="op-shift-item">
-                        <FiClock /> <span>{agentData?.shiftTime || '09:00 AM - 06:00 PM'}</span>
+                    <div className="op-shift-item" style={{ fontSize: '15px' }}>
+                        <FiClock style={{ color: '#00B14F' }} /> <span style={{ fontWeight: '700', color: 'white' }}>{agentData?.shiftTime || '09:00 AM - 06:00 PM'}</span>
                     </div>
                 </div>
 
@@ -194,13 +194,37 @@ const DeliveryDashboard = () => {
                 )}
             </div>
 
-            {/* Performance Snapshot */}
-            <h3 className="op-section-title">Performance Snapshot</h3>
-            <div className="op-perf-grid">
-                <div className="op-perf-box">
-                    <strong>{stats.todayDeliveries}</strong>
-                    <span>Orders Today</span>
+            {/* Daily Operational Stats */}
+            <div className="op-welcome-card" style={{ marginBottom: '24px', padding: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <h3 style={{ margin: 0, fontSize: '18px' }}>Today's Activity</h3>
+                    <div style={{ color: '#00B14F', fontSize: '13px', fontWeight: '800', background: 'rgba(0,177,79,0.1)', padding: '4px 10px', borderRadius: '20px' }}>
+                        Live Progress
+                    </div>
                 </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
+                    <div style={{ flex: 1, textAlign: 'center', padding: '16px', borderRadius: '16px', background: '#111315', border: '1px solid #2C2F33' }}>
+                        <span style={{ fontSize: '12px', color: '#949CA4', display: 'block', marginBottom: '4px' }}>Orders Today</span>
+                        <strong style={{ fontSize: '28px', color: 'white' }}>{stats.todayDeliveries}</strong>
+                    </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(0,177,79,0.05)', border: '1px solid rgba(0,177,79,0.1)' }}>
+                        <span style={{ fontSize: '12px', color: '#00B14F', display: 'block', marginBottom: '4px', fontWeight: '700' }}>COMPLETED</span>
+                        <strong style={{ fontSize: '24px', color: 'white' }}>{stats.todayDeliveries}</strong>
+                    </div>
+                    <div style={{ padding: '16px', borderRadius: '16px', background: 'rgba(255,184,0,0.05)', border: '1px solid rgba(255,184,0,0.1)' }}>
+                        <span style={{ fontSize: '12px', color: '#FFB800', display: 'block', marginBottom: '4px', fontWeight: '700' }}>PENDING</span>
+                        <strong style={{ fontSize: '24px', color: 'white' }}>{currentOrder ? '1' : '0'}</strong>
+                    </div>
+                </div>
+            </div>
+
+            {/* Performance Snapshot */}
+            <h3 className="op-section-title">Performance Metrics</h3>
+            <div className="op-perf-grid" style={{ marginBottom: '24px' }}>
                 <div className="op-perf-box">
                     <strong style={{ color: stats.performance.onTimePercentage > 90 ? '#0C831F' : '#E23744' }}>
                         {stats.performance.onTimePercentage}%
@@ -218,12 +242,6 @@ const DeliveryDashboard = () => {
                 <div className="op-perf-box">
                     <strong>⭐ {stats.rating.toFixed(1)}</strong>
                     <span>Rating</span>
-                </div>
-                <div className="op-perf-box">
-                    <strong style={{ color: presentToday ? '#0C831F' : '#E23744' }}>
-                        {presentToday ? 'Present' : 'Absent'}
-                    </strong>
-                    <span>Attendance</span>
                 </div>
             </div>
 

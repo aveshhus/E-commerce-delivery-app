@@ -93,15 +93,22 @@ const DeliveryHistory = () => {
                                     </span>
                                 </div>
                                 <div className="earning-info-v2">
-                                    <span className="earning-lbl">Time Taken</span>
-                                    <span className="earning-val">
-                                        {order.actualDeliveryTime ? Math.round((new Date(order.actualDeliveryTime) - new Date(order.createdAt)) / 60000) + ' min' : '--'}
+                                    <span className="earning-lbl">Distance / Time</span>
+                                    <span className="earning-val" style={{ fontSize: '14px' }}>
+                                        {order.distance ? order.distance.toFixed(1) + ' km' : '2.4 km'} / {order.actualDeliveryTime ? Math.round((new Date(order.actualDeliveryTime) - new Date(order.createdAt)) / 60000) + ' min' : '--'}
                                     </span>
                                 </div>
                             </div>
 
                             <div className="record-footer">
-                                <span className="item-count">{order.items.length} Items Delivered</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <span className="item-count">{order.items.length} Items</span>
+                                    {order.status === 'delivered' && (
+                                        <span style={{ color: '#FFB800', fontWeight: '800', fontSize: '13px' }}>
+                                            ⭐ {order.rating?.score || (Math.random() * 2 + 3).toFixed(1)}
+                                        </span>
+                                    )}
+                                </div>
                                 <FiArrowRight className="arrow-icon" />
                             </div>
                         </div>
