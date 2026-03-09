@@ -160,8 +160,8 @@ const AdminDelivery = () => {
                                         <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>EMP: {a.employeeId || 'KM-PENDING'}</div>
                                     </td>
                                     <td>
-                                        <span className={`badge ${a.isOnline ? 'badge-success' : 'badge-outline'}`}>
-                                            {a.isOnline ? (a.currentOrder ? 'ON DELIVERY' : 'ONLINE') : 'OFFLINE'}
+                                        <span className={`badge ${a.isOnline ? (a.isOnBreak ? 'badge-warning' : 'badge-success') : 'badge-outline'}`}>
+                                            {a.isOnline ? (a.currentOrder ? 'ON DELIVERY' : (a.isOnBreak ? 'ON BREAK' : 'ONLINE')) : 'OFFLINE'}
                                         </span>
                                     </td>
                                     <td style={{ fontWeight: 700 }}>{a.dailyTarget || 20}</td>
@@ -283,13 +283,14 @@ const AdminDelivery = () => {
                 {activeTab === 'attendance' && (
                     <div style={{ padding: '24px' }}>
                         <table className="admin-table">
-                            <thead><tr><th>Agent</th><th>Date</th><th>Logged Hours</th><th>Status</th></tr></thead>
+                            <thead><tr><th>Agent</th><th>Date</th><th>Logged Hours</th><th>Breaks</th><th>Status</th></tr></thead>
                             <tbody>
                                 {agents.flatMap(agent => (agent.attendance || []).toReversed().map((att, idx) => (
                                     <tr key={`${agent._id}-${idx}`}>
                                         <td><strong>{agent.name}</strong></td>
                                         <td>{att.date}</td>
                                         <td>{att.hours?.toFixed(2) || 0}h</td>
+                                        <td>{att.breakMinutes?.toFixed(0) || 0}m</td>
                                         <td><span className={`badge ${att.status === 'present' ? 'badge-success' : 'badge-warning'}`}>{att.status}</span></td>
                                     </tr>
                                 )))}

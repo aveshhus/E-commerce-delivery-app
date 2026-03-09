@@ -182,13 +182,21 @@ const DeliveryDashboard = () => {
 
                 {isOnline && !currentOrder && (
                     <button
-                        className={`op-break-link ${isOnBreak ? 'active' : ''}`}
+                        className="op-master-btn"
+                        style={{
+                            marginTop: '16px',
+                            width: '100%',
+                            justifyContent: 'center',
+                            background: isOnBreak ? 'rgba(250, 62, 62, 0.05)' : 'rgba(255, 184, 0, 0.1)',
+                            border: `1px solid ${isOnBreak ? 'rgba(250, 62, 62, 0.3)' : 'rgba(255, 184, 0, 0.3)'}`,
+                            color: isOnBreak ? '#FA3E3E' : '#FFB800'
+                        }}
                         onClick={toggleBreakMode}
                     >
                         {isOnBreak ? (
-                            <><FiActivity /> Resume Work</>
+                            <><FiActivity /> End Break & Resume</>
                         ) : (
-                            <><FiCoffee /> Take a Break</>
+                            <><FiCoffee /> Start Break Time</>
                         )}
                     </button>
                 )}
