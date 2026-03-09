@@ -27,11 +27,16 @@ const AdminDelivery = () => {
     const [form, setForm] = useState({ name: '', phone: '', email: '', vehicleType: 'bike', vehicleNumber: '', dailyTarget: 20 });
 
     // Shifts State
-    const [shifts, setShifts] = useState([
-        { id: 'morning', name: 'Morning Shift', time: '9:00 AM - 6:00 PM', agents: 12 },
-        { id: 'evening', name: 'Evening Shift', time: '2:00 PM - 11:00 PM', agents: 8 },
-        { id: 'night', name: 'Night Owl', time: '11:00 PM - 7:00 AM', agents: 3 }
-    ]);
+    // Shifts Computed Data
+    const shiftList = [
+        { id: 'morning', name: 'Morning Shift', time: '9:00 AM - 6:00 PM' },
+        { id: 'evening', name: 'Evening Shift', time: '2:00 PM - 11:00 PM' },
+        { id: 'night', name: 'Night Owl', time: '11:00 PM - 7:00 AM' }
+    ];
+
+    const getShiftAgentsCount = (timeRange) => {
+        return agents.filter(a => a.shiftTime === timeRange).length;
+    };
 
     useEffect(() => {
         fetchAgents();
@@ -208,11 +213,11 @@ const AdminDelivery = () => {
                 {activeTab === 'shifts' && (
                     <div style={{ padding: '24px' }}>
                         <div className="grid-3">
-                            {shifts.map(s => (
+                            {shiftList.map(s => (
                                 <div key={s.id} className="card" style={{ padding: '20px', border: '1px solid var(--border)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                                         <div style={{ background: 'var(--primary-50)', color: 'var(--primary)', padding: '6px', borderRadius: '8px' }}><Clock size={20} /></div>
-                                        <span className="badge badge-info">{s.agents} Active</span>
+                                        <span className="badge badge-info">{getShiftAgentsCount(s.time)} Active</span>
                                     </div>
                                     <h5 style={{ fontSize: '16px', margin: '0 0 4px' }}>{s.name}</h5>
                                     <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: '0 0 16px' }}>{s.time}</p>

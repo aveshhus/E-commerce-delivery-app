@@ -89,6 +89,7 @@ const DeliveryDashboard = () => {
             }
 
             if (profileRes.success) {
+                const agent = profileRes.data.agent;
                 setStats({
                     todayDeliveries: agent.totalDeliveries || 0,
                     kmDriven: agent.kmDriven?.today || 0,
@@ -200,6 +201,61 @@ const DeliveryDashboard = () => {
                         )}
                     </button>
                 )}
+            </div>
+
+            {/* Attendance & Shift Heatmap Grid */}
+            <div className="op-welcome-card" style={{ marginBottom: '24px' }}>
+                <div style={{ color: 'var(--op-text-secondary)', fontSize: '12px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '800' }}>Attendance & Shift History</div>
+                <div className="heatmap-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '8px' }}>
+                    {(() => {
+                        const cells = [];
+                        const today = new Date();
+                        for (let i = 29; i >= 0; i--) {
+                            const d = new Date();
+                            d.setDate(today.getDate() - i);
+                            const dStr = d.toISOString().split('T')[0];
+                            const rec = stats.attendance?.find(a => a.date === dStr);
+
+                            let status = 'absent';
+                            let color = 'rgba(255, 255, 255, 0.05)';
+                            if (rec) {
+                                if (rec.hours >= 6) { status = 'present'; color = '#00B14F'; }
+                                else if (rec.hours >= 3) { status = 'half-day'; color = '#FFB800'; }
+                                else { status = 'absent'; color = '#FA3E3E'; }
+                            }
+
+                            cells.push(
+                                <div
+                                    key={dStr}
+                                    className="heatmap-cell group relative"
+                                    style={{
+                                        aspectRatio: '1',
+                                        background: color,
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        position: 'relative'
+                                    }}
+                                >
+                                    <div className="heatmap-tooltip">
+                                        <div style={{ fontWeight: 800, marginBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '4px' }}>
+                                            {new Date(dStr).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                                        </div>
+                                        <div style={{ fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                            <span>Shift: <strong>{rec?.hours?.toFixed(1) || 0}h</strong></span>
+                                            <span style={{ color: color }}>{status.toUpperCase()}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        return cells;
+                    })()}
+                </div>
+                <div style={{ display: 'flex', gap: '12px', marginTop: '16px', fontSize: '10px', color: 'var(--op-text-secondary)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#00B14F' }}></div> Present</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#FFB800' }}></div> HalfDay</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#FA3E3E' }}></div> Absent</div>
+                </div>
             </div>
 
             {/* Daily Operational Stats */}
