@@ -580,3 +580,53 @@
 .shift-controls button:active {
     transform: translateY(0);
 }
+
+/* Attendance Heatmap Styles */
+.heatmap-cell {
+    position: relative;
+    transition: transform 0.2s ease;
+}
+
+.heatmap-cell:hover {
+    transform: scale(1.1);
+    z-index: 100;
+}
+
+.heatmap-tooltip {
+    position: absolute;
+    bottom: 140%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(26, 28, 30, 0.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    border-radius: 12px;
+    width: 160px;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+}
+
+.heatmap-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1A1C1E;
+}
+
+.heatmap-cell:hover .heatmap-tooltip {
+    opacity: 1;
+    visibility: visible;
+    bottom: 125%;
+}
+
+.group:hover .heatmap-tooltip {
+    opacity: 1 !important;
+    visibility: visible !important;
+}

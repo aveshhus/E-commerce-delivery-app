@@ -40,7 +40,77 @@ const DeliveryPerformance = () => {
                     </div>
                     <div style={{ textAlign: 'right' }}>
                         <div style={{ color: '#949CA4', fontSize: '12px', marginBottom: '4px' }}>Shift Hrs Logged</div>
-                        <div style={{ color: '#00B14F', fontSize: '24px', fontWeight: '800' }}>6h 45m</div>
+                        <div style={{ color: '#00B14F', fontSize: '24px', fontWeight: '800' }}>
+                            {(() => {
+                                const todayStr = new Date().toISOString().split('T')[0];
+                                const todayRec = agentData?.attendance?.find(a => a.date === todayStr);
+                                if (!todayRec) return '0h';
+                                const h = Math.floor(todayRec.hours || 0);
+                                const m = Math.round(((todayRec.hours || 0) % 1) * 60);
+                                return `${h}h ${m}m`;
+                            })()}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Attendance Heatmap Grid */}
+                <div className="attendance-heatmap-container" style={{ marginBottom: '24px' }}>
+                    <div style={{ color: '#949CA4', fontSize: '12px', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Work History (Past 30 Days)</div>
+                    <div className="heatmap-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '8px' }}>
+                        {(() => {
+                            const cells = [];
+                            const today = new Date();
+                            for (let i = 29; i >= 0; i--) {
+                                const d = new Date();
+                                d.setDate(today.getDate() - i);
+                                const dStr = d.toISOString().split('T')[0];
+                                const rec = agentData?.attendance?.find(a => a.date === dStr);
+
+                                let status = 'absent';
+                                let color = 'rgba(250, 62, 62, 0.15)';
+                                if (rec) {
+                                    if (rec.hours >= 6) { status = 'present'; color = '#00B14F'; }
+                                    else if (rec.hours >= 3) { status = 'half-day'; color = '#FFB800'; }
+                                    else { status = 'absent'; color = '#FA3E3E'; }
+                                }
+
+                                cells.push(
+                                    <div
+                                        key={dStr}
+                                        className="heatmap-cell group relative"
+                                        style={{
+                                            aspectRatio: '1',
+                                            background: color,
+                                            borderRadius: '4px',
+                                            cursor: 'pointer',
+                                            position: 'relative'
+                                        }}
+                                    >
+                                        <div className="heatmap-tooltip">
+                                            <div style={{ fontWeight: 800, marginBottom: '4px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '4px' }}>
+                                                {new Date(dStr).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                                            </div>
+                                            <div style={{ fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                <span>Shift: <strong>{rec?.hours?.toFixed(1) || 0}h</strong></span>
+                                                <span>Online: <strong>{rec?.onlineHours?.toFixed(1) || 0}h</strong></span>
+                                                <span style={{ color: color }}>STATUS: {status.toUpperCase()}</span>
+                                                {rec?.logs?.length > 0 && (
+                                                    <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                                        <div style={{ color: '#949CA4', fontSize: '9px' }}>ACTIVITY LOG:</div>
+                                                        {rec.logs.slice(-3).map((log, idx) => (
+                                                            <div key={idx} style={{ fontSize: '9px', opacity: 0.8 }}>
+                                                                • {new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {log.event}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            }
+                            return cells;
+                        })()}
                     </div>
                 </div>
 
@@ -54,6 +124,12 @@ const DeliveryPerformance = () => {
                     <button onClick={requestLeave} style={{ background: '#111315', color: 'white', border: '1px solid #2C2F33', padding: '16px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', gridColumn: 'span 2', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                         <FiCalendar style={{ color: '#1A73E8', fontSize: '18px' }} /> Request Leave / Time Off
                     </button>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', fontSize: '10px', color: '#949CA4' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#00B14F' }}></div> P</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#FFB800' }}></div> HD</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#FA3E3E' }}></div> A</div>
                 </div>
 
                 <div style={{ background: 'rgba(255, 184, 0, 0.1)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,184,0,0.3)', color: '#FFB800', fontSize: '13px', display: 'flex', alignItems: 'flex-start', gap: '10px', lineHeight: '1.4' }}>
