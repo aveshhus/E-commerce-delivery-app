@@ -24,7 +24,6 @@ router.get('/', auth, authorize('admin', 'superadmin'), deliveryController.getAg
 router.post('/', auth, authorize('admin', 'superadmin'), deliveryController.createAgent);
 router.get('/nearby', auth, authorize('admin', 'superadmin'), deliveryController.getNearbyAgents);
 router.put('/admin/application/:id/status', auth, authorize('admin', 'superadmin'), deliveryController.updateApplicationStatus);
-router.put('/:id/toggle-status', auth, authorize('admin', 'superadmin'), deliveryController.adminToggleStatus);
 router.put('/:id', auth, authorize('admin', 'superadmin'), deliveryController.updateAgent);
 router.delete('/:id', auth, authorize('admin', 'superadmin'), deliveryController.deleteAgent);
 

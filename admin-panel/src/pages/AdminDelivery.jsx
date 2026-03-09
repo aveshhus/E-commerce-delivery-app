@@ -65,16 +65,6 @@ const AdminDelivery = () => {
         } catch (err) { toast.error(err.message || 'Action failed'); }
     };
 
-    const handleToggleStatus = async (id) => {
-        try {
-            const res = await adminAPI.toggleAgentStatus(id);
-            if (res.success) {
-                toast.success(res.message);
-                fetchAgents();
-            }
-        } catch (err) { toast.error(err.message || 'Toggle failed'); }
-    };
-
     const openNew = () => { setEditing(null); setForm({ name: '', phone: '', email: '', vehicleType: 'bike', vehicleNumber: '', dailyTarget: 20 }); setShowModal(true); };
     const openEdit = (a) => { setEditing(a._id); setForm({ name: a.name, phone: a.phone, email: a.email || '', vehicleType: a.vehicleType, vehicleNumber: a.vehicleNumber || '', dailyTarget: a.dailyTarget || 20 }); setShowModal(true); };
 
@@ -157,39 +147,12 @@ const AdminDelivery = () => {
                                     </td>
                                     <td>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <span className={`badge ${a.isOnline ? 'badge-success' : 'badge-outline'}`} style={{ fontSize: '10px' }}>
-                                                    {a.isOnline ?
-                                                        (a.currentOrder ? 'ON DELIVERY' :
-                                                            (a.isOnBreak ? 'ON BREAK' : 'ONLINE'))
-                                                        : 'OFFLINE'}
-                                                </span>
-                                                <button
-                                                    onClick={() => handleToggleStatus(a._id)}
-                                                    className={`toggle-btn ${a.isOnline ? 'active' : ''}`}
-                                                    style={{
-                                                        width: '32px',
-                                                        height: '18px',
-                                                        borderRadius: '10px',
-                                                        background: a.isOnline ? 'var(--success)' : '#ccc',
-                                                        position: 'relative',
-                                                        border: 'none',
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.3s'
-                                                    }}
-                                                >
-                                                    <div style={{
-                                                        width: '14px',
-                                                        height: '14px',
-                                                        borderRadius: '50%',
-                                                        background: 'white',
-                                                        position: 'absolute',
-                                                        top: '2px',
-                                                        left: a.isOnline ? '16px' : '2px',
-                                                        transition: 'all 0.3s'
-                                                    }}></div>
-                                                </button>
-                                            </div>
+                                            <span className={`badge ${a.isOnline ? 'badge-success' : 'badge-outline'}`} style={{ fontSize: '10px' }}>
+                                                {a.isOnline ?
+                                                    (a.currentOrder ? 'ON DELIVERY' :
+                                                        (a.isOnBreak ? 'ON BREAK' : 'ONLINE'))
+                                                    : 'OFFLINE'}
+                                            </span>
                                             <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
                                                 {a.checkInTime ? `Clock In: ${new Date(a.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : 'Not Checked In'}
                                             </div>

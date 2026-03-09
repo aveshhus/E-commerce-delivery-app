@@ -268,84 +268,67 @@ exports.toggleBreak = async (req, res) => {
     }
 };
 
-// Helper to toggle agent availability with attendance logic
-async function performToggleAvailability(agent) {
-    const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
-    let attIndex = agent.attendance.findIndex(a => a.date === todayStr);
-
-    // Ensure attendance record exists for today
-    if (attIndex === -1) {
-        agent.attendance.push({
-            date: todayStr,
-            status: 'present',
-            hours: 0,
-            onlineHours: 0,
-            breakMinutes: 0,
-            logs: []
-        });
-        attIndex = agent.attendance.length - 1;
-    }
-
-    agent.isOnline = !agent.isOnline;
-
-    if (!agent.isOnline) {
-        // Going Offline
-        agent.isAvailable = false;
-        agent.isOnBreak = false;
-
-        if (agent.lastOnlineAt) {
-            const hoursPassed = (new Date() - new Date(agent.lastOnlineAt)) / (1000 * 60 * 60);
-            agent.onlineHours.today = (agent.onlineHours.today || 0) + hoursPassed;
-            agent.onlineHours.total = (agent.onlineHours.total || 0) + hoursPassed;
-            agent.attendance[attIndex].onlineHours = (agent.attendance[attIndex].onlineHours || 0) + hoursPassed;
-        }
-        agent.lastOfflineAt = now;
-        agent.attendance[attIndex].logs.push({ event: 'go-offline', time: now });
-
-        // If they are going offline, we also update total shift hours up to this point
-        if (agent.checkInTime) {
-            const totalShiftHours = (now - new Date(agent.checkInTime)) / (1000 * 60 * 60);
-            agent.attendance[attIndex].hours = totalShiftHours;
-        }
-    } else {
-        // Going Online
-        // AUTO CHECK-IN: If not checked in today, do it now
-        if (!agent.checkInTime) {
-            agent.checkInTime = now;
-            agent.checkOutTime = null;
-            agent.attendance[attIndex].logs.push({ event: 'check-in', time: now });
-        }
-
-        agent.isAvailable = true;
-        agent.lastOnlineAt = now;
-        agent.attendance[attIndex].logs.push({ event: 'go-online', time: now });
-    }
-
-    return await agent.save();
-}
-
 // Toggle availability (Online/Offline) - Merged with Check-In logic
 exports.toggleAvailability = async (req, res) => {
     try {
         let agent = await DeliveryAgent.findOne({ user: req.user._id });
         if (!agent) return res.status(404).json({ success: false, message: 'Agent not found' });
 
-        const updatedAgent = await performToggleAvailability(agent);
-        res.json({ success: true, data: { agent: updatedAgent } });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        let attIndex = agent.attendance.findIndex(a => a.date === todayStr);
 
-// Admin Toggles Agent Status
-exports.adminToggleStatus = async (req, res) => {
-    try {
-        let agent = await DeliveryAgent.findById(req.params.id);
-        if (!agent) return res.status(404).json({ success: false, message: 'Agent not found' });
+        // Ensure attendance record exists for today
+        if (attIndex === -1) {
+            agent.attendance.push({
+                date: todayStr,
+                status: 'present',
+                hours: 0,
+                onlineHours: 0,
+                breakMinutes: 0,
+                logs: []
+            });
+            attIndex = agent.attendance.length - 1;
+        }
 
-        const updatedAgent = await performToggleAvailability(agent);
-        res.json({ success: true, message: `Status toggled to ${updatedAgent.isOnline ? 'Online' : 'Offline'}`, data: { agent: updatedAgent } });
+        agent.isOnline = !agent.isOnline;
+
+        if (!agent.isOnline) {
+            // Going Offline
+            agent.isAvailable = false;
+            agent.isOnBreak = false;
+
+            if (agent.lastOnlineAt) {
+                const hoursPassed = (new Date() - new Date(agent.lastOnlineAt)) / (1000 * 60 * 60);
+                agent.onlineHours.today = (agent.onlineHours.today || 0) + hoursPassed;
+                agent.onlineHours.total = (agent.onlineHours.total || 0) + hoursPassed;
+                agent.attendance[attIndex].onlineHours = (agent.attendance[attIndex].onlineHours || 0) + hoursPassed;
+            }
+            agent.lastOfflineAt = now;
+            agent.attendance[attIndex].logs.push({ event: 'go-offline', time: now });
+
+            // If they are going offline, we also update total shift hours up to this point
+            if (agent.checkInTime) {
+                const totalShiftHours = (now - new Date(agent.checkInTime)) / (1000 * 60 * 60);
+                agent.attendance[attIndex].hours = totalShiftHours;
+            }
+        } else {
+            // Going Online
+
+            // AUTO CHECK-IN: If not checked in today, do it now
+            if (!agent.checkInTime) {
+                agent.checkInTime = now;
+                agent.checkOutTime = null;
+                agent.attendance[attIndex].logs.push({ event: 'check-in', time: now });
+            }
+
+            agent.isAvailable = true;
+            agent.lastOnlineAt = now;
+            agent.attendance[attIndex].logs.push({ event: 'go-online', time: now });
+        }
+
+        await agent.save();
+        res.json({ success: true, data: { agent } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

@@ -156,36 +156,42 @@ const DeliveryDashboard = () => {
                 </div>
             </div>
 
-            {/* Current Status Toggle Grid */}
-            <div className="op-status-grid">
-                <button
-                    disabled={contextLoading || currentOrder}
-                    onClick={() => { if (!isOnline) toggleStatus(); else if (isOnBreak) toggleBreakMode(); }}
-                    className={`op-status-btn ${activeStatus === 'available' ? 'active available' : ''}`}
-                >
-                    <div className="op-s-dot s-green"></div>
-                    Available
-                </button>
-                <div className={`op-status-btn disabled ${activeStatus === 'delivery' ? 'active delivery' : ''}`}>
-                    <div className="op-s-dot s-yellow"></div>
-                    On Delivery
+            {/* Master Shift Toggle */}
+            <div className="op-master-toggle-container">
+                <div className={`op-master-card ${isOnline ? 'online' : 'offline'}`}>
+                    <div className="op-m-info">
+                        <div className="op-m-badge">
+                            <div className={`op-m-dot ${isOnline ? 'pulse' : ''}`}></div>
+                            <span>{isOnline ? (currentOrder ? 'ON DELIVERY' : (isOnBreak ? 'ON BREAK' : 'ON DUTY')) : 'OFFLINE'}</span>
+                        </div>
+                        <h3>{isOnline ? "You are receiving orders" : "Ready to start work?"}</h3>
+                    </div>
+
+                    <button
+                        className={`op-master-btn ${isOnline ? 'online' : 'offline'}`}
+                        disabled={contextLoading || currentOrder}
+                        onClick={toggleStatus}
+                    >
+                        {isOnline ? (
+                            <><FiPower /> Go Offline</>
+                        ) : (
+                            <><FiZap /> Go On Duty</>
+                        )}
+                    </button>
                 </div>
-                <button
-                    disabled={contextLoading || currentOrder || !isOnline}
-                    onClick={toggleBreakMode}
-                    className={`op-status-btn ${activeStatus === 'break' ? 'active break' : ''}`}
-                >
-                    <div className="op-s-dot s-red"></div>
-                    Break
-                </button>
-                <button
-                    disabled={contextLoading || currentOrder}
-                    onClick={() => { if (isOnline) toggleStatus(); }}
-                    className={`op-status-btn ${activeStatus === 'offline' ? 'active offline' : ''}`}
-                >
-                    <div className="op-s-dot s-black"></div>
-                    Offline
-                </button>
+
+                {isOnline && !currentOrder && (
+                    <button
+                        className={`op-break-link ${isOnBreak ? 'active' : ''}`}
+                        onClick={toggleBreakMode}
+                    >
+                        {isOnBreak ? (
+                            <><FiActivity /> Resume Work</>
+                        ) : (
+                            <><FiCoffee /> Take a Break</>
+                        )}
+                    </button>
+                )}
             </div>
 
             {/* Performance Snapshot */}
