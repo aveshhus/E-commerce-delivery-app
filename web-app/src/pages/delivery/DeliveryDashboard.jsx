@@ -14,7 +14,8 @@ import {
     FiXCircle,
     FiCoffee,
     FiPower,
-    FiTruck
+    FiTruck,
+    FiArrowRight
 } from 'react-icons/fi';
 import deliveryService from '../../services/deliveryService';
 import toast from 'react-hot-toast';

@@ -148,38 +148,38 @@ const DeliveryAttendance = () => {
                                                 <FiUserCheck className="icon check-in" />
                                                 <div className="text">
                                                     <span className="lbl">Shift Start</span>
-                                                    <span className="val">{day.logs.find(l => l.event === 'check-in')?.time ? new Date(day.logs.find(l => l.event === 'check-in').time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
+                                                    <span className="val">{day.logs?.find(l => l.event === 'check-in')?.time ? new Date(day.logs.find(l => l.event === 'check-in').time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
                                                 </div>
                                             </div>
                                             <div className="detail-item">
                                                 <FiUserX className="icon check-out" />
                                                 <div className="text">
                                                     <span className="lbl">Shift End</span>
-                                                    <span className="val">{day.logs.find(l => l.event === 'check-out')?.time ? new Date(day.logs.find(l => l.event === 'check-out').time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
+                                                    <span className="val">{day.logs?.find(l => l.event === 'check-out')?.time ? new Date(day.logs.find(l => l.event === 'check-out').time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
                                                 </div>
                                             </div>
                                             <div className="detail-item">
                                                 <FiActivity className="icon online" />
                                                 <div className="text">
                                                     <span className="lbl">Online Time</span>
-                                                    <span className="val">{day.onlineHours?.toFixed(1) || 0} hrs</span>
+                                                    <span className="val">{(day.onlineHours || 0).toFixed(1)} hrs</span>
                                                 </div>
                                             </div>
                                             <div className="detail-item">
                                                 <FiCoffee className="icon break" />
                                                 <div className="text">
                                                     <span className="lbl">Break Taken</span>
-                                                    <span className="val">{day.breakMinutes?.toFixed(0) || 0} mins</span>
+                                                    <span className="val">{(day.breakMinutes || 0).toFixed(0)} mins</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="logs-timeline">
                                             <p className="log-title">Chronological Activity</p>
-                                            {day.logs.map((log, lIdx) => (
+                                            {day.logs?.map((log, lIdx) => (
                                                 <div key={lIdx} className="log-entry">
-                                                    <span className="log-time">{new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                                    <span className="log-event">{log.event.replace('-', ' ')}</span>
+                                                    <span className="log-time">{log.time ? new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
+                                                    <span className="log-event">{log.event?.replace('-', ' ')}</span>
                                                 </div>
                                             ))}
                                         </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FiLogOut, FiSettings, FiFileText, FiBook, FiBell, FiAlertCircle, FiTruck, FiChevronRight, FiPhoneCall, FiShield } from 'react-icons/fi';
+import { FiLogOut, FiSettings, FiFileText, FiBook, FiBell, FiAlertCircle, FiTruck, FiChevronRight, FiPhoneCall, FiShield, FiCalendar, FiDollarSign } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import './DeliveryDashboard.css';
 
