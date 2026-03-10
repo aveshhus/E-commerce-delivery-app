@@ -35,6 +35,7 @@ import DeliveryEarnings from './pages/delivery/DeliveryEarnings';
 import DeliveryIssueReport from './pages/delivery/DeliveryIssueReport';
 import DeliveryNotifications from './pages/delivery/DeliveryNotifications';
 import DeliveryProfile from './pages/delivery/DeliveryProfile';
+import DeliveryAttendance from './pages/delivery/DeliveryAttendance';
 import DeliveryMenu from './pages/delivery/DeliveryMenu';
 import DeliveryLogin from './pages/delivery/DeliveryLogin';
 import PartnerApplication from './pages/PartnerApplication';
@@ -99,6 +100,7 @@ const AppContent = () => {
             <Route path="issue-report" element={<DeliveryIssueReport />} />
             <Route path="notifications" element={<DeliveryNotifications />} />
             <Route path="profile" element={<DeliveryProfile />} />
+            <Route path="attendance" element={<DeliveryAttendance />} />
             <Route path="menu" element={<DeliveryMenu />} />
           </Route>
           <Route path="*" element={<Navigate to="/delivery" replace />} />

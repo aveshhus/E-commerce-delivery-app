@@ -58,6 +58,14 @@ const DeliveryMenu = () => {
                     </div>
                     <FiChevronRight className="op-menu-arrow" />
                 </button>
+                <button className="op-menu-item" onClick={() => navigate('/delivery/attendance')}>
+                    <div className="op-menu-icon" style={{ color: '#00B14F', background: 'rgba(0,177,79,0.1)' }}><FiCalendar /></div>
+                    <div className="op-menu-text">
+                        <span>Attendance & Shift History</span>
+                        <small>Daily activity log, hours & status</small>
+                    </div>
+                    <FiChevronRight className="op-menu-arrow" />
+                </button>
             </div>
 
             {/* 7. Incident / Support System */}

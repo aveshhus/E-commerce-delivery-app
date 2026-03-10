@@ -207,9 +207,9 @@ const DeliveryDashboard = () => {
             <div className="op-welcome-card" style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                     <div style={{ color: 'var(--op-text-secondary)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '800' }}>Attendance & Shift History</div>
-                    <div style={{ color: '#00B14F', fontSize: '11px', fontWeight: '700' }}>
-                        Joined: {agentData?.createdAt ? new Date(agentData.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '---'}
-                    </div>
+                    <Link to="/delivery/attendance" style={{ color: '#00B14F', fontSize: '11px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
+                        OPEN HISTORY <FiArrowRight />
+                    </Link>
                 </div>
                 <div className="heatmap-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '8px' }}>
                     {(() => {
