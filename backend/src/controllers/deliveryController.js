@@ -484,6 +484,15 @@ exports.checkOut = async (req, res) => {
             if (agent.checkInTime) {
                 const totalShiftHours = (now - new Date(agent.checkInTime)) / (1000 * 60 * 60);
                 agent.attendance[attIndex].hours = totalShiftHours;
+
+                // 🏁 Productivity-based Status Calculation
+                if (totalShiftHours >= 6) {
+                    agent.attendance[attIndex].status = 'present';
+                } else if (totalShiftHours >= 3) {
+                    agent.attendance[attIndex].status = 'half-day';
+                } else {
+                    agent.attendance[attIndex].status = 'absent';
+                }
             }
             agent.attendance[attIndex].logs.push({ event: 'check-out', time: now });
         }

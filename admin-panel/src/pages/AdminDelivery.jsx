@@ -38,6 +38,16 @@ const AdminDelivery = () => {
         return agents.filter(a => a.shiftTime === timeRange).length;
     };
 
+    const getAttendanceStats = (attendance = []) => {
+        const stats = { full: 0, half: 0, absent: 0 };
+        attendance.forEach(a => {
+            if (a.status === 'present') stats.full++;
+            else if (a.status === 'half-day') stats.half++;
+            else stats.absent++;
+        });
+        return stats;
+    };
+
     useEffect(() => {
         fetchAgents();
         fetchApplications();
@@ -190,21 +200,37 @@ const AdminDelivery = () => {
                     <div style={{ padding: '24px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
                             <h4 style={{ margin: 0 }}>Monthly Salary Disbursement (March 2026)</h4>
+                            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Logic: Full Day (+₹50) | Half Day (+₹25) | Absent (₹0)</div>
                             <button className="btn btn-primary btn-sm">Generate All Slips</button>
                         </div>
                         <table className="admin-table">
-                            <thead><tr><th>Agent</th><th>Base Pay</th><th>Delivery Bonus</th><th>Attendance</th><th>Penalties</th><th>Net Payable</th></tr></thead>
+                            <thead><tr><th>Agent</th><th>Base Pay</th><th>Work Summary</th><th>Attendance Bonus</th><th>Delivery Bonus</th><th>Net Payable</th></tr></thead>
                             <tbody>
-                                {agents.map(a => (
-                                    <tr key={a._id}>
-                                        <td><strong>{a.name}</strong></td>
-                                        <td>₹{a.earnings?.baseSalary || 15000}</td>
-                                        <td style={{ color: 'var(--success)' }}>+₹{a.earnings?.monthly || 0}</td>
-                                        <td style={{ color: 'var(--success)' }}>+₹500</td>
-                                        <td style={{ color: 'var(--error)' }}>-₹0</td>
-                                        <td style={{ fontWeight: 800 }}>₹{(a.earnings?.baseSalary || 15000) + (a.earnings?.monthly || 0) + 500}</td>
-                                    </tr>
-                                ))}
+                                {agents.map(a => {
+                                    const attStats = getAttendanceStats(a.attendance);
+                                    const attBonus = (attStats.full * 50) + (attStats.half * 25);
+                                    const base = a.earnings?.baseSalary || 15000;
+                                    const deliveryBonus = a.earnings?.monthly || 0;
+
+                                    return (
+                                        <tr key={a._id}>
+                                            <td>
+                                                <strong>{a.name}</strong>
+                                                <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{a.employeeId}</div>
+                                            </td>
+                                            <td>₹{base}</td>
+                                            <td>
+                                                <div style={{ fontSize: '12px' }}>
+                                                    <span style={{ color: 'var(--success)' }}>{attStats.full} Days Full</span> |
+                                                    <span style={{ color: 'var(--warning)', marginLeft: '4px' }}>{attStats.half} Half</span>
+                                                </div>
+                                            </td>
+                                            <td style={{ color: 'var(--success)', fontWeight: 600 }}>+₹{attBonus}</td>
+                                            <td style={{ color: 'var(--success)' }}>+₹{deliveryBonus}</td>
+                                            <td style={{ fontWeight: 800, fontSize: '15px', color: 'var(--primary)' }}>₹{base + attBonus + deliveryBonus}</td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
@@ -296,7 +322,9 @@ const AdminDelivery = () => {
                                         <td>{att.date}</td>
                                         <td>{att.hours?.toFixed(2) || 0}h</td>
                                         <td>{att.breakMinutes?.toFixed(0) || 0}m</td>
-                                        <td><span className={`badge ${att.status === 'present' ? 'badge-success' : 'badge-warning'}`}>{att.status}</span></td>
+                                        <td><span className={`badge ${att.status === 'present' ? 'badge-success' :
+                                            att.status === 'half-day' ? 'badge-warning' : 'badge-error'
+                                            }`}>{att.status}</span></td>
                                     </tr>
                                 )))}
                             </tbody>

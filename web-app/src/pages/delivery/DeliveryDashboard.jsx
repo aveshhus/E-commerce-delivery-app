@@ -205,23 +205,40 @@ const DeliveryDashboard = () => {
 
             {/* Attendance & Shift Heatmap Grid */}
             <div className="op-welcome-card" style={{ marginBottom: '24px' }}>
-                <div style={{ color: 'var(--op-text-secondary)', fontSize: '12px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '800' }}>Attendance & Shift History</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <div style={{ color: 'var(--op-text-secondary)', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '800' }}>Attendance & Shift History</div>
+                    <div style={{ color: '#00B14F', fontSize: '11px', fontWeight: '700' }}>
+                        Joined: {agentData?.createdAt ? new Date(agentData.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }) : '---'}
+                    </div>
+                </div>
                 <div className="heatmap-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '8px' }}>
                     {(() => {
                         const cells = [];
                         const today = new Date();
+                        const joinDate = agentData?.createdAt ? new Date(agentData.createdAt) : null;
+
                         for (let i = 29; i >= 0; i--) {
                             const d = new Date();
                             d.setDate(today.getDate() - i);
+                            d.setHours(0, 0, 0, 0);
                             const dStr = d.toISOString().split('T')[0];
                             const rec = stats.attendance?.find(a => a.date === dStr);
 
                             let status = 'absent';
                             let color = 'rgba(255, 255, 255, 0.05)';
+
+                            const isAfterJoining = joinDate ? d >= new Date(joinDate.setHours(0, 0, 0, 0)) : false;
+
                             if (rec) {
                                 if (rec.hours >= 6) { status = 'present'; color = '#00B14F'; }
                                 else if (rec.hours >= 3) { status = 'half-day'; color = '#FFB800'; }
                                 else { status = 'absent'; color = '#FA3E3E'; }
+                            } else if (isAfterJoining) {
+                                status = 'absent';
+                                color = '#FA3E3E';
+                            } else {
+                                status = 'not-onboarded';
+                                color = 'rgba(255, 255, 255, 0.03)';
                             }
 
                             cells.push(
@@ -233,7 +250,8 @@ const DeliveryDashboard = () => {
                                         background: color,
                                         borderRadius: '4px',
                                         cursor: 'pointer',
-                                        position: 'relative'
+                                        position: 'relative',
+                                        opacity: status === 'not-onboarded' ? 0.3 : 1
                                     }}
                                 >
                                     <div className="heatmap-tooltip">
@@ -241,8 +259,14 @@ const DeliveryDashboard = () => {
                                             {new Date(dStr).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                                         </div>
                                         <div style={{ fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                            <span>Shift: <strong>{rec?.hours?.toFixed(1) || 0}h</strong></span>
-                                            <span style={{ color: color }}>{status.toUpperCase()}</span>
+                                            {status !== 'not-onboarded' ? (
+                                                <>
+                                                    <span>Shift: <strong>{rec?.hours?.toFixed(1) || 0}h</strong></span>
+                                                    <span style={{ color: color }}>{status.toUpperCase()}</span>
+                                                </>
+                                            ) : (
+                                                <span style={{ color: 'var(--op-text-secondary)' }}>NOT ONBOARDED</span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

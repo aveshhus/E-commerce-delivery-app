@@ -35,8 +35,11 @@ const DeliveryPerformance = () => {
             <div className="op-welcome-card" style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #2C2F33', paddingBottom: '16px' }}>
                     <div>
-                        <div style={{ color: '#949CA4', fontSize: '12px', marginBottom: '4px' }}>Current Shift Time</div>
-                        <div style={{ color: 'white', fontSize: '18px', fontWeight: '800' }}>{agentData?.shiftTime || '09:00 AM - 06:00 PM'}</div>
+                        <div style={{ color: '#949CA4', fontSize: '12px', marginBottom: '4px' }}>Shift Timing</div>
+                        <div style={{ color: 'white', fontSize: '18px', fontWeight: '800' }}>{agentData?.shiftTime || '09:00 AM - 6:00 PM'}</div>
+                        <div style={{ color: '#00B14F', fontSize: '11px', marginTop: '4px', fontWeight: '600' }}>
+                            🗓 Joined: {agentData?.createdAt ? new Date(agentData.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : '---'}
+                        </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                         <div style={{ color: '#949CA4', fontSize: '12px', marginBottom: '4px' }}>Shift Hrs Logged</div>
@@ -60,18 +63,32 @@ const DeliveryPerformance = () => {
                         {(() => {
                             const cells = [];
                             const today = new Date();
+                            const joinDate = agentData?.createdAt ? new Date(agentData.createdAt) : null;
+
                             for (let i = 29; i >= 0; i--) {
                                 const d = new Date();
                                 d.setDate(today.getDate() - i);
+                                d.setHours(0, 0, 0, 0);
                                 const dStr = d.toISOString().split('T')[0];
                                 const rec = agentData?.attendance?.find(a => a.date === dStr);
 
                                 let status = 'absent';
-                                let color = 'rgba(250, 62, 62, 0.15)';
+                                let color = 'rgba(250, 62, 62, 0.1)'; // Default: Very faint red for pre-joining or truly absent
+
+                                const isAfterJoining = joinDate ? d >= new Date(joinDate.setHours(0, 0, 0, 0)) : false;
+
                                 if (rec) {
                                     if (rec.hours >= 6) { status = 'present'; color = '#00B14F'; }
                                     else if (rec.hours >= 3) { status = 'half-day'; color = '#FFB800'; }
                                     else { status = 'absent'; color = '#FA3E3E'; }
+                                } else if (isAfterJoining) {
+                                    // If after joining but no record, strictly ABSENT
+                                    status = 'absent';
+                                    color = '#FA3E3E';
+                                } else {
+                                    // Before joining date
+                                    status = 'not-onboarded';
+                                    color = 'rgba(255, 255, 255, 0.05)';
                                 }
 
                                 cells.push(
@@ -83,7 +100,8 @@ const DeliveryPerformance = () => {
                                             background: color,
                                             borderRadius: '4px',
                                             cursor: 'pointer',
-                                            position: 'relative'
+                                            position: 'relative',
+                                            opacity: status === 'not-onboarded' ? 0.3 : 1
                                         }}
                                     >
                                         <div className="heatmap-tooltip">
@@ -91,9 +109,15 @@ const DeliveryPerformance = () => {
                                                 {new Date(dStr).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                                             </div>
                                             <div style={{ fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                <span>Shift: <strong>{rec?.hours?.toFixed(1) || 0}h</strong></span>
-                                                <span>Online: <strong>{rec?.onlineHours?.toFixed(1) || 0}h</strong></span>
-                                                <span style={{ color: color }}>STATUS: {status.toUpperCase()}</span>
+                                                {status !== 'not-onboarded' ? (
+                                                    <>
+                                                        <span>Shift: <strong>{rec?.hours?.toFixed(1) || 0}h</strong></span>
+                                                        <span>Online: <strong>{rec?.onlineHours?.toFixed(1) || 0}h</strong></span>
+                                                        <span style={{ color: color }}>STATUS: {status.toUpperCase()}</span>
+                                                    </>
+                                                ) : (
+                                                    <span style={{ color: '#949CA4' }}>NOT ONBOARDED</span>
+                                                )}
                                                 {rec?.logs?.length > 0 && (
                                                     <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                                                         <div style={{ color: '#949CA4', fontSize: '9px' }}>ACTIVITY LOG:</div>
