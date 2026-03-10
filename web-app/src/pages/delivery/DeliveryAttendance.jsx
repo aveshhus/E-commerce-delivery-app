@@ -106,6 +106,55 @@ const DeliveryAttendance = () => {
                 </div>
             </div>
 
+            {/* Yearly Contribution-style Grid */}
+            <div className="yearly-grid-container">
+                <div className="yearly-grid-header">
+                    <h3 className="section-title">Yearly Performance Grid</h3>
+                    <div className="grid-legend">
+                        <div className="legend-item"><div className="sq present"></div> Present</div>
+                        <div className="legend-item"><div className="sq half"></div> Half</div>
+                        <div className="legend-item"><div className="sq absent"></div> Absent</div>
+                    </div>
+                </div>
+
+                <div className="yearly-grid-scroll">
+                    <div className="yearly-grid">
+                        {(() => {
+                            const cells = [];
+                            const today = new Date();
+                            // Go back 364 days to show a full year including today
+                            for (let i = 364; i >= 0; i--) {
+                                const d = new Date();
+                                d.setDate(today.getDate() - i);
+                                d.setHours(0, 0, 0, 0);
+                                const dStr = d.toISOString().split('T')[0];
+                                const rec = attendance.find(a => a.date === dStr);
+
+                                let status = 'none';
+                                if (rec) {
+                                    status = rec.status;
+                                }
+
+                                cells.push(
+                                    <div
+                                        key={dStr}
+                                        className={`grid-cell ${status}`}
+                                        title={`${new Date(dStr).toLocaleDateString()}: ${status.replace('-', ' ')}`}
+                                    >
+                                        <div className="cell-tooltip">
+                                            <strong>{new Date(dStr).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
+                                            <span>{status.toUpperCase()}</span>
+                                            {rec && <span>{rec.hours?.toFixed(1)} hrs</span>}
+                                        </div>
+                                    </div>
+                                );
+                            }
+                            return cells;
+                        })()}
+                    </div>
+                </div>
+            </div>
+
             <div className="att-list-section">
                 <h3 className="section-title">Historic Activity</h3>
 
