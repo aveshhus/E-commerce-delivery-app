@@ -356,6 +356,48 @@ exports.updateOrderStatus = async (req, res) => {
         if (status === 'delivered') {
             order.actualDeliveryTime = new Date();
             order.paymentStatus = 'paid';
+
+            // Update agent metrics
+            if (order.deliveryAgent) {
+                const agent = await DeliveryAgent.findById(order.deliveryAgent);
+                if (agent) {
+                    // 1. Calculate On-time
+                    const wasOnTime = order.actualDeliveryTime <= order.estimatedDeliveryTime;
+                    const totalDels = agent.totalDeliveries || 0;
+                    const onTimeDels = Math.round((agent.performance.onTimePercentage / 100) * totalDels);
+
+                    const newTotalDels = totalDels + 1;
+                    const newOnTimeDels = onTimeDels + (wasOnTime ? 1 : 0);
+                    const newOnTimePerc = Math.round((newOnTimeDels / newTotalDels) * 100);
+
+                    agent.totalDeliveries = newTotalDels;
+                    agent.performance.onTimePercentage = newOnTimePerc;
+
+                    // 2. Set Grade based on metrics
+                    if (newOnTimePerc >= 95) agent.performance.grade = 'A';
+                    else if (newOnTimePerc >= 85) agent.performance.grade = 'B';
+                    else if (newOnTimePerc >= 70) agent.performance.grade = 'C';
+                    else agent.performance.grade = 'D';
+
+                    await agent.save();
+                }
+            }
+        }
+
+        if (status === 'cancelled' && order.deliveryAgent) {
+            // Increment failed deliveries for agent
+            const agent = await DeliveryAgent.findById(order.deliveryAgent);
+            if (agent) {
+                const totalDels = agent.totalDeliveries || 0;
+                const failedDels = Math.round((agent.performance.failedDeliveriesPercentage / 100) * totalDels);
+
+                const newTotalDels = totalDels + 1;
+                const newFailedDels = failedDels + 1;
+                const newFailedPerc = Math.round((newFailedDels / newTotalDels) * 100);
+
+                agent.performance.failedDeliveriesPercentage = newFailedPerc;
+                await agent.save();
+            }
         }
 
         await order.save();
@@ -400,6 +442,103 @@ exports.assignDeliveryAgent = async (req, res) => {
         await agent.save();
 
         res.json({ success: true, message: 'Delivery agent assigned successfully', data: { order } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Customer: Submit Order Rating
+exports.submitRating = async (req, res) => {
+    try {
+        const { score, review } = req.body;
+        const order = await Order.findOne({ _id: req.params.id, user: req.user._id });
+
+        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+        if (order.status !== 'delivered') return res.status(400).json({ success: false, message: 'Only delivered orders can be rated' });
+        if (order.customerRating?.score) return res.status(400).json({ success: false, message: 'Order already rated' });
+
+        order.customerRating = { score, review, timestamp: new Date() };
+        await order.save();
+
+        // Update delivery agent average rating
+        if (order.deliveryAgent) {
+            const agent = await DeliveryAgent.findById(order.deliveryAgent);
+            if (agent) {
+                const oldCount = agent.rating.count || 0;
+                const oldAvg = agent.rating.average || 5;
+                const newCount = oldCount + 1;
+                const newAvg = ((oldAvg * oldCount) + score) / newCount;
+
+                agent.rating.average = parseFloat(newAvg.toFixed(1));
+                agent.rating.count = newCount;
+                await agent.save();
+            }
+        }
+
+        res.json({ success: true, message: 'Rating submitted successfully', data: { order } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Customer: File Complaint
+exports.submitComplaint = async (req, res) => {
+    try {
+        const { category, message } = req.body;
+        const order = await Order.findOne({ _id: req.params.id, user: req.user._id });
+
+        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+        order.complaint = {
+            isFiled: true,
+            category,
+            message,
+            status: 'pending',
+            filedAt: new Date()
+        };
+        await order.save();
+
+        // Increment complaint count for agent if assigned
+        if (order.deliveryAgent) {
+            await DeliveryAgent.findByIdAndUpdate(order.deliveryAgent, {
+                $inc: { 'performance.complaintsCount': 1 }
+            });
+        }
+
+        res.json({ success: true, message: 'Complaint filed successfully', data: { order } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Customer: Request Return (Damaged/Wrong Item)
+exports.requestReturn = async (req, res) => {
+    try {
+        const { reason, images } = req.body;
+        const order = await Order.findOne({ _id: req.params.id, user: req.user._id });
+
+        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+        if (order.status !== 'delivered') return res.status(400).json({ success: false, message: 'Only delivered orders can be returned' });
+
+        order.returnInfo = {
+            isReturned: true,
+            reason,
+            status: 'requested',
+            images: images || [],
+            requestedAt: new Date()
+        };
+        order.status = 'refunded'; // Initial status for return flow
+        order.statusHistory.push({ status: 'refunded', note: `Return requested: ${reason}` });
+        await order.save();
+
+        // Increment returned count for agent
+        if (order.deliveryAgent) {
+            await DeliveryAgent.findByIdAndUpdate(order.deliveryAgent, {
+                $inc: { 'performance.returnedCount': 1 }
+            });
+        }
+
+        res.json({ success: true, message: 'Return request submitted', data: { order } });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

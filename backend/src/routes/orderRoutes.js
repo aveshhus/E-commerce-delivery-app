@@ -8,6 +8,9 @@ router.get('/my-orders', auth, orderController.getUserOrders);
 router.get('/my-orders/:id', auth, orderController.getOrder);
 router.put('/:id/cancel', auth, orderController.cancelOrder);
 router.post('/:id/reorder', auth, orderController.reorder);
+router.post('/:id/rate', auth, orderController.submitRating);
+router.post('/:id/complaint', auth, orderController.submitComplaint);
+router.post('/:id/return', auth, orderController.requestReturn);
 
 // Admin routes
 router.get('/admin/all', auth, authorize('admin', 'superadmin'), orderController.getAllOrders);

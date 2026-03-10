@@ -85,6 +85,9 @@ export const orderAPI = {
     getOrder: (id) => api.get(`/orders/my-orders/${id}`),
     cancelOrder: (id, data) => api.put(`/orders/${id}/cancel`, data),
     reorder: (id) => api.post(`/orders/${id}/reorder`),
+    rateOrder: (id, data) => api.post(`/orders/${id}/rate`, data),
+    submitComplaint: (id, data) => api.post(`/orders/${id}/complaint`, data),
+    requestReturn: (id, data) => api.post(`/orders/${id}/return`, data),
 };
 
 // Address APIs

@@ -119,6 +119,29 @@ const orderSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Coupon'
     },
+    customerRating: {
+        score: { type: Number, min: 1, max: 5 },
+        review: String,
+        timestamp: Date
+    },
+    returnInfo: {
+        isReturned: { type: Boolean, default: false },
+        reason: String,
+        status: {
+            type: String,
+            enum: ['none', 'requested', 'picked_up', 'refunded', 'rejected'],
+            default: 'none'
+        },
+        images: [String],
+        requestedAt: Date
+    },
+    complaint: {
+        isFiled: { type: Boolean, default: false },
+        category: { type: String, enum: ['delivery_late', 'bad_behavior', 'item_missing', 'wrong_item', 'other'] },
+        message: String,
+        status: { type: String, enum: ['pending', 'investigating', 'resolved'], default: 'pending' },
+        filedAt: Date
+    },
     statusHistory: [{
         status: String,
         timestamp: { type: Date, default: Date.now },

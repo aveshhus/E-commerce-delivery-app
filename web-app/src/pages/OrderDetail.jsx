@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { orderAPI } from '../services/api';
+import toast from 'react-hot-toast';
 import {
     ChevronLeft, MapPin, Phone, CreditCard,
     Clock, Package, CheckCircle2, Truck,
@@ -12,6 +13,9 @@ const OrderDetail = () => {
     const navigate = useNavigate();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [activeModal, setActiveModal] = useState(null); // 'rate', 'complaint', 'return'
+    const [modalData, setModalData] = useState({ score: 5, text: '', category: 'delivery_late' });
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         fetchOrder();
@@ -25,6 +29,54 @@ const OrderDetail = () => {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleRating = async () => {
+        try {
+            setSubmitting(true);
+            const res = await orderAPI.rateOrder(id, { score: modalData.score, review: modalData.text });
+            if (res.success) {
+                toast.success('Thank you for your rating!');
+                fetchOrder();
+                setActiveModal(null);
+            }
+        } catch (err) {
+            toast.error(err.message || 'Failed to submit rating');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleComplaint = async () => {
+        try {
+            setSubmitting(true);
+            const res = await orderAPI.submitComplaint(id, { category: modalData.category, message: modalData.text });
+            if (res.success) {
+                toast.success('Complaint filed. We will investigate.');
+                fetchOrder();
+                setActiveModal(null);
+            }
+        } catch (err) {
+            toast.error(err.message || 'Failed to file complaint');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleReturn = async () => {
+        try {
+            setSubmitting(true);
+            const res = await orderAPI.requestReturn(id, { reason: modalData.text });
+            if (res.success) {
+                toast.success('Return request submitted.');
+                fetchOrder();
+                setActiveModal(null);
+            }
+        } catch (err) {
+            toast.error(err.message || 'Failed to submit return');
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -176,51 +228,170 @@ const OrderDetail = () => {
                     </div>
                 </div>
 
-                {/* Sidebar */}
-                <div className="detail-sidebar">
-                    <div className="address-detail-card detail-card">
-                        <div className="card-h-group">
-                            <MapPin size={18} className="h-icon" />
-                            <h3>Delivery Address</h3>
-                        </div>
-                        <div className="addr-content">
-                            <p className="name">{order.deliveryAddress?.fullName}</p>
-                            <p className="phone">
-                                {order.deliveryAddress?.phone}
-                                {order.deliveryAddress?.alternatePhone && <span style={{ opacity: 0.6 }}> | {order.deliveryAddress.alternatePhone}</span>}
-                            </p>
-                            <p className="text">
-                                {order.deliveryAddress?.addressLine1}, {order.deliveryAddress?.city}<br />
-                                {order.deliveryAddress?.state} - {order.deliveryAddress?.pincode}
-                            </p>
-                        </div>
-                    </div>
+                {/* Modals */}
+                {activeModal && (
+                    <div className="modal-overlay-v2 fade-in" onClick={() => setActiveModal(null)}>
+                        <div className="modal-card-v2 slide-up" onClick={e => e.stopPropagation()}>
+                            <div className="modal-header-v2">
+                                <h2>
+                                    {activeModal === 'rate' && 'Rate Your Delivery'}
+                                    {activeModal === 'complaint' && 'Report an Issue'}
+                                    {activeModal === 'return' && 'Request Return'}
+                                </h2>
+                                <button className="close-m-btn" onClick={() => setActiveModal(null)}>×</button>
+                            </div>
 
-                    <div className="order-time-card detail-card">
-                        <div className="card-h-group">
-                            <Receipt size={18} className="h-icon" />
-                            <h3>Order Info</h3>
-                        </div>
-                        <div className="info-bits">
-                            <div className="bit">
-                                <span>Placed on</span>
-                                <p>{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                            <div className="modal-body-v2">
+                                {activeModal === 'rate' && (
+                                    <div className="rating-input">
+                                        <div className="stars-picker">
+                                            {[1, 2, 3, 4, 5].map(s => (
+                                                <span
+                                                    key={s}
+                                                    className={s <= modalData.score ? 'active' : ''}
+                                                    onClick={() => setModalData({ ...modalData, score: s })}
+                                                >★</span>
+                                            ))}
+                                        </div>
+                                        <p className="rating-hint">{['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][modalData.score - 1]}</p>
+                                    </div>
+                                )}
+
+                                {activeModal === 'complaint' && (
+                                    <div className="field-group">
+                                        <label>Issue Category</label>
+                                        <select
+                                            value={modalData.category}
+                                            onChange={e => setModalData({ ...modalData, category: e.target.value })}
+                                        >
+                                            <option value="delivery_late">Late Delivery</option>
+                                            <option value="bad_behavior">Behavioral Issue</option>
+                                            <option value="item_missing">Missing Item</option>
+                                            <option value="wrong_item">Wrong Item</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                )}
+
+                                <div className="field-group">
+                                    <label>
+                                        {activeModal === 'rate' ? 'Review (Optional)' : 'Tell us more'}
+                                    </label>
+                                    <textarea
+                                        placeholder={activeModal === 'return' ? 'Describe the damage or reason for return...' : 'Type here...'}
+                                        rows="4"
+                                        value={modalData.text}
+                                        onChange={e => setModalData({ ...modalData, text: e.target.value })}
+                                    ></textarea>
+                                </div>
+
+                                <button
+                                    className="submit-m-btn"
+                                    disabled={submitting || (activeModal !== 'rate' && !modalData.text)}
+                                    onClick={() => {
+                                        if (activeModal === 'rate') handleRating();
+                                        if (activeModal === 'complaint') handleComplaint();
+                                        if (activeModal === 'return') handleReturn();
+                                    }}
+                                >
+                                    {submitting ? 'Processing...' : 'Submit Now'}
+                                </button>
                             </div>
-                            <div className="bit">
-                                <span>Time</span>
-                                <p>{new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</p>
-                            </div>
                         </div>
-                        <button className="download-invoice">
-                            <ExternalLink size={14} />
-                            Download Invoice
-                        </button>
                     </div>
+                )}
+
+            </div>
+        </div>
+
+                {/* Sidebar */ }
+    <div className="detail-sidebar">
+        {/* Post-Delivery Actions */}
+        {isDelivered && (
+            <div className="post-delivery-card detail-card pulse-border">
+                <h3>Post-Delivery Actions</h3>
+                <div className="action-buttons-v2">
+                    {!order.customerRating?.score ? (
+                        <button className="action-row-btn star" onClick={() => setActiveModal('rate')}>
+                            <div className="btn-icon">⭐</div>
+                            <div className="btn-text">
+                                <strong>Rate Order</strong>
+                                <span>Share your experience</span>
+                            </div>
+                        </button>
+                    ) : (
+                        <div className="rating-summary-mini">
+                            <span>Your Rating:</span>
+                            <div className="stars">
+                                {[...Array(5)].map((_, i) => (
+                                    <span key={i} style={{ color: i < order.customerRating.score ? '#FFB800' : '#ddd' }}>★</span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    <button className="action-row-btn warning" onClick={() => setActiveModal('complaint')}>
+                        <div className="btn-icon">⚠️</div>
+                        <div className="btn-text">
+                            <strong>Report Issue</strong>
+                            <span>Complaint about delivery</span>
+                        </div>
+                    </button>
+
+                    <button className="action-row-btn return" onClick={() => setActiveModal('return')}>
+                        <div className="btn-icon">🔄</div>
+                        <div className="btn-text">
+                            <strong>Request Return</strong>
+                            <span>Damaged or Wrong Item</span>
+                        </div>
+                    </button>
                 </div>
             </div>
+        )}
 
-            <style dangerouslySetInnerHTML={{
-                __html: `
+        <div className="address-detail-card detail-card">
+            <div className="card-h-group">
+                <MapPin size={18} className="h-icon" />
+                <h3>Delivery Address</h3>
+            </div>
+            <div className="addr-content">
+                <p className="name">{order.deliveryAddress?.fullName}</p>
+                <p className="phone">
+                    {order.deliveryAddress?.phone}
+                    {order.deliveryAddress?.alternatePhone && <span style={{ opacity: 0.6 }}> | {order.deliveryAddress.alternatePhone}</span>}
+                </p>
+                <p className="text">
+                    {order.deliveryAddress?.addressLine1}, {order.deliveryAddress?.city}<br />
+                    {order.deliveryAddress?.state} - {order.deliveryAddress?.pincode}
+                </p>
+            </div>
+        </div>
+
+        <div className="order-time-card detail-card">
+            <div className="card-h-group">
+                <Receipt size={18} className="h-icon" />
+                <h3>Order Info</h3>
+            </div>
+            <div className="info-bits">
+                <div className="bit">
+                    <span>Placed on</span>
+                    <p>{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                </div>
+                <div className="bit">
+                    <span>Time</span>
+                    <p>{new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+            </div>
+            <button className="download-invoice">
+                <ExternalLink size={14} />
+                Download Invoice
+            </button>
+        </div>
+    </div>
+            </div >
+
+    <style dangerouslySetInnerHTML={{
+        __html: `
                 .order-detail-page {
                     max-width: 1000px;
                     margin: 0 auto;
@@ -388,8 +559,97 @@ const OrderDetail = () => {
                     cursor: pointer;
                     font-size: 13px;
                 }
+
+                /* New Premium Styles for Actions & Modals */
+                .pulse-border {
+                    border: 1px solid rgba(16, 185, 129, 0.2);
+                    animation: border-pulse 4s infinite;
+                }
+                @keyframes border-pulse {
+                    0% { border-color: rgba(16, 185, 129, 0.1); }
+                    50% { border-color: rgba(16, 185, 129, 0.5); }
+                    100% { border-color: rgba(16, 185, 129, 0.1); }
+                }
+
+                .action-buttons-v2 { display: grid; gap: 12px; margin-top: 10px; }
+                .action-row-btn {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 12px;
+                    border-radius: 14px;
+                    border: 1px solid #f1f1f1;
+                    background: #fff;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    text-align: left;
+                    width: 100%;
+                }
+                .action-row-btn:hover { background: #f9fafb; border-color: var(--primary); transform: translateX(5px); }
+                .btn-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #f3f4f6; border-radius: 10px; font-size: 18px; }
+                .btn-text strong { display: block; font-size: 14px; color: #111827; }
+                .btn-text span { font-size: 11px; color: #6b7280; font-weight: 500; }
+
+                .rating-summary-mini { display: flex; align-items: center; gap: 10px; padding: 12px; background: #f0fdf4; border-radius: 12px; border: 1px solid #bbfcce; margin-bottom: 12px; }
+                .rating-summary-mini span { font-size: 12px; font-weight: 700; color: #10b981; }
+                .rating-summary-mini .stars { font-size: 16px; letter-spacing: 2px; }
+
+                .modal-overlay-v2 {
+                    position: fixed;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(0,0,0,0.6);
+                    backdrop-filter: blur(5px);
+                    z-index: 1000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                }
+                .modal-card-v2 {
+                    background: #fff;
+                    width: 100%;
+                    max-width: 400px;
+                    border-radius: 24px;
+                    padding: 24px;
+                    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+                }
+                .modal-header-v2 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+                .modal-header-v2 h2 { font-size: 18px; font-weight: 800; }
+                .close-m-btn { font-size: 24px; border: none; background: none; cursor: pointer; color: #9ca3af; }
+
+                .stars-picker { display: flex; justify-content: center; gap: 8px; margin-bottom: 10px; }
+                .stars-picker span { font-size: 40px; cursor: pointer; color: #ddd; transition: scale 0.2s; }
+                .stars-picker span.active { color: #FFB800; transform: scale(1.1); }
+                .stars-picker span:hover { transform: scale(1.2); }
+                .rating-hint { text-align: center; font-weight: 700; color: #10b981; margin-bottom: 20px; }
+
+                .field-group { margin-bottom: 20px; }
+                .field-group label { display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; color: #6b7280; margin-bottom: 8px; }
+                .field-group textarea, .field-group select {
+                    width: 100%;
+                    padding: 12px;
+                    border-radius: 12px;
+                    border: 1px solid #e5e7eb;
+                    font-size: 14px;
+                    font-family: inherit;
+                    outline: none;
+                }
+                .field-group textarea:focus { border-color: var(--primary); }
+
+                .submit-m-btn {
+                    width: 100%;
+                    padding: 14px;
+                    border-radius: 14px;
+                    background: #1A1A2E;
+                    color: #fff;
+                    border: none;
+                    font-weight: 800;
+                    cursor: pointer;
+                    transition: opacity 0.2s;
+                }
+                .submit-m-btn:disabled { opacity: 0.5; cursor: not-allowed; }
             ` }} />
-        </div>
+        </div >
     );
 };
 
