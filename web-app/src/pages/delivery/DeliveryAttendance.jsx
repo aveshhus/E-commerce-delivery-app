@@ -106,51 +106,94 @@ const DeliveryAttendance = () => {
                 </div>
             </div>
 
-            {/* Yearly Contribution-style Grid */}
-            <div className="yearly-grid-container">
+            {/* Yearly Performance Command Center */}
+            <div className="yearly-grid-container premium-card">
                 <div className="yearly-grid-header">
-                    <h3 className="section-title">Yearly Performance Grid</h3>
+                    <div className="title-group">
+                        <FiActivity className="pulse-icon" />
+                        <h3 className="section-title">Professional Work Grid</h3>
+                    </div>
                     <div className="grid-legend">
-                        <div className="legend-item"><div className="sq present"></div> Present</div>
-                        <div className="legend-item"><div className="sq half"></div> Half</div>
-                        <div className="legend-item"><div className="sq absent"></div> Absent</div>
+                        <div className="legend-item"><div className="sq present"></div> <span className="lbl-mini">6h+</span></div>
+                        <div className="legend-item"><div className="sq half-day"></div> <span className="lbl-mini">3h+</span></div>
+                        <div className="legend-item"><div className="sq absent"></div> <span className="lbl-mini">Absent</span></div>
                     </div>
                 </div>
 
-                <div className="yearly-grid-scroll">
-                    <div className="yearly-grid">
+                <div className="grid-wrapper-v2">
+                    {/* Month Labels */}
+                    <div className="month-labels">
                         {(() => {
-                            const cells = [];
+                            const months = [];
                             const today = new Date();
-                            // Go back 364 days to show a full year including today
-                            for (let i = 364; i >= 0; i--) {
-                                const d = new Date();
-                                d.setDate(today.getDate() - i);
-                                d.setHours(0, 0, 0, 0);
-                                const dStr = d.toISOString().split('T')[0];
-                                const rec = attendance.find(a => a.date === dStr);
-
-                                let status = 'none';
-                                if (rec) {
-                                    status = rec.status;
-                                }
-
-                                cells.push(
-                                    <div
-                                        key={dStr}
-                                        className={`grid-cell ${status}`}
-                                        title={`${new Date(dStr).toLocaleDateString()}: ${status.replace('-', ' ')}`}
-                                    >
-                                        <div className="cell-tooltip">
-                                            <strong>{new Date(dStr).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</strong>
-                                            <span>{status.toUpperCase()}</span>
-                                            {rec && <span>{rec.hours?.toFixed(1)} hrs</span>}
-                                        </div>
-                                    </div>
-                                );
+                            for (let i = 11; i >= 0; i--) {
+                                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                                months.push(<span key={i} className="m-lbl">{d.toLocaleDateString('en-US', { month: 'short' })}</span>);
                             }
-                            return cells;
+                            return months;
                         })()}
+                    </div>
+
+                    <div className="grid-main-layout">
+                        {/* Day Labels */}
+                        <div className="day-labels">
+                            <span>Mon</span>
+                            <span>Wed</span>
+                            <span>Fri</span>
+                        </div>
+
+                        <div className="yearly-grid-scroll">
+                            <div className="yearly-grid-v2">
+                                {(() => {
+                                    const cells = [];
+                                    const today = new Date();
+
+                                    // Github style grid: 52-53 columns, 7 rows
+                                    // We'll iterate by weeks to make it easier to align
+                                    for (let i = 364; i >= 0; i--) {
+                                        const d = new Date();
+                                        d.setDate(today.getDate() - i);
+                                        d.setHours(0, 0, 0, 0);
+                                        const dStr = d.toISOString().split('T')[0];
+                                        const rec = attendance.find(a => a.date === dStr);
+
+                                        let status = 'none';
+                                        if (rec) status = rec.status;
+
+                                        cells.push(
+                                            <div
+                                                key={dStr}
+                                                className={`grid-cell-v2 ${status} ${selectedDay === dStr ? 'active' : ''}`}
+                                                onClick={() => {
+                                                    setSelectedDay(dStr);
+                                                    document.getElementById(`record-${dStr}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                }}
+                                            >
+                                                <div className="cell-tooltip-v2">
+                                                    <div className="t-head">{new Date(dStr).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                                                    <div className="t-body">
+                                                        <span className={`t-status ${status}`}>{status.toUpperCase()}</span>
+                                                        {rec && <span className="t-hrs">{rec.hours?.toFixed(1)} hrs logged</span>}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    return cells;
+                                })()}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid-footer-stats">
+                    <div className="g-stat">
+                        <strong>{attendance.filter(a => a.status === 'present').length}</strong>
+                        <span>Full Days</span>
+                    </div>
+                    <div className="g-stat">
+                        <strong>{attendance.reduce((acc, curr) => acc + (curr.hours || 0), 0).toFixed(0)}h</strong>
+                        <span>Total Year</span>
                     </div>
                 </div>
             </div>
@@ -168,7 +211,8 @@ const DeliveryAttendance = () => {
                         {attendance.map((day, index) => (
                             <div
                                 key={day.date}
-                                className={`att-record-item ${selectedDay === day.date ? 'expanded' : ''}`}
+                                id={`record-${day.date}`}
+                                className={`att-record-item ${selectedDay === day.date ? 'expanded active-highlight' : ''}`}
                                 onClick={() => setSelectedDay(selectedDay === day.date ? null : day.date)}
                             >
                                 <div className="record-main">
