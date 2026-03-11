@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import {
     FiCalendar,
@@ -21,6 +21,7 @@ const DeliveryAttendance = () => {
     const [attendance, setAttendance] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedDay, setSelectedDay] = useState(null);
+    const scrollRef = useRef(null);
     const [stats, setStats] = useState({
         present: 0,
         halfDay: 0,
@@ -41,6 +42,13 @@ const DeliveryAttendance = () => {
                 const sorted = [...attData].sort((a, b) => new Date(b.date) - new Date(a.date));
                 setAttendance(sorted);
                 calculateStats(sorted);
+
+                // Auto-scroll to end of grid after data load
+                setTimeout(() => {
+                    if (scrollRef.current) {
+                        scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+                    }
+                }, 100);
             }
         } catch (error) {
             console.error("Error fetching attendance:", error);
@@ -121,61 +129,92 @@ const DeliveryAttendance = () => {
                 </div>
 
                 <div className="grid-wrapper-v2">
-                    {/* Month Labels */}
-                    <div className="month-labels">
-                        {(() => {
-                            const months = [];
-                            const today = new Date();
-                            for (let i = 11; i >= 0; i--) {
-                                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-                                months.push(<span key={i} className="m-lbl">{d.toLocaleDateString('en-US', { month: 'short' })}</span>);
-                            }
-                            return months;
-                        })()}
-                    </div>
+                    <div className="yearly-grid-scroll" ref={scrollRef}>
+                        <div className="month-labels-container">
+                            <div className="month-labels">
+                                {(() => {
+                                    const months = [];
+                                    const today = new Date();
+                                    // Start from 53 weeks ago Sunday
+                                    const lastSat = new Date(today);
+                                    lastSat.setDate(today.getDate() + (6 - today.getDay()));
+                                    const start = new Date(lastSat);
+                                    start.setDate(lastSat.getDate() - 370); // 371 days total (0 to 370)
 
-                    <div className="grid-main-layout">
-                        {/* Day Labels */}
-                        <div className="day-labels">
-                            <span>Mon</span>
-                            <span>Wed</span>
-                            <span>Fri</span>
+                                    let currentMonth = -1;
+                                    for (let i = 0; i <= 370; i++) {
+                                        const d = new Date(start);
+                                        d.setDate(start.getDate() + i);
+                                        if (d.getDay() === 0 && d.getMonth() !== currentMonth) { // If it's a Sunday and a new month
+                                            months.push(<span key={i} className="m-lbl" style={{ gridColumn: Math.floor(i / 7) + 1 }}>{d.toLocaleDateString('en-US', { month: 'short' })}</span>);
+                                            currentMonth = d.getMonth();
+                                        }
+                                    }
+                                    return months;
+                                })()}
+                            </div>
                         </div>
 
-                        <div className="yearly-grid-scroll">
+                        <div className="grid-main-layout">
+                            {/* Day Labels */}
+                            <div className="day-labels">
+                                <span>S</span>
+                                <span>M</span>
+                                <span>T</span>
+                                <span>W</span>
+                                <span>T</span>
+                                <span>F</span>
+                                <span>S</span>
+                            </div>
+
                             <div className="yearly-grid-v2">
                                 {(() => {
                                     const cells = [];
                                     const today = new Date();
 
-                                    // Github style grid: 52-53 columns, 7 rows
-                                    // We'll iterate by weeks to make it easier to align
-                                    for (let i = 364; i >= 0; i--) {
-                                        const d = new Date();
-                                        d.setDate(today.getDate() - i);
+                                    // To align with 7 rows (Sun-Sat), we find the most recent Saturday
+                                    // and go back 371 days (53 weeks) from there to ensure full columns.
+                                    const lastSat = new Date(today);
+                                    lastSat.setDate(today.getDate() + (6 - today.getDay()));
+
+                                    for (let i = 370; i >= 0; i--) {
+                                        const d = new Date(lastSat);
+                                        d.setDate(lastSat.getDate() - i);
                                         d.setHours(0, 0, 0, 0);
-                                        const dStr = d.toISOString().split('T')[0];
+
+                                        // Use YYYY-MM-DD format in LOCAL time
+                                        const dStr = d.getFullYear() + '-' +
+                                            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                                            String(d.getDate()).padStart(2, '0');
+
                                         const rec = attendance.find(a => a.date === dStr);
 
                                         let status = 'none';
                                         if (rec) status = rec.status;
 
+                                        // Hide future dates
+                                        const isFuture = d > today;
+
                                         cells.push(
                                             <div
                                                 key={dStr}
-                                                className={`grid-cell-v2 ${status} ${selectedDay === dStr ? 'active' : ''}`}
+                                                id={`cell-${dStr}`}
+                                                className={`grid-cell-v2 ${status} ${selectedDay === dStr ? 'active' : ''} ${isFuture ? 'future' : ''}`}
                                                 onClick={() => {
+                                                    if (isFuture) return;
                                                     setSelectedDay(dStr);
                                                     document.getElementById(`record-${dStr}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                                 }}
                                             >
-                                                <div className="cell-tooltip-v2">
-                                                    <div className="t-head">{new Date(dStr).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
-                                                    <div className="t-body">
-                                                        <span className={`t-status ${status}`}>{status.toUpperCase()}</span>
-                                                        {rec && <span className="t-hrs">{rec.hours?.toFixed(1)} hrs logged</span>}
+                                                {!isFuture && (
+                                                    <div className="cell-tooltip-v2">
+                                                        <div className="t-head">{d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                                                        <div className="t-body">
+                                                            <span className={`t-status ${status}`}>{status.toUpperCase()}</span>
+                                                            {rec && <span className="t-hrs">{(rec.hours || 0).toFixed(1)} hrs logged</span>}
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )}
                                             </div>
                                         );
                                     }
@@ -226,7 +265,7 @@ const DeliveryAttendance = () => {
                                             <span className="status-text">{day.status.toUpperCase()}</span>
                                         </div>
                                         <div className="time-row">
-                                            <FiClock /> {day.hours.toFixed(1)} hrs total
+                                            <FiClock /> {(day.hours || 0).toFixed(1)} hrs total
                                         </div>
                                     </div>
                                     <div className="arrow-box">

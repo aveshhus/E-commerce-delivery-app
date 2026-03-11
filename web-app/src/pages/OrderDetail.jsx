@@ -5,7 +5,8 @@ import toast from 'react-hot-toast';
 import {
     ChevronLeft, MapPin, Phone, CreditCard,
     Clock, Package, CheckCircle2, Truck,
-    ArrowLeft, Receipt, ExternalLink, HelpCircle
+    ArrowLeft, Receipt, ExternalLink, HelpCircle,
+    XCircle
 } from 'lucide-react';
 
 const OrderDetail = () => {
@@ -228,170 +229,167 @@ const OrderDetail = () => {
                     </div>
                 </div>
 
-                {/* Modals */}
-                {activeModal && (
-                    <div className="modal-overlay-v2 fade-in" onClick={() => setActiveModal(null)}>
-                        <div className="modal-card-v2 slide-up" onClick={e => e.stopPropagation()}>
-                            <div className="modal-header-v2">
-                                <h2>
-                                    {activeModal === 'rate' && 'Rate Your Delivery'}
-                                    {activeModal === 'complaint' && 'Report an Issue'}
-                                    {activeModal === 'return' && 'Request Return'}
-                                </h2>
-                                <button className="close-m-btn" onClick={() => setActiveModal(null)}>×</button>
-                            </div>
-
-                            <div className="modal-body-v2">
-                                {activeModal === 'rate' && (
-                                    <div className="rating-input">
-                                        <div className="stars-picker">
-                                            {[1, 2, 3, 4, 5].map(s => (
-                                                <span
-                                                    key={s}
-                                                    className={s <= modalData.score ? 'active' : ''}
-                                                    onClick={() => setModalData({ ...modalData, score: s })}
-                                                >★</span>
+                {/* Sidebar */}
+                <div className="detail-sidebar">
+                    {/* Post-Delivery Actions */}
+                    {isDelivered && (
+                        <div className="post-delivery-card detail-card pulse-border">
+                            <h3>Post-Delivery Actions</h3>
+                            <div className="action-buttons-v2">
+                                {!order.customerRating?.score ? (
+                                    <button className="action-row-btn star" onClick={() => setActiveModal('rate')}>
+                                        <div className="btn-icon">⭐</div>
+                                        <div className="btn-text">
+                                            <strong>Rate Order</strong>
+                                            <span>Share your experience</span>
+                                        </div>
+                                    </button>
+                                ) : (
+                                    <div className="rating-summary-mini">
+                                        <span>Your Rating:</span>
+                                        <div className="stars">
+                                            {[...Array(5)].map((_, i) => (
+                                                <span key={i} style={{ color: i < order.customerRating.score ? '#FFB800' : '#ddd' }}>★</span>
                                             ))}
                                         </div>
-                                        <p className="rating-hint">{['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][modalData.score - 1]}</p>
                                     </div>
                                 )}
 
-                                {activeModal === 'complaint' && (
-                                    <div className="field-group">
-                                        <label>Issue Category</label>
-                                        <select
-                                            value={modalData.category}
-                                            onChange={e => setModalData({ ...modalData, category: e.target.value })}
-                                        >
-                                            <option value="delivery_late">Late Delivery</option>
-                                            <option value="bad_behavior">Behavioral Issue</option>
-                                            <option value="item_missing">Missing Item</option>
-                                            <option value="wrong_item">Wrong Item</option>
-                                            <option value="other">Other</option>
-                                        </select>
+                                <button className="action-row-btn warning" onClick={() => setActiveModal('complaint')}>
+                                    <div className="btn-icon">⚠️</div>
+                                    <div className="btn-text">
+                                        <strong>Report Issue</strong>
+                                        <span>Complaint about delivery</span>
                                     </div>
-                                )}
-
-                                <div className="field-group">
-                                    <label>
-                                        {activeModal === 'rate' ? 'Review (Optional)' : 'Tell us more'}
-                                    </label>
-                                    <textarea
-                                        placeholder={activeModal === 'return' ? 'Describe the damage or reason for return...' : 'Type here...'}
-                                        rows="4"
-                                        value={modalData.text}
-                                        onChange={e => setModalData({ ...modalData, text: e.target.value })}
-                                    ></textarea>
-                                </div>
-
-                                <button
-                                    className="submit-m-btn"
-                                    disabled={submitting || (activeModal !== 'rate' && !modalData.text)}
-                                    onClick={() => {
-                                        if (activeModal === 'rate') handleRating();
-                                        if (activeModal === 'complaint') handleComplaint();
-                                        if (activeModal === 'return') handleReturn();
-                                    }}
-                                >
-                                    {submitting ? 'Processing...' : 'Submit Now'}
                                 </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
-            </div>
-        </div>
-
-                {/* Sidebar */ }
-    <div className="detail-sidebar">
-        {/* Post-Delivery Actions */}
-        {isDelivered && (
-            <div className="post-delivery-card detail-card pulse-border">
-                <h3>Post-Delivery Actions</h3>
-                <div className="action-buttons-v2">
-                    {!order.customerRating?.score ? (
-                        <button className="action-row-btn star" onClick={() => setActiveModal('rate')}>
-                            <div className="btn-icon">⭐</div>
-                            <div className="btn-text">
-                                <strong>Rate Order</strong>
-                                <span>Share your experience</span>
-                            </div>
-                        </button>
-                    ) : (
-                        <div className="rating-summary-mini">
-                            <span>Your Rating:</span>
-                            <div className="stars">
-                                {[...Array(5)].map((_, i) => (
-                                    <span key={i} style={{ color: i < order.customerRating.score ? '#FFB800' : '#ddd' }}>★</span>
-                                ))}
+                                <button className="action-row-btn return" onClick={() => setActiveModal('return')}>
+                                    <div className="btn-icon">🔄</div>
+                                    <div className="btn-text">
+                                        <strong>Request Return</strong>
+                                        <span>Damaged or Wrong Item</span>
+                                    </div>
+                                </button>
                             </div>
                         </div>
                     )}
 
-                    <button className="action-row-btn warning" onClick={() => setActiveModal('complaint')}>
-                        <div className="btn-icon">⚠️</div>
-                        <div className="btn-text">
-                            <strong>Report Issue</strong>
-                            <span>Complaint about delivery</span>
+                    <div className="address-detail-card detail-card">
+                        <div className="card-h-group">
+                            <MapPin size={18} className="h-icon" />
+                            <h3>Delivery Address</h3>
                         </div>
-                    </button>
-
-                    <button className="action-row-btn return" onClick={() => setActiveModal('return')}>
-                        <div className="btn-icon">🔄</div>
-                        <div className="btn-text">
-                            <strong>Request Return</strong>
-                            <span>Damaged or Wrong Item</span>
+                        <div className="addr-content">
+                            <p className="name">{order.deliveryAddress?.fullName}</p>
+                            <p className="phone">
+                                {order.deliveryAddress?.phone}
+                                {order.deliveryAddress?.alternatePhone && <span style={{ opacity: 0.6 }}> | {order.deliveryAddress.alternatePhone}</span>}
+                            </p>
+                            <p className="text">
+                                {order.deliveryAddress?.addressLine1}, {order.deliveryAddress?.city}<br />
+                                {order.deliveryAddress?.state} - {order.deliveryAddress?.pincode}
+                            </p>
                         </div>
-                    </button>
+                    </div>
+
+                    <div className="order-time-card detail-card">
+                        <div className="card-h-group">
+                            <Receipt size={18} className="h-icon" />
+                            <h3>Order Info</h3>
+                        </div>
+                        <div className="info-bits">
+                            <div className="bit">
+                                <span>Placed on</span>
+                                <p>{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                            </div>
+                            <div className="bit">
+                                <span>Time</span>
+                                <p>{new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</p>
+                            </div>
+                        </div>
+                        <button className="download-invoice">
+                            <ExternalLink size={14} />
+                            Download Invoice
+                        </button>
+                    </div>
                 </div>
             </div>
-        )}
 
-        <div className="address-detail-card detail-card">
-            <div className="card-h-group">
-                <MapPin size={18} className="h-icon" />
-                <h3>Delivery Address</h3>
-            </div>
-            <div className="addr-content">
-                <p className="name">{order.deliveryAddress?.fullName}</p>
-                <p className="phone">
-                    {order.deliveryAddress?.phone}
-                    {order.deliveryAddress?.alternatePhone && <span style={{ opacity: 0.6 }}> | {order.deliveryAddress.alternatePhone}</span>}
-                </p>
-                <p className="text">
-                    {order.deliveryAddress?.addressLine1}, {order.deliveryAddress?.city}<br />
-                    {order.deliveryAddress?.state} - {order.deliveryAddress?.pincode}
-                </p>
-            </div>
-        </div>
+            {/* Modals */}
+            {activeModal && (
+                <div className="modal-overlay-v2 fade-in" onClick={() => setActiveModal(null)}>
+                    <div className="modal-card-v2 slide-up" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header-v2">
+                            <h2>
+                                {activeModal === 'rate' && 'Rate Your Delivery'}
+                                {activeModal === 'complaint' && 'Report an Issue'}
+                                {activeModal === 'return' && 'Request Return'}
+                            </h2>
+                            <button className="close-m-btn" onClick={() => setActiveModal(null)}>×</button>
+                        </div>
 
-        <div className="order-time-card detail-card">
-            <div className="card-h-group">
-                <Receipt size={18} className="h-icon" />
-                <h3>Order Info</h3>
-            </div>
-            <div className="info-bits">
-                <div className="bit">
-                    <span>Placed on</span>
-                    <p>{new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                        <div className="modal-body-v2">
+                            {activeModal === 'rate' && (
+                                <div className="rating-input">
+                                    <div className="stars-picker">
+                                        {[1, 2, 3, 4, 5].map(s => (
+                                            <span
+                                                key={s}
+                                                className={s <= modalData.score ? 'active' : ''}
+                                                onClick={() => setModalData({ ...modalData, score: s })}
+                                            >★</span>
+                                        ))}
+                                    </div>
+                                    <p className="rating-hint">{['Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][modalData.score - 1]}</p>
+                                </div>
+                            )}
+
+                            {activeModal === 'complaint' && (
+                                <div className="field-group">
+                                    <label>Issue Category</label>
+                                    <select
+                                        value={modalData.category}
+                                        onChange={e => setModalData({ ...modalData, category: e.target.value })}
+                                    >
+                                        <option value="delivery_late">Late Delivery</option>
+                                        <option value="bad_behavior">Behavioral Issue</option>
+                                        <option value="item_missing">Missing Item</option>
+                                        <option value="wrong_item">Wrong Item</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            )}
+
+                            <div className="field-group">
+                                <label>
+                                    {activeModal === 'rate' ? 'Review (Optional)' : 'Tell us more'}
+                                </label>
+                                <textarea
+                                    placeholder={activeModal === 'return' ? 'Describe the damage or reason for return...' : 'Type here...'}
+                                    rows="4"
+                                    value={modalData.text}
+                                    onChange={e => setModalData({ ...modalData, text: e.target.value })}
+                                ></textarea>
+                            </div>
+
+                            <button
+                                className="submit-m-btn"
+                                disabled={submitting || (activeModal !== 'rate' && !modalData.text)}
+                                onClick={() => {
+                                    if (activeModal === 'rate') handleRating();
+                                    if (activeModal === 'complaint') handleComplaint();
+                                    if (activeModal === 'return') handleReturn();
+                                }}
+                            >
+                                {submitting ? 'Processing...' : 'Submit Now'}
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div className="bit">
-                    <span>Time</span>
-                    <p>{new Date(order.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</p>
-                </div>
-            </div>
-            <button className="download-invoice">
-                <ExternalLink size={14} />
-                Download Invoice
-            </button>
-        </div>
-    </div>
-            </div >
+            )}
 
-    <style dangerouslySetInnerHTML={{
-        __html: `
+            <style dangerouslySetInnerHTML={{
+                __html: `
                 .order-detail-page {
                     max-width: 1000px;
                     margin: 0 auto;

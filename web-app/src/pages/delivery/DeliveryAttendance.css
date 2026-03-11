@@ -316,10 +316,46 @@
     pointer-events: none;
 }
 
+.yearly-grid-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
 .title-group {
     display: flex;
     align-items: center;
     gap: 12px;
+}
+
+.grid-legend {
+    display: flex;
+    gap: 12px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sq {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+
+.sq.present {
+    background: #00B14F;
+}
+
+.sq.half-day {
+    background: #FFB800;
+}
+
+.sq.absent {
+    background: rgba(250, 62, 62, 0.6);
 }
 
 .pulse-icon {
@@ -345,16 +381,34 @@
     }
 }
 
+.yearly-grid-scroll {
+    overflow-x: auto;
+    padding-bottom: 12px;
+    scrollbar-width: none;
+    /* Hide scrollbar for cleaner look */
+}
+
+.yearly-grid-scroll::-webkit-scrollbar {
+    display: none;
+}
+
 .grid-wrapper-v2 {
     margin: 20px 0;
+    position: relative;
+}
+
+.month-labels-container {
+    width: max-content;
+    padding-left: 32px;
+    /* Offset for day labels */
+    margin-bottom: 8px;
 }
 
 .month-labels {
-    display: flex;
-    justify-content: space-between;
-    padding-left: 35px;
-    /* Offset for day labels */
-    margin-bottom: 8px;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: repeat(53, 15px);
+    /* week column width: 12px + 3px gap */
 }
 
 .m-lbl {
@@ -372,10 +426,10 @@
 .day-labels {
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
-    padding: 4px 0;
-    height: 110px;
-    /* Match grid height */
+    justify-content: space-between;
+    padding: 2px 0;
+    height: 102px;
+    /* 7 * 12 + 6 * 3 */
 }
 
 .day-labels span {
@@ -387,10 +441,9 @@
 .yearly-grid-v2 {
     display: grid;
     grid-auto-flow: column;
-    grid-template-rows: repeat(7, 1fr);
+    grid-template-rows: repeat(7, 12px);
     gap: 3px;
     width: max-content;
-    height: 110px;
 }
 
 .grid-cell-v2 {
@@ -414,6 +467,11 @@
 
 .grid-cell-v2.absent {
     background: rgba(250, 62, 62, 0.6);
+}
+
+.grid-cell-v2.future {
+    opacity: 0.1;
+    pointer-events: none;
 }
 
 .grid-cell-v2.active {

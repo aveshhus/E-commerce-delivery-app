@@ -377,7 +377,19 @@ const AdminDelivery = () => {
 
             {showAnnModal && (
                 <div className="modal-overlay" onClick={() => setShowAnnModal(false)}>
-                    {/* ... (Announcement modal content) */}
+                    <div className="modal" style={{ maxWidth: '480px' }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header"><h3>Broadcast Message</h3></div>
+                        <form onSubmit={handleAnnSubmit}>
+                            <div className="modal-body">
+                                <div className="form-group"><label className="form-label">Title</label><input className="form-input" required value={annForm.title} onChange={e => setAnnForm({ ...annForm, title: e.target.value })} /></div>
+                                <div className="form-group"><label className="form-label">Message</label><textarea className="form-input" required rows="4" value={annForm.content} onChange={e => setAnnForm({ ...annForm, content: e.target.value })} /></div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-outline" onClick={() => setShowAnnModal(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary">Send Broadcast</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             )}
 
@@ -456,10 +468,18 @@ const AdminDelivery = () => {
                             <div className="p-attendance-preview">
                                 <h4>Attendance Consistency</h4>
                                 <div className="mini-github-grid">
-                                    {/* Small preview of attendance */}
-                                    {[...Array(28)].map((_, i) => (
-                                        <div key={i} className={`mini-cell ${(i % 7 === 0) ? 'empty' : 'filled'}`}></div>
-                                    ))}
+                                    {(() => {
+                                        const now = new Date();
+                                        return [...Array(28)].map((_, i) => {
+                                            const d = new Date();
+                                            d.setDate(now.getDate() - (27 - i)); // iterate forward from 28 days ago
+                                            const dStr = d.getFullYear() + '-' +
+                                                String(d.getMonth() + 1).padStart(2, '0') + '-' +
+                                                String(d.getDate()).padStart(2, '0');
+                                            const hasRec = viewingPerformance.attendance?.some(a => a.date === dStr);
+                                            return <div key={i} className={`mini-cell ${hasRec ? 'filled' : 'empty'}`}></div>;
+                                        });
+                                    })()}
                                 </div>
                                 <p className="mini-hint">Showing last 28 days activity</p>
                             </div>
