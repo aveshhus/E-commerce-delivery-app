@@ -88,57 +88,99 @@ const DeliveryLayout = () => {
         navigate('/login');
     };
 
+    const NavItems = [
+        { path: '/delivery', icon: <FiHome />, label: 'Home' },
+        { path: '/delivery/orders', icon: <FiPackage />, label: 'Orders' },
+        { path: '/delivery/route', icon: <FiMapPin />, label: 'Route' },
+        { path: '/delivery/performance', icon: <FiBarChart2 />, label: 'Performance' },
+        { path: '/delivery/menu', icon: <FiMenu />, label: 'Menu' },
+    ];
+
     return (
         <div className="delivery-container">
-            {/* Header hidden on dashboard to rebuild custom one */}
-            {location.pathname !== '/delivery' && (
-                <header className="delivery-header">
-                    <div className="header-left">
-                        <div className="agent-avatar">
-                            {user?.name?.charAt(0) || 'D'}
-                        </div>
-                        <div className="agent-info">
-                            <h3>{user?.name || 'Delivery Partner'}</h3>
-                            <p>ID: {agentData?.employeeId || '#AG' + user?._id?.substring(0, 6)}</p>
-                        </div>
+            {/* Desktop Sidebar */}
+            <aside className="delivery-sidebar">
+                <div className="sidebar-logo">
+                    <div className="logo-icon">KM</div>
+                    <span>Operations</span>
+                </div>
+                
+                <div className="sidebar-agent-card">
+                    <div className="agent-avatar">
+                        {user?.name?.charAt(0) || 'D'}
                     </div>
-                    <div className="header-right">
-                        <div className={`status-pill ${isOnline ? (isOnBreak ? 'break' : 'online') : 'offline'}`} onClick={toggleStatus}>
-                            <span className="status-dot"></span>
-                            {isOnline ? (isOnBreak ? 'BREAK' : 'ONLINE') : 'OFFLINE'}
-                        </div>
+                    <div className="agent-info">
+                        <h3>{user?.name || 'Partner'}</h3>
+                        <p>{agentData?.employeeId || 'KM-PENDING'}</p>
                     </div>
-                </header>
-            )}
+                </div>
 
-            {/* Main Content */}
-            <main className="delivery-main" style={{ paddingTop: location.pathname === '/delivery' ? '0' : '65px' }}>
-                <Outlet context={{ isOnline, isOnBreak, agentData, toggleStatus, toggleBreakMode, loading }} />
-            </main>
+                <nav className="sidebar-nav">
+                    {NavItems.map(item => (
+                        <Link 
+                            key={item.path}
+                            to={item.path} 
+                            className={`sidebar-item ${location.pathname === item.path || (item.path !== '/delivery' && location.pathname.startsWith(item.path)) ? 'active' : ''}`}
+                        >
+                            {item.icon}
+                            <span>{item.label}</span>
+                        </Link>
+                    ))}
+                </nav>
 
-            {/* Bottom Navigation */}
-            <nav className="delivery-bottom-nav">
-                <Link to="/delivery" className={`nav-item ${location.pathname === '/delivery' ? 'active' : ''}`}>
-                    <FiHome />
-                    <span>Home</span>
-                </Link>
-                <Link to="/delivery/orders" className={`nav-item ${location.pathname.includes('/orders') || location.pathname.includes('/history') ? 'active' : ''}`}>
-                    <FiPackage />
-                    <span>Orders</span>
-                </Link>
-                <Link to="/delivery/route" className={`nav-item ${location.pathname === '/delivery/route' ? 'active' : ''}`}>
-                    <FiMapPin />
-                    <span>Route</span>
-                </Link>
-                <Link to="/delivery/performance" className={`nav-item ${location.pathname === '/delivery/performance' ? 'active' : ''}`}>
-                    <FiBarChart2 />
-                    <span>Perf</span>
-                </Link>
-                <Link to="/delivery/menu" className={`nav-item ${location.pathname === '/delivery/menu' ? 'active' : ''}`}>
-                    <FiMenu />
-                    <span>Menu</span>
-                </Link>
-            </nav>
+                <div className="sidebar-footer">
+                    <div className={`status-toggle ${isOnline ? 'online' : 'offline'}`} onClick={toggleStatus}>
+                        <div className="status-indicator"></div>
+                        <span>{isOnline ? 'ONLINE' : 'OFFLINE'}</span>
+                    </div>
+                    <button className="sidebar-logout" onClick={handleLogout}>
+                        <FiLogOut /> <span>Logout</span>
+                    </button>
+                </div>
+            </aside>
+
+            <div className="delivery-content-wrapper">
+                {/* Mobile/Tablet Header */}
+                {location.pathname !== '/delivery' && (
+                    <header className="delivery-header mobile-only">
+                        <div className="header-left">
+                            <div className="agent-avatar small">
+                                {user?.name?.charAt(0) || 'D'}
+                            </div>
+                            <div className="agent-info">
+                                <h3>{user?.name || 'Partner'}</h3>
+                            </div>
+                        </div>
+                        <div className="header-right">
+                            <div className={`status-pill ${isOnline ? (isOnBreak ? 'break' : 'online') : 'offline'}`} onClick={toggleStatus}>
+                                <span className="status-dot"></span>
+                                {isOnline ? (isOnBreak ? 'BRK' : 'ON') : 'OFF'}
+                            </div>
+                        </div>
+                    </header>
+                )}
+
+                {/* Main Content Area */}
+                <main className={`delivery-main ${location.pathname === '/delivery' ? 'is-dashboard' : ''}`}>
+                    <div className="content-inner">
+                        <Outlet context={{ isOnline, isOnBreak, agentData, toggleStatus, toggleBreakMode, loading }} />
+                    </div>
+                </main>
+
+                {/* Mobile Bottom Navigation */}
+                <nav className="delivery-bottom-nav">
+                    {NavItems.map(item => (
+                        <Link 
+                            key={item.path}
+                            to={item.path} 
+                            className={`nav-item ${location.pathname === item.path || (item.path !== '/delivery' && location.pathname.startsWith(item.path)) ? 'active' : ''}`}
+                        >
+                            {item.icon}
+                            <span>{item.label}</span>
+                        </Link>
+                    ))}
+                </nav>
+            </div>
         </div>
     );
 };

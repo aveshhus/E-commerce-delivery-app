@@ -20,9 +20,23 @@
 }
 
 .op-dashboard-container {
-    padding: 24px 16px;
-    max-width: 600px;
-    margin: 0 auto;
+    padding: 24px 0; /* Let layout handle side padding */
+    width: 100%;
+}
+
+@media (min-width: 1024px) {
+    .op-dashboard-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        max-width: 1000px;
+        margin: 0;
+    }
+
+    .op-welcome-card {
+        grid-column: span 2;
+        margin-bottom: 0;
+    }
 }
 
 /* Welcome Card */

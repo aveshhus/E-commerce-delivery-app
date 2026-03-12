@@ -1,10 +1,7 @@
 /* Operations Command Center - Dark Mode Orders & History */
 .manage-order-container {
-    padding: 24px 16px;
-    max-width: 600px;
-    margin: 0 auto;
-    font-family: -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
-    color: var(--op-text-primary);
+    padding: 24px 0;
+    width: 100%;
 }
 
 /* Internal Tab Navigation */
