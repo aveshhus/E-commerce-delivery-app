@@ -467,6 +467,18 @@ const AdminDelivery = () => {
                                     <span className="s-lbl">AVG RATING</span>
                                     <h2 className="s-val text-yellow">⭐ {viewingPerformance.rating?.average?.toFixed(1) || '5.0'}</h2>
                                 </div>
+                                <div className="s-metric">
+                                    <span className="s-lbl">MONTHLY ATTENDANCE</span>
+                                    <h2 className={`s-val ${detailedPerformance.attendanceStats?.monthly > 90 ? 'green' : 'yellow'}`}>
+                                        {detailedPerformance.attendanceStats?.monthly || 0}%
+                                    </h2>
+                                </div>
+                                <div className="s-metric">
+                                    <span className="s-lbl">OVERALL ATTENDANCE</span>
+                                    <h2 className={`s-val ${detailedPerformance.attendanceStats?.overall > 90 ? 'green' : 'yellow'}`}>
+                                        {detailedPerformance.attendanceStats?.overall || 0}%
+                                    </h2>
+                                </div>
                             </div>
 
                             {/* Main Performance Ledger */}
@@ -636,8 +648,8 @@ const AdminDelivery = () => {
                 }
                 .perf-summary-bar {
                     display: grid;
-                    grid-template-columns: repeat(4, 1fr);
-                    gap: 16px;
+                    grid-template-columns: repeat(6, 1fr);
+                    gap: 12px;
                     margin: 24px 0;
                 }
                 .s-metric {

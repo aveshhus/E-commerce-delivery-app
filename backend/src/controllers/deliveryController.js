@@ -775,10 +775,24 @@ exports.getAgentDetailedPerformance = async (req, res) => {
             log.avgRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : '5.0';
             delete log.ratings;
 
-            // Link attendance data onlineHours
             const attData = agent.attendance.find(a => a.date === log.date);
             log.onlineHours = attData ? attData.onlineHours.toFixed(1) : '0.0';
         });
+
+        // Calculate Attendance Percentages
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        const overallAttendance = agent.attendance.length > 0 
+            ? Math.round((agent.attendance.filter(a => ['present', 'half-day'].includes(a.status)).length / agent.attendance.length) * 100)
+            : 0;
+
+        const monthAttendance = agent.attendance.length > 0
+            ? Math.round((agent.attendance.filter(a => {
+                const d = new Date(a.date);
+                return d >= startOfMonth && ['present', 'half-day'].includes(a.status);
+              }).length / Math.max(1, agent.attendance.filter(a => new Date(a.date) >= startOfMonth).length)) * 100)
+            : 0;
 
         const performanceLogs = Object.values(performanceMap).sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -790,7 +804,11 @@ exports.getAgentDetailedPerformance = async (req, res) => {
                     employeeId: agent.employeeId,
                     performance: agent.performance
                 },
-                logs: performanceLogs
+                logs: performanceLogs,
+                attendanceStats: {
+                    overall: overallAttendance,
+                    monthly: monthAttendance
+                }
             }
         });
     } catch (error) {
