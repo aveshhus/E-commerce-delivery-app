@@ -573,23 +573,23 @@ const AdminDelivery = () => {
 
             <style>{`
                 .performance-modal {
-                    background: #121212;
-                    color: white;
+                    background: #ffffff;
+                    color: #333;
                     width: 100%;
                     max-width: 900px;
                     border-radius: 24px;
                     overflow: hidden;
-                    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+                    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);
                     max-height: 90vh;
                     overflow-y: auto;
                 }
                 .p-modal-header {
                     padding: 24px;
-                    background: #1a1a1a;
+                    background: #f8f9fa;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    border-bottom: 1px solid #333;
+                    border-bottom: 1px solid #eee;
                     position: sticky;
                     top: 0;
                     z-index: 10;
@@ -598,21 +598,21 @@ const AdminDelivery = () => {
                     display: flex;
                     align-items: center;
                     gap: 8px;
-                    background: #252525;
+                    background: #ffffff;
                     padding: 6px 12px;
                     border-radius: 12px;
-                    border: 1px solid #333;
+                    border: 1px solid #ddd;
                 }
                 .p-date-filters input {
                     background: transparent;
                     border: none;
-                    color: #fff;
+                    color: #333;
                     font-size: 12px;
                     outline: none;
                     cursor: pointer;
                 }
                 .p-date-filters span {
-                    color: #666;
+                    color: #999;
                     font-size: 11px;
                     font-weight: 700;
                 }
@@ -623,53 +623,54 @@ const AdminDelivery = () => {
                     margin: 24px 0;
                 }
                 .s-metric {
-                    background: #1a1a1a;
+                    background: #f8f9fa;
                     padding: 16px;
                     border-radius: 16px;
-                    border: 1px solid #333;
+                    border: 1px solid #eee;
                     text-align: center;
                 }
-                .s-lbl { font-size: 10px; color: #666; font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; }
-                .s-val { font-size: 24px; font-weight: 900; margin: 0; color: #fff; }
+                .s-lbl { font-size: 10px; color: #888; font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+                .s-val { font-size: 24px; font-weight: 900; margin: 0; color: #333; }
                 .s-val.green { color: #00B14F; }
                 .s-val.yellow { color: #FFB800; }
                 .text-yellow { color: #FFB800; }
                 
                 .perf-ledger-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-                .perf-ledger-table th { text-align: left; padding: 12px; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-                .perf-ledger-table td { background: #1a1a1a; padding: 16px 12px; font-size: 13px; }
+                .perf-ledger-table th { text-align: left; padding: 12px; font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+                .perf-ledger-table td { background: #f8f9fa; padding: 16px 12px; font-size: 13px; color: #444; }
                 .perf-ledger-table tr td:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
                 .perf-ledger-table tr td:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
                 
-                .d-date { font-weight: 800; color: #fff; font-size: 14px; }
-                .d-day { font-size: 11px; color: #666; font-weight: 700; text-transform: uppercase; }
+                .d-date { font-weight: 800; color: #333; font-size: 14px; }
+                .d-day { font-size: 11px; color: #888; font-weight: 700; text-transform: uppercase; }
                 
                 .text-green { color: #00B14F; }
                 .text-red { color: #FA3E3E; }
                 .bg-green { background: #00B14F; }
                 .bg-yellow { background: #FFB800; }
+                .text-white { color: #333 !important; }
                 
                 .p-score-container { display: flex; flex-direction: column; gap: 4px; }
-                .p-score-bar { width: 80px; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+                .p-score-bar { width: 80px; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
                 .p-score-fill { height: 100%; transition: width 0.3s ease; }
-                .p-score-container small { font-size: 9px; font-weight: 900; color: #666; }
+                .p-score-container small { font-size: 9px; font-weight: 900; color: #999; }
                 
-                .compliance-mini-section { margin-top: 32px; border-top: 1px solid #333; padding-top: 24px; }
+                .compliance-mini-section { margin-top: 32px; border-top: 1px solid #eee; padding-top: 24px; }
                 .compliance-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-                .mini-doc { background: #1a1a1a; padding: 12px; border-radius: 12px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+                .mini-doc { background: #f8f9fa; padding: 12px; border-radius: 12px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
                 .mini-doc.verified { border-left: 3px solid #00B14F; }
                 .mini-doc.unverified { border-left: 3px solid #FA3E3E; }
                 .m-doc-info { display: flex; flex-direction: column; }
-                .m-label { font-size: 11px; font-weight: 800; color: #fff; }
-                .m-status { font-size: 9px; font-weight: 900; color: #666; }
+                .m-label { font-size: 11px; font-weight: 800; color: #333; }
+                .m-status { font-size: 9px; font-weight: 900; color: #888; }
                 .mini-doc.verified .m-status { color: #00B14F; }
                 
                 .m-doc-actions { display: flex; gap: 8px; }
-                .m-doc-actions a, .m-doc-actions button { background: #333; border: none; color: #fff; font-size: 9px; font-weight: 900; padding: 4px 8px; border-radius: 4px; cursor: pointer; text-decoration: none; }
-                .m-doc-actions button { background: #00B14F; }
-                .p-modal-header h3 { margin: 0; font-size: 18px; color: #fff; }
+                .m-doc-actions a, .m-doc-actions button { background: #eee; border: none; color: #333; font-size: 9px; font-weight: 900; padding: 4px 8px; border-radius: 4px; cursor: pointer; text-decoration: none; }
+                .m-doc-actions button { background: #00B14F; color: white; }
+                .p-modal-header h3 { margin: 0; font-size: 18px; color: #333; }
                 .p-modal-header p { margin: 4px 0 0; font-size: 13px; color: #888; }
-                .close-btn { background: none; border: none; color: #666; cursor: pointer; }
+                .close-btn { background: none; border: none; color: #999; cursor: pointer; }
 
                 .p-modal-body { padding: 24px; }
 
@@ -677,17 +678,17 @@ const AdminDelivery = () => {
                     display: flex;
                     align-items: center;
                     gap: 20px;
-                    background: #1a1a1a;
+                    background: #f8f9fa;
                     padding: 24px;
                     border-radius: 20px;
                     margin-bottom: 24px;
-                    border: 1px solid #2a2a2a;
+                    border: 1px solid #eee;
                 }
                 .grade-circle {
                     width: 70px;
                     height: 70px;
                     border-radius: 50%;
-                    background: #00B14F22;
+                    background: #00B14F11;
                     border: 3px solid #00B14F;
                     display: flex;
                     align-items: center;
@@ -697,7 +698,7 @@ const AdminDelivery = () => {
                     color: #00B14F;
                 }
                 .g-label { display: block; font-size: 14px; color: #888; }
-                .g-status { margin: 4px 0 0; font-size: 26px; font-weight: 800; color: #fff; }
+                .g-status { margin: 4px 0 0; font-size: 26px; font-weight: 800; color: #333; }
 
                 .perf-stats-grid {
                     display: grid;
@@ -706,13 +707,13 @@ const AdminDelivery = () => {
                     margin-bottom: 24px;
                 }
                 .p-stat-box {
-                    background: #1a1a1a;
+                    background: #f8f9fa;
                     padding: 20px;
                     border-radius: 20px;
                     display: flex;
                     align-items: center;
                     gap: 12px;
-                    border: 1px solid #2a2a2a;
+                    border: 1px solid #eee;
                 }
                 .p-stat-icon {
                     width: 36px;
@@ -721,7 +722,7 @@ const AdminDelivery = () => {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    background: #252525;
+                    background: #eee;
                 }
                 .p-stat-icon.green { color: #00B14F; }
                 .p-stat-icon.red { color: #FA3E3E; }
@@ -732,33 +733,33 @@ const AdminDelivery = () => {
                 .p-val { margin: 2px 0 0; font-size: 22px; font-weight: 800; }
                 .p-val.green { color: #00B14F; }
                 .p-val.red { color: #FA3E3E; }
-                .p-val.dark { color: #fff; }
+                .p-val.dark { color: #333; }
 
                 .perf-footer-metrics {
                     display: flex;
-                    background: #1a1a1a;
+                    background: #f8f9fa;
                     border-radius: 20px;
                     padding: 20px;
-                    border: 1px solid #2a2a2a;
+                    border: 1px solid #eee;
                     margin-bottom: 24px;
                 }
                 .footer-metric-item { flex: 1; text-align: center; }
                 .f-lbl { display: block; font-size: 13px; color: #888; margin-bottom: 4px; }
                 .f-val { margin: 0; font-size: 24px; font-weight: 800; color: #00B14F; }
-                .divider { width: 1px; background: #333; margin: 0 20px; }
+                .divider { width: 1px; background: #ddd; margin: 0 20px; }
 
                 .p-attendance-preview {
-                    background: #1a1a1a;
+                    background: #f8f9fa;
                     padding: 20px;
                     border-radius: 20px;
-                    border: 1px solid #2a2a2a;
+                    border: 1px solid #eee;
                 }
                 .p-attendance-preview h4 { margin: 0 0 16px; font-size: 14px; color: #888; }
                 .mini-github-grid { display: flex; flex-wrap: wrap; gap: 4px; }
                 .mini-cell { width: 12px; height: 12px; border-radius: 2px; }
                 .mini-cell.filled { background: #00B14F; }
-                .mini-cell.empty { background: #252525; }
-                .mini-hint { margin: 10px 0 0; font-size: 11px; color: #666; }
+                .mini-cell.empty { background: #eee; }
+                .mini-hint { margin: 10px 0 0; font-size: 11px; color: #999; }
 
                 /* Compliance Section */
                 .compliance-section {
@@ -767,32 +768,29 @@ const AdminDelivery = () => {
                 .section-title {
                     font-size: 12px;
                     font-weight: 800;
-                    color: #666;
+                    color: #999;
                     margin-bottom: 16px;
                     letter-spacing: 1px;
                 }
                 .compliance-list {
-                    background: #1a1a1a;
+                    background: #f8f9fa;
                     border-radius: 20px;
                     overflow: hidden;
-                    border: 1px solid #2a2a2a;
+                    border: 1px solid #eee;
                 }
                 .compliance-item {
                     padding: 20px 24px;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    border-bottom: 1px solid #2a2a2a;
+                    border-bottom: 1px solid #eee;
                 }
                 .compliance-item:last-child { border-bottom: none; }
                 .doc-label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
-                .doc-status-text { font-size: 18px; font-weight: 800; color: #fff; margin: 0; }
-                .doc-number { font-size: 11px; color: #555; font-family: monospace; }
+                .doc-status-text { font-size: 18px; font-weight: 800; color: #333; margin: 0; }
                 
                 .doc-actions { display: flex; align-items: center; gap: 16px; }
                 .view-link { font-size: 11px; color: #3B82F6; text-decoration: none; font-weight: 600; }
-                .view-link:hover { text-decoration: underline; }
-
                 .status-badge-v2 {
                     display: flex;
                     align-items: center;
@@ -805,7 +803,7 @@ const AdminDelivery = () => {
                 .status-badge-v2.verified { background: rgba(0, 177, 79, 0.1); color: #00B14F; border: 1px solid rgba(0, 177, 79, 0.2); }
                 .status-badge-v2.pending { background: rgba(255, 184, 0, 0.1); color: #FFB800; border: 1px solid rgba(255, 184, 0, 0.2); }
                 .status-badge-v2.rejected { background: rgba(250, 62, 62, 0.1); color: #FA3E3E; border: 1px solid rgba(250, 62, 62, 0.2); }
-                .status-badge-v2.unverified { background: #252525; color: #666; }
+                .status-badge-v2.unverified { background: #eee; color: #888; }
 
                 .verify-btn-group { display: flex; gap: 4px; }
                 .v-btn {
@@ -816,43 +814,38 @@ const AdminDelivery = () => {
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
-                    border: 1px solid #333;
-                    background: #252525;
-                    color: #fff;
+                    border: 1px solid #ddd;
+                    background: #eee;
+                    color: #333;
                     transition: all 0.2s;
                 }
                 .v-btn.approve:hover { background: #00B14F; color: white; border-color: #00B14F; }
                 .v-btn.reject:hover { background: #FA3E3E; color: white; border-color: #FA3E3E; }
 
-                /* Logs View Styling */
                 .perf-logs-container { animation: fadeIn 0.3s ease; }
                 .perf-filter-bar {
                     display: flex;
                     gap: 16px;
                     align-items: flex-end;
                     margin-bottom: 24px;
-                    background: #1a1a1a;
+                    background: #f8f9fa;
                     padding: 16px;
                     border-radius: 12px;
                 }
                 .p-date-input { display: flex; flex-direction: column; gap: 4px; }
-                .p-date-input label { font-size: 11px; color: #666; font-weight: 700; }
+                .p-date-input label { font-size: 11px; color: #888; font-weight: 700; }
                 .p-date-input input {
-                    background: #252525;
-                    border: 1px solid #333;
-                    color: white;
+                    background: #fff;
+                    border: 1px solid #ddd;
+                    color: #333;
                     padding: 8px;
                     border-radius: 8px;
                     font-size: 13px;
                 }
                 .perf-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                .perf-table th { text-align: left; padding: 12px; font-size: 11px; color: #666; text-transform: uppercase; border-bottom: 1px solid #333; }
-                .perf-table td { padding: 16px 12px; font-size: 14px; border-bottom: 1px solid #222; }
-                .p-att-badge { font-size: 10px; padding: 4px 8px; border-radius: 4px; font-weight: 800; }
-                .p-att-badge.present { background: rgba(0, 177, 79, 0.1); color: #00B14F; }
-                .p-att-badge.half-day { background: rgba(255, 184, 0, 0.1); color: #FFB800; }
-                .p-att-badge.absent { background: rgba(250, 62, 62, 0.1); color: #FA3E3E; }
-                .p-eff-bar { width: 60px; height: 4px; background: #333; border-radius: 2px; margin-bottom: 4px; overflow: hidden; }
+                .perf-table th { text-align: left; padding: 12px; font-size: 11px; color: #888; text-transform: uppercase; border-bottom: 1px solid #eee; }
+                .perf-table td { padding: 16px 12px; font-size: 14px; border-bottom: 1px solid #f0f0f0; color: #444; }
+                .p-eff-bar { width: 60px; height: 4px; background: #eee; border-radius: 2px; margin-bottom: 4px; overflow: hidden; }
                 .p-eff-fill { height: 100%; background: #00B14F; }
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             `}</style>
