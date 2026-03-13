@@ -476,12 +476,14 @@ const AdminDelivery = () => {
                                     <table className="perf-ledger-table">
                                         <thead>
                                             <tr>
-                                                <th>Date</th>
-                                                <th>Status</th>
+                                                <th style={{ width: '100px' }}>Date</th>
+                                                <th>Online Time</th>
+                                                <th>Attendance</th>
                                                 <th>Orders (D/T)</th>
-                                                <th>Success %</th>
+                                                <th>Quality (R/C)</th>
+                                                <th>Ratings</th>
                                                 <th>Earnings</th>
-                                                <th>Performance Score</th>
+                                                <th>Health</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -494,32 +496,48 @@ const AdminDelivery = () => {
                                                             <div className="d-day">{new Date(log.date).toLocaleDateString(undefined, { weekday: 'short' })}</div>
                                                         </td>
                                                         <td>
+                                                            <div style={{ fontWeight: 700, color: '#444' }}>{log.onlineHours || '0.0'} <small style={{ color: '#999' }}>hrs</small></div>
+                                                        </td>
+                                                        <td>
                                                             <span className={`p-att-badge ${log.attendance}`}>
                                                                 {log.attendance?.toUpperCase() || 'ABSENT'}
                                                             </span>
                                                         </td>
                                                         <td>
-                                                            <span className="text-green" style={{ fontWeight: 700 }}>{log.delivered || 0}</span>
-                                                            <span style={{ opacity: 0.4, margin: '0 4px' }}>/</span>
-                                                            <span style={{ fontWeight: 600 }}>{log.orders || 0}</span>
+                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                <div>
+                                                                    <span className="text-green" style={{ fontWeight: 700 }}>{log.delivered || 0}</span>
+                                                                    <span style={{ opacity: 0.4, margin: '0 4px' }}>/</span>
+                                                                    <span style={{ fontWeight: 600 }}>{log.orders || 0}</span>
+                                                                </div>
+                                                                {log.late > 0 && <small style={{ color: '#FFB800', fontSize: '10px' }}>{log.late} DELAYS</small>}
+                                                            </div>
                                                         </td>
                                                         <td>
-                                                            <div className="success-cell">
-                                                                <span className={successRate > 90 ? 'text-green' : successRate > 70 ? 'text-yellow' : 'text-red'}>
-                                                                    {successRate}%
-                                                                </span>
+                                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                                <div title="Returns" style={{ opacity: log.returned > 0 ? 1 : 0.3 }}>
+                                                                    <span style={{ color: '#FA3E3E', fontWeight: 800 }}>{log.returned || 0}</span>
+                                                                    <small style={{ fontSize: '9px', marginLeft: '2px', color: '#999' }}>RET</small>
+                                                                </div>
+                                                                <div title="Complaints" style={{ opacity: log.complaints > 0 ? 1 : 0.3 }}>
+                                                                    <span style={{ color: '#FA3E3E', fontWeight: 800 }}>{log.complaints || 0}</span>
+                                                                    <small style={{ fontSize: '9px', marginLeft: '2px', color: '#999' }}>CMP</small>
+                                                                </div>
                                                             </div>
+                                                        </td>
+                                                        <td>
+                                                            <div style={{ color: '#FFB800', fontWeight: 700 }}>⭐ {log.avgRating || '5.0'}</div>
                                                         </td>
                                                         <td><strong className="text-white">₹{log.earnings}</strong></td>
                                                         <td>
                                                             <div className="p-score-container">
                                                                 <div className="p-score-bar">
                                                                     <div 
-                                                                        className={`p-score-fill ${successRate > 90 ? 'bg-green' : 'bg-yellow'}`} 
+                                                                        className={`p-score-fill ${successRate > 90 && log.complaints === 0 ? 'bg-green' : 'bg-yellow'}`} 
                                                                         style={{ width: `${successRate}%` }}
                                                                     ></div>
                                                                 </div>
-                                                                <small>{successRate > 90 ? 'EXCELLENT' : 'GOOD'}</small>
+                                                                <small>{successRate > 90 && log.complaints === 0 ? 'ELITE' : 'STABLE'}</small>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -576,7 +594,7 @@ const AdminDelivery = () => {
                     background: #ffffff;
                     color: #333;
                     width: 100%;
-                    max-width: 900px;
+                    max-width: 1100px;
                     border-radius: 24px;
                     overflow: hidden;
                     box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);

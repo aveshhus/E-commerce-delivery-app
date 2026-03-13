@@ -737,8 +737,20 @@ exports.getAgentDetailedPerformance = async (req, res) => {
             performanceMap[dateStr].orders += 1;
             if (order.status === 'delivered') {
                 performanceMap[dateStr].delivered = (performanceMap[dateStr].delivered || 0) + 1;
-            } else if (['cancelled', 'failed', 'returned'].includes(order.status)) {
+                if (order.customerRating?.score) {
+                    performanceMap[dateStr].ratings = (performanceMap[dateStr].ratings || []);
+                    performanceMap[dateStr].ratings.push(order.customerRating.score);
+                }
+            } else if (['cancelled', 'failed', 'refunded'].includes(order.status)) {
                 performanceMap[dateStr].failed = (performanceMap[dateStr].failed || 0) + 1;
+            }
+
+            if (order.returnInfo?.isReturned) {
+                performanceMap[dateStr].returned = (performanceMap[dateStr].returned || 0) + 1;
+            }
+
+            if (order.complaint?.isFiled) {
+                performanceMap[dateStr].complaints = (performanceMap[dateStr].complaints || 0) + 1;
             }
             
             performanceMap[dateStr].earnings += (order.deliveryCharge || 20); 
@@ -746,14 +758,26 @@ exports.getAgentDetailedPerformance = async (req, res) => {
                 if (order.actualDeliveryTime && order.createdAt) {
                     const duration = (new Date(order.actualDeliveryTime) - new Date(order.createdAt)) / 60000;
                     if (duration <= 45) performanceMap[dateStr].onTime += 1;
+                    else performanceMap[dateStr].late = (performanceMap[dateStr].late || 0) + 1;
                 }
             }
         });
 
-        // Add defaults for missing delivered/failed
+        // Add defaults and calculate averages
         Object.values(performanceMap).forEach(log => {
-            if (!log.delivered) log.delivered = 0;
-            if (!log.failed) log.failed = 0;
+            log.delivered = log.delivered || 0;
+            log.failed = log.failed || 0;
+            log.returned = log.returned || 0;
+            log.complaints = log.complaints || 0;
+            log.late = log.late || 0;
+            
+            const ratings = log.ratings || [];
+            log.avgRating = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : '5.0';
+            delete log.ratings;
+
+            // Link attendance data onlineHours
+            const attData = agent.attendance.find(a => a.date === log.date);
+            log.onlineHours = attData ? attData.onlineHours.toFixed(1) : '0.0';
         });
 
         const performanceLogs = Object.values(performanceMap).sort((a, b) => new Date(b.date) - new Date(a.date));
