@@ -231,38 +231,31 @@ const OrderDetail = () => {
 
                 {/* Sidebar */}
                 <div className="detail-sidebar">
-                    {/* Post-Delivery Actions */}
-                    {isDelivered && (
-                        <div className="post-delivery-card detail-card pulse-border">
-                            <h3>Post-Delivery Actions</h3>
-                            <div className="action-buttons-v2">
-                                {!order.customerRating?.score ? (
-                                    <button className="action-row-btn star" onClick={() => setActiveModal('rate')}>
-                                        <div className="btn-icon">⭐</div>
-                                        <div className="btn-text">
-                                            <strong>Rate Order</strong>
-                                            <span>Share your experience</span>
-                                        </div>
-                                    </button>
-                                ) : (
-                                    <div className="rating-summary-mini">
-                                        <span>Your Rating:</span>
-                                        <div className="stars">
-                                            {[...Array(5)].map((_, i) => (
-                                                <span key={i} style={{ color: i < order.customerRating.score ? '#FFB800' : '#ddd' }}>★</span>
-                                            ))}
-                                        </div>
+                    {/* Help & Support Actions */}
+                    <div className="support-card detail-card">
+                        <h3>Need Help?</h3>
+                        <div className="action-buttons-v2">
+                            {isDelivered && !order.customerRating?.score && (
+                                <button className="action-row-btn star" onClick={() => setActiveModal('rate')}>
+                                    <div className="btn-icon">⭐</div>
+                                    <div className="btn-text">
+                                        <strong>Rate Order</strong>
+                                        <span>Share your experience</span>
                                     </div>
-                                )}
+                                </button>
+                            )}
 
+                            {!isCancelled && (
                                 <button className="action-row-btn warning" onClick={() => setActiveModal('complaint')}>
                                     <div className="btn-icon">⚠️</div>
                                     <div className="btn-text">
                                         <strong>Report Issue</strong>
-                                        <span>Complaint about delivery</span>
+                                        <span>Complaint or Problem</span>
                                     </div>
                                 </button>
+                            )}
 
+                            {isDelivered && (
                                 <button className="action-row-btn return" onClick={() => setActiveModal('return')}>
                                     <div className="btn-icon">🔄</div>
                                     <div className="btn-text">
@@ -270,9 +263,9 @@ const OrderDetail = () => {
                                         <span>Damaged or Wrong Item</span>
                                     </div>
                                 </button>
-                            </div>
+                            )}
                         </div>
-                    )}
+                    </div>
 
                     <div className="address-detail-card detail-card">
                         <div className="card-h-group">

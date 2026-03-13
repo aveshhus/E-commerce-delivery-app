@@ -10,7 +10,14 @@ import {
     DollarSign,
     Clock,
     MapPin,
-    FileText
+    FileText,
+    ShieldCheck,
+    Lock,
+    AlertTriangle,
+    Activity,
+    UserCheck,
+    TrendingUp,
+    ShieldInfo
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -312,14 +319,13 @@ const AdminDelivery = () => {
                         <table className="admin-table">
                             <thead><tr><th>Agent</th><th>Type</th><th>Severity</th><th>Description</th><th>Status</th></tr></thead>
                             <tbody>
-                                {/* Mock data for now since we just created the table */}
-                                <tr>
-                                    <td><strong>Rahul Sharma</strong><br /><small>KM-7FF28A</small></td>
-                                    <td><span className="badge badge-error">VEHICLE</span></td>
-                                    <td><span style={{ color: 'var(--error)', fontWeight: 800 }}>CRITICAL</span></td>
-                                    <td>Flat tire near Sector 15. Need backup for current order.</td>
-                                    <td><span className="badge badge-warning">OPEN</span></td>
-                                </tr>
+                                {agents.length === 0 ? (
+                                    <tr><td colSpan={5} className="empty-state">No critical field issues reported today</td></tr>
+                                ) : (
+                                    <tr>
+                                        <td colSpan={5} className="empty-state" style={{ color: '#999' }}>Scanning field for active incidents... No issues found.</td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -430,12 +436,13 @@ const AdminDelivery = () => {
             {/* Performance Dashboard Modal */}
             {viewingPerformance && (
                 <div className="modal-overlay" onClick={() => setViewingPerformance(null)}>
-                    <div className="performance-modal" onClick={e => e.stopPropagation()}>
-                        <div className="p-modal-header">
-                            <div>
-                                <h3 style={{ margin: 0, fontSize: '20px' }}>Rider Performance Audit</h3>
-                                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                                    Reviewing records for <strong>{viewingPerformance.name}</strong> ({viewingPerformance.employeeId})
+                    <div className="performance-modal premium" onClick={e => e.stopPropagation()}>
+                        <div className="p-modal-header v2">
+                            <div className="header-agent">
+                                <Activity size={24} className="pulse-icon" />
+                                <div>
+                                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 900 }}>Rider Performance Audit</h3>
+                                    <p style={{ margin: 0, fontSize: '13px', color: '#666' }}>ID: <strong>{detailedPerformance.agent?.employeeId || 'KM-PENDING'}</strong> | {detailedPerformance.agent?.name}</p>
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -449,473 +456,374 @@ const AdminDelivery = () => {
                         </div>
 
                         <div className="p-modal-body" style={{ padding: '0 24px 24px' }}>
-                            {/* Dashboard Highlights */}
-                            <div className="perf-summary-bar">
-                                <div className="s-metric">
-                                    <span className="s-lbl">LIFETIME GRADE</span>
-                                    <h2 className={`s-val ${viewingPerformance.performance?.grade === 'A' ? 'green' : 'yellow'}`}>{viewingPerformance.performance?.grade || 'A'}</h2>
+                            {/* Performance Grade Section */}
+                            <div className="performance-grade-card">
+                                <div className={`grade-badge ${detailedPerformance.agent?.performance?.grade?.includes('A') ? 'grade-a' : 'grade-b'}`}>
+                                    {detailedPerformance.agent?.performance?.grade || 'A'}
                                 </div>
-                                <div className="s-metric">
-                                    <span className="s-lbl">AVG RATING</span>
-                                    <h2 className="s-val text-yellow">⭐ {viewingPerformance.rating?.average?.toFixed(1) || '5.0'}</h2>
-                                </div>
-                                <div className="s-metric">
-                                    <span className="s-lbl">MONTHLY ATTENDANCE</span>
-                                    <h2 className={`s-val ${detailedPerformance.attendanceStats?.monthly > 90 ? 'green' : 'yellow'}`}>
-                                        {detailedPerformance.attendanceStats?.monthly || 0}%
-                                    </h2>
-                                </div>
-                                <div className="s-metric">
-                                    <span className="s-lbl">OVERALL ATTENDANCE</span>
-                                    <h2 className={`s-val ${detailedPerformance.attendanceStats?.overall > 90 ? 'green' : 'yellow'}`}>
-                                        {detailedPerformance.attendanceStats?.overall || 0}%
-                                    </h2>
-                                </div>
-                            </div>
-                            
-                            <div className="perf-summary-bar secondary">
-                                <div className="s-metric blue">
-                                    <span className="s-lbl">ORDERS (TODAY)</span>
-                                    <h2 className="s-val">{detailedPerformance.deliveryCounts?.today || 0}</h2>
-                                </div>
-                                <div className="s-metric blue">
-                                    <span className="s-lbl">ORDERS (MONTHLY)</span>
-                                    <h2 className="s-val">{detailedPerformance.deliveryCounts?.monthly || 0}</h2>
-                                </div>
-                                <div className="s-metric blue">
-                                    <span className="s-lbl">ORDERS (OVERALL)</span>
-                                    <h2 className="s-val">{detailedPerformance.deliveryCounts?.overall || 0}</h2>
-                                </div>
-                                <div className="s-metric">
-                                    <span className="s-lbl">SUCCESS RATE</span>
-                                    <h2 className="s-val text-green">{viewingPerformance.performance?.onTimePercentage || 0}%</h2>
-                                </div>
-                            </div>
-                            
-                            <div className="perf-summary-bar tertiary">
-                                <div className="s-metric green-alt">
-                                    <span className="s-lbl">WORKING HRS (TODAY)</span>
-                                    <h2 className="s-val">{detailedPerformance.hoursStats?.today || '0.0'} <small>hrs</small></h2>
-                                </div>
-                                <div className="s-metric green-alt">
-                                    <span className="s-lbl">WORKING HRS (MONTHLY)</span>
-                                    <h2 className="s-val">{detailedPerformance.hoursStats?.monthly || '0.0'} <small>hrs</small></h2>
-                                </div>
-                                <div className="s-metric green-alt">
-                                    <span className="s-lbl">WORKING HRS (OVERALL)</span>
-                                    <h2 className="s-val">{detailedPerformance.hoursStats?.overall || '0.0'} <small>hrs</small></h2>
-                                </div>
-                                <div className="s-metric">
-                                    <span className="s-lbl">GLOBAL SUCCESS</span>
-                                    <h2 className="s-val text-green">{viewingPerformance.performance?.onTimePercentage || 0}%</h2>
+                                <div className="grade-info">
+                                    <h4>Performance Assessment</h4>
+                                    <h2>{
+                                        detailedPerformance.agent?.performance?.grade === 'A+' ? 'ELITE PERFORMANCE' :
+                                        detailedPerformance.agent?.performance?.grade === 'A' ? 'EXCELLENT TRACK RECORD' :
+                                        detailedPerformance.agent?.performance?.grade === 'B' ? 'STEADY PERFORMANCE' : 'IMPROVEMENT REQUIRED'
+                                    }</h2>
+                                    <p>Based on current success rate of {detailedPerformance.agent?.performance?.onTimePercentage}% across {detailedPerformance.deliveryCounts?.overall || 0} lifetime orders.</p>
                                 </div>
                             </div>
 
-                            {/* Main Performance Ledger */}
-                            <div className="ledger-container">
-                                <h4 className="section-title">DAILY PERFORMANCE LEDGER</h4>
-                                <div className="table-responsive">
-                                    <table className="perf-ledger-table">
-                                        <thead>
-                                            <tr>
-                                                <th style={{ width: '100px' }}>Date</th>
-                                                <th>Working Hrs</th>
-                                                <th>Attendance</th>
-                                                <th>Orders (D/T)</th>
-                                                <th>Quality (R/C)</th>
-                                                <th>Ratings</th>
-                                                <th>Earnings</th>
-                                                <th>Health</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {detailedPerformance.logs.map((log, i) => {
-                                                const successRate = Math.round((log.delivered / (log.orders || 1)) * 100);
-                                                return (
+                            {/* Operational Score Grid */}
+                            <div className="score-grid">
+                                <div className="score-card">
+                                    <div className="icon-wrap green"><CheckCircle size={20} /></div>
+                                    <div className="val">{detailedPerformance.agent?.performance?.onTimePercentage || 0}%</div>
+                                    <div className="lbl">On-Time Accuracy</div>
+                                    <div className="trend positive">Target &gt;95%</div>
+                                </div>
+                                <div className="score-card">
+                                    <div className="icon-wrap red"><XCircle size={20} /></div>
+                                    <div className="val">{detailedPerformance.agent?.performance?.failedDeliveries || 0}</div>
+                                    <div className="lbl">Failed/Cancelled</div>
+                                    <div className="trend negative">Orders Rejected</div>
+                                </div>
+                                <div className="score-card">
+                                    <div className="icon-wrap blue"><Clock size={20} /></div>
+                                    <div className="val">{detailedPerformance.agent?.performance?.avgDeliveryTime || 0} <small>min</small></div>
+                                    <div className="lbl">Avg. TAT Time</div>
+                                    <div className="trend">Turnaround Time</div>
+                                </div>
+                                <div className="score-card">
+                                    <div className="icon-wrap yellow">⭐</div>
+                                    <div className="val">{detailedPerformance.agent?.performance?.rating || '5.0'}</div>
+                                    <div className="lbl">Customer Experience</div>
+                                    <div className="trend positive">Lifetime Rating</div>
+                                </div>
+                            </div>
+
+                            {/* Tabs for Detailed Audit */}
+                            <div className="audit-tabs">
+                                <button className={perfTab === 'overview' ? 'active' : ''} onClick={() => setPerfTab('overview')}>Operational Ribbon</button>
+                                <button className={perfTab === 'logs' ? 'active' : ''} onClick={() => setPerfTab('logs')}>Daily Ledger</button>
+                                <button className={perfTab === 'compliance' ? 'active' : ''} onClick={() => setPerfTab('compliance')}>Compliance & Documents</button>
+                            </div>
+
+                            {perfTab === 'overview' && (
+                                <div className="pane-content fade-in">
+                                    <div className="perf-summary-bar">
+                                        <div className="s-metric">
+                                            <span className="s-lbl">MONTHLY ATTENDANCE</span>
+                                            <h2 className={`s-val ${detailedPerformance.attendanceStats?.monthly > 90 ? 'green' : 'yellow'}`}>
+                                                {detailedPerformance.attendanceStats?.monthly || 0}%
+                                            </h2>
+                                        </div>
+                                        <div className="s-metric">
+                                            <span className="s-lbl">OVERALL ATTENDANCE</span>
+                                            <h2 className={`s-val ${detailedPerformance.attendanceStats?.overall > 90 ? 'green' : 'yellow'}`}>
+                                                {detailedPerformance.attendanceStats?.overall || 0}%
+                                            </h2>
+                                        </div>
+                                        <div className="s-metric blue"><span className="s-lbl">ORDERS (TODAY)</span><h2 className="s-val">{detailedPerformance.deliveryCounts?.today || 0}</h2></div>
+                                        <div className="s-metric blue"><span className="s-lbl">ORDERS (MONTHLY)</span><h2 className="s-val">{detailedPerformance.deliveryCounts?.monthly || 0}</h2></div>
+                                    </div>
+                                    <div className="perf-summary-bar tertiary">
+                                        <div className="s-metric green-alt"><span className="s-lbl">WORK HRS (TODAY)</span><h2 className="s-val">{detailedPerformance.hoursStats?.today || '0.0'}h</h2></div>
+                                        <div className="s-metric green-alt"><span className="s-lbl">WORK HRS (MONTHLY)</span><h2 className="s-val">{detailedPerformance.hoursStats?.monthly || '0.0'}h</h2></div>
+                                        <div className="s-metric green-alt"><span className="s-lbl">LIFE WORKTIME</span><h2 className="s-val">{detailedPerformance.hoursStats?.overall || '0.0'}h</h2></div>
+                                        <div className="s-metric blue"><span className="s-lbl">LIFE VOLUME</span><h2 className="s-val">{detailedPerformance.deliveryCounts?.overall || 0}</h2></div>
+                                    </div>
+
+                                    {/* Incident Audit */}
+                                    <div className="quality-audit fade-in" style={{ marginTop: '24px' }}>
+                                        <h4 className="section-title">SERVICE QUALITY AUDIT</h4>
+                                        <div className="incident-list">
+                                            {detailedPerformance.agent?.qualityAudit?.length > 0 ? (
+                                                detailedPerformance.agent.qualityAudit.map((item, idx) => (
+                                                    <div key={idx} className="incident-row">
+                                                        <div className={`i-type ${item.complaint?.isFiled ? 'warn' : 'err'}`}>
+                                                            {item.complaint?.isFiled ? <AlertTriangle size={14} /> : <Trash2 size={14} />}
+                                                            <span>{item.complaint?.isFiled ? 'COMPLAINT' : 'RETURN'}</span>
+                                                        </div>
+                                                        <div className="i-meta">
+                                                            <strong>#{item.orderNumber}</strong>
+                                                            <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+                                                        </div>
+                                                        <div className="i-msg">
+                                                            "{item.complaint?.message || item.returnInfo?.reason || 'No details provided'}"
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="no-incidents">
+                                                    <ShieldInfo size={32} />
+                                                    <p>Zero quality concerns detected in recent records. High service integrity maintained.</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {perfTab === 'logs' && (
+                                <div className="ledger-container fade-in">
+                                    <h4 className="section-title">DAILY PERFORMANCE JOURNEY</h4>
+                                    <div className="table-responsive">
+                                        <table className="perf-ledger-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Working Hrs</th>
+                                                    <th>Attendance</th>
+                                                    <th>Orders (D/T)</th>
+                                                    <th>Quality (R/C)</th>
+                                                    <th>Earnings</th>
+                                                    <th>Health</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {detailedPerformance.logs.map((log, i) => (
                                                     <tr key={i}>
                                                         <td>
                                                             <div className="d-date">{new Date(log.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}</div>
                                                             <div className="d-day">{new Date(log.date).toLocaleDateString(undefined, { weekday: 'short' })}</div>
                                                         </td>
-                                                        <td>
-                                                            <div style={{ fontWeight: 700, color: '#444' }}>{log.workingHours || '0.0'} <small style={{ color: '#999' }}>hrs</small></div>
-                                                        </td>
-                                                        <td>
-                                                            <span className={`p-att-badge ${log.attendance}`}>
-                                                                {log.attendance?.toUpperCase() || 'ABSENT'}
-                                                            </span>
-                                                        </td>
-                                                        <td>
-                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                                <div>
-                                                                    <span className="text-green" style={{ fontWeight: 700 }}>{log.delivered || 0}</span>
-                                                                    <span style={{ opacity: 0.4, margin: '0 4px' }}>/</span>
-                                                                    <span style={{ fontWeight: 600 }}>{log.orders || 0}</span>
-                                                                </div>
-                                                                {log.late > 0 && <small style={{ color: '#FFB800', fontSize: '10px' }}>{log.late} DELAYS</small>}
-                                                            </div>
-                                                        </td>
+                                                        <td><div style={{ fontWeight: 700, color: '#444' }}>{log.workingHours || '0.0'} <small>hrs</small></div></td>
+                                                        <td><span className={`p-att-badge ${log.attendance}`}>{log.attendance?.toUpperCase() || 'ABSENT'}</span></td>
+                                                        <td><strong>{log.delivered || 0}</strong><small style={{ color: '#999' }}> / {log.orders || 0}</small></td>
                                                         <td>
                                                             <div style={{ display: 'flex', gap: '8px' }}>
-                                                                <div title="Returns" style={{ opacity: log.returned > 0 ? 1 : 0.3 }}>
-                                                                    <span style={{ color: '#FA3E3E', fontWeight: 800 }}>{log.returned || 0}</span>
-                                                                    <small style={{ fontSize: '9px', marginLeft: '2px', color: '#999' }}>RET</small>
-                                                                </div>
-                                                                <div title="Complaints" style={{ opacity: log.complaints > 0 ? 1 : 0.3 }}>
-                                                                    <span style={{ color: '#FA3E3E', fontWeight: 800 }}>{log.complaints || 0}</span>
-                                                                    <small style={{ fontSize: '9px', marginLeft: '2px', color: '#999' }}>CMP</small>
-                                                                </div>
+                                                                <span style={{ color: log.returned > 0 ? '#ff4d4f' : '#666', fontWeight: 600 }}>RET: {log.returned || 0}</span>
+                                                                <span style={{ color: log.complaints > 0 ? '#ff4d4f' : '#666', fontWeight: 600 }}>CMP: {log.complaints || 0}</span>
                                                             </div>
                                                         </td>
-                                                        <td>
-                                                            <div style={{ color: '#FFB800', fontWeight: 700 }}>⭐ {log.avgRating || '5.0'}</div>
-                                                        </td>
-                                                        <td><strong className="text-white">₹{log.earnings}</strong></td>
-                                                        <td>
-                                                            <div className="p-score-container">
-                                                                <div className="p-score-bar">
-                                                                    <div 
-                                                                        className={`p-score-fill ${successRate > 90 && log.complaints === 0 ? 'bg-green' : 'bg-yellow'}`} 
-                                                                        style={{ width: `${successRate}%` }}
-                                                                    ></div>
-                                                                </div>
-                                                                <small>{successRate > 90 && log.complaints === 0 ? 'ELITE' : 'STABLE'}</small>
-                                                            </div>
-                                                        </td>
+                                                        <td style={{ fontWeight: 800, color: 'var(--primary)' }}>₹{log.earnings}</td>
+                                                        <td><span className={`p-health-flag ${log.healthScore > 80 ? 'good' : 'bad'}`}>{log.healthScore}%</span></td>
                                                     </tr>
-                                                );
-                                            })}
-                                            {detailedPerformance.logs.length === 0 && (
-                                                <tr>
-                                                    <td colSpan="6" style={{ textAlign: 'center', padding: '60px', color: '#666' }}>
-                                                        No activity recorded for this date range.
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
+                                                ))}
+                                                {detailedPerformance.logs.length === 0 && (
+                                                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#999' }}>No data found for selected range</td></tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
-                            {/* Compliance Section as Collapsible or Footer */}
-                            <div className="compliance-mini-section">
-                                <h4 className="section-title">DOCUMENTS & COMPLIANCE</h4>
-                                <div className="compliance-grid">
-                                    {[
-                                        { id: 'aadhaar', label: 'Aadhaar', key: 'aadhaar' },
-                                        { id: 'license', label: 'License', key: 'license' },
-                                        { id: 'pan', label: 'PAN Card', key: 'pan' },
-                                        { id: 'bank', label: 'Bank / Payout', key: 'bank' }
-                                    ].map(doc => {
-                                        const docData = viewingPerformance.documents?.[doc.key] || {};
-                                        const status = docData.status || 'unverified';
-                                        return (
-                                            <div key={doc.id} className={`mini-doc ${status}`}>
-                                                <div className="m-doc-info">
-                                                    <span className="m-label">{doc.label}</span>
-                                                    <span className="m-status">{status.toUpperCase()}</span>
+                            {perfTab === 'compliance' && (
+                                <div className="compliance-section fade-in">
+                                    <h4 className="section-title">DOCUMENTS & FIELD VERIFICATION</h4>
+                                    <div className="compliance-grid">
+                                        {[
+                                            { id: 'aadhaar', label: 'Aadhaar Card', icon: <UserCheck size={18} />, key: 'aadhaar' },
+                                            { id: 'license', label: 'Driving License', icon: <MapPin size={18} />, key: 'license' },
+                                            { id: 'pan', label: 'PAN Card', icon: <ShieldCheck size={18} />, key: 'pan' },
+                                            { id: 'bank', label: 'Bank Details', icon: <DollarSign size={18} />, key: 'bank' }
+                                        ].map(doc => {
+                                            const docData = detailedPerformance.agent?.documents?.[doc.key] || {};
+                                            const status = docData.status || 'unverified';
+                                            return (
+                                                <div key={doc.id} className={`comp-card ${status}`}>
+                                                    <div className="comp-h">
+                                                        <div className="comp-icon">{doc.icon}</div>
+                                                        <div>
+                                                            <span className="lbl">{doc.label}</span>
+                                                            <div className={`status-badge ${status}`}>{status.toUpperCase()}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="comp-body">
+                                                        <p>Number: <strong>{docData.number || 'Not Provided'}</strong></p>
+                                                        <div className="comp-actions">
+                                                            {docData.file && <a href={`http://${window.location.hostname}:5000${docData.file}`} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">View File</a>}
+                                                            {status !== 'verified' && <button className="btn btn-primary btn-sm">Approve</button>}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="m-doc-actions">
-                                                    {docData.file && <a href={`http://${window.location.hostname}:5000${docData.file}`} target="_blank" rel="noreferrer">VIEW</a>}
-                                                    {status !== 'verified' && (
-                                                        <button onClick={() => handleVerifyDocument(viewingPerformance._id, doc.key, 'verified')}>VERIFY</button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
             )}
 
             <style>{`
-                .performance-modal {
+                .performance-modal.premium {
                     background: #ffffff;
-                    color: #333;
                     width: 100%;
-                    max-width: 1100px;
-                    border-radius: 24px;
-                    overflow: hidden;
-                    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);
+                    max-width: 1000px;
+                    border-radius: 28px;
+                    box-shadow: 0 30px 60px -12px rgba(0,0,0,0.15);
                     max-height: 90vh;
                     overflow-y: auto;
+                    border: 1px solid #f0f0f0;
                 }
-                .p-modal-header {
-                    padding: 24px;
-                    background: #f8f9fa;
+                .p-modal-header.v2 {
+                    padding: 24px 32px;
+                    background: #fff;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    border-bottom: 1px solid #eee;
+                    border-bottom: 2px solid #f5f5f7;
                     position: sticky;
                     top: 0;
                     z-index: 10;
                 }
-                .p-date-filters {
+                .header-agent { display: flex; gap: 16px; align-items: center; }
+                .pulse-icon { color: var(--primary); animation: pulse 2s infinite; }
+                @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+                .performance-grade-card {
                     display: flex;
                     align-items: center;
+                    gap: 32px;
+                    background: linear-gradient(135deg, #f8f9fc 0%, #ffffff 100%);
+                    padding: 32px;
+                    border-radius: 24px;
+                    margin: 24px 0;
+                    border: 1px solid #eef0f5;
+                }
+                .grade-badge {
+                    width: 90px;
+                    height: 90px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 42px;
+                    font-weight: 900;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+                }
+                .grade-badge.grade-a { background: #E6F7EF; color: #00B14F; border: 4px solid #00B14F; }
+                .grade-badge.grade-b { background: #FFF9E6; color: #FFB800; border: 4px solid #FFB800; }
+                .grade-info h4 { margin: 0; font-size: 11px; text-transform: uppercase; color: #99a; letter-spacing: 1.5px; }
+                .grade-info h2 { margin: 4px 0; font-size: 28px; font-weight: 900; color: #1a1a1a; letter-spacing: -0.5px; }
+                .grade-info p { margin: 0; font-size: 14px; color: #667; font-weight: 500; }
+
+                .score-grid {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 16px;
+                    margin-bottom: 32px;
+                }
+                .score-card {
+                    background: #fff;
+                    padding: 24px;
+                    border-radius: 20px;
+                    border: 1px solid #f0f0f5;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                }
+                .score-card:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0,0,0,0.05); border-color: var(--primary-20); }
+                .icon-wrap { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
+                .icon-wrap.green { background: #e6f7ef; color: #00b14f; }
+                .icon-wrap.red { background: #fff1f0; color: #ff4d4f; }
+                .icon-wrap.blue { background: #e6f3ff; color: #1890ff; }
+                .icon-wrap.yellow { background: #fffbe6; color: #faad14; font-size: 20px; }
+                .score-card .val { font-size: 24px; font-weight: 900; color: #1a1a1a; margin-bottom: 4px; }
+                .score-card .lbl { font-size: 12px; font-weight: 700; color: #889; text-transform: uppercase; letter-spacing: 0.5px; }
+                .score-card .trend { font-size: 11px; margin-top: 8px; font-weight: 600; color: #99a; }
+                .trend.positive { color: #00b14f; }
+                .trend.negative { color: #ff4d4f; }
+
+                .audit-tabs {
+                    display: flex;
                     gap: 8px;
-                    background: #ffffff;
-                    padding: 6px 12px;
-                    border-radius: 12px;
-                    border: 1px solid #ddd;
+                    background: #f4f5f8;
+                    padding: 6px;
+                    border-radius: 14px;
+                    margin-bottom: 24px;
                 }
-                .p-date-filters input {
-                    background: transparent;
+                .audit-tabs button {
+                    flex: 1;
+                    padding: 10px;
                     border: none;
-                    color: #333;
-                    font-size: 12px;
-                    outline: none;
+                    background: transparent;
+                    font-size: 13px;
+                    font-weight: 800;
+                    color: #667;
+                    border-radius: 10px;
                     cursor: pointer;
+                    transition: all 0.2s;
                 }
-                .p-date-filters span {
-                    color: #999;
-                    font-size: 11px;
-                    font-weight: 700;
-                }
+                .audit-tabs button.active { background: #fff; color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
                 .perf-summary-bar {
                     display: grid;
                     grid-template-columns: repeat(4, 1fr);
-                    gap: 12px;
-                    margin: 12px 0;
-                }
-                .s-metric.blue {
-                    background: #f0f7ff;
-                    border-color: #cce5ff;
-                }
-                .s-metric.green-alt {
-                    background: #f0fff4;
-                    border-color: #c6f6d5;
+                    gap: 16px;
+                    margin: 16px 0;
                 }
                 .s-metric {
-                    background: #f8f9fa;
-                    padding: 16px;
-                    border-radius: 16px;
-                    border: 1px solid #eee;
-                    text-align: center;
+                    background: #fff;
+                    padding: 20px;
+                    border-radius: 18px;
+                    border: 1px solid #f0f0f5;
                 }
-                .s-lbl { font-size: 10px; color: #888; font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; }
-                .s-val { font-size: 24px; font-weight: 900; margin: 0; color: #333; }
-                .s-val.green { color: #00B14F; }
-                .s-val.yellow { color: #FFB800; }
-                .text-yellow { color: #FFB800; }
-                
+                .s-metric.blue { background: #f0f7ff; border-color: #d9ecff; }
+                .s-metric.green-alt { background: #f0fff4; border-color: #dcfce7; }
+                .s-lbl { font-size: 10px; color: #889; font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 8px; }
+                .s-val { font-size: 26px; font-weight: 950; margin: 0; color: #1a1a1a; }
+                .s-val.green { color: #00b14f; }
+                .s-val.yellow { color: #faad14; }
+
                 .perf-ledger-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
-                .perf-ledger-table th { text-align: left; padding: 12px; font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-                .perf-ledger-table td { background: #f8f9fa; padding: 16px 12px; font-size: 13px; color: #444; }
-                .perf-ledger-table tr td:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
-                .perf-ledger-table tr td:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
-                
-                .d-date { font-weight: 800; color: #333; font-size: 14px; }
-                .d-day { font-size: 11px; color: #888; font-weight: 700; text-transform: uppercase; }
-                
-                .text-green { color: #00B14F; }
-                .text-red { color: #FA3E3E; }
-                .bg-green { background: #00B14F; }
-                .bg-yellow { background: #FFB800; }
-                .text-white { color: #333 !important; }
-                
-                .p-score-container { display: flex; flex-direction: column; gap: 4px; }
-                .p-score-bar { width: 80px; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
-                .p-score-fill { height: 100%; transition: width 0.3s ease; }
-                .p-score-container small { font-size: 9px; font-weight: 900; color: #999; }
-                
-                .compliance-mini-section { margin-top: 32px; border-top: 1px solid #eee; padding-top: 24px; }
-                .compliance-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-                .mini-doc { background: #f8f9fa; padding: 12px; border-radius: 12px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-                .mini-doc.verified { border-left: 3px solid #00B14F; }
-                .mini-doc.unverified { border-left: 3px solid #FA3E3E; }
-                .m-doc-info { display: flex; flex-direction: column; }
-                .m-label { font-size: 11px; font-weight: 800; color: #333; }
-                .m-status { font-size: 9px; font-weight: 900; color: #888; }
-                .mini-doc.verified .m-status { color: #00B14F; }
-                
-                .m-doc-actions { display: flex; gap: 8px; }
-                .m-doc-actions a, .m-doc-actions button { background: #eee; border: none; color: #333; font-size: 9px; font-weight: 900; padding: 4px 8px; border-radius: 4px; cursor: pointer; text-decoration: none; }
-                .m-doc-actions button { background: #00B14F; color: white; }
-                .p-modal-header h3 { margin: 0; font-size: 18px; color: #333; }
-                .p-modal-header p { margin: 4px 0 0; font-size: 13px; color: #888; }
-                .close-btn { background: none; border: none; color: #999; cursor: pointer; }
+                .perf-ledger-table th { padding: 12px 16px; font-size: 11px; font-weight: 800; color: #99a; text-transform: uppercase; }
+                .perf-ledger-table td { background: #fff; padding: 16px; font-size: 13px; border-top: 1px solid #f0f0f5; border-bottom: 1px solid #f0f0f5; }
+                .perf-ledger-table tr td:first-child { border-left: 1px solid #f0f0f5; border-top-left-radius: 16px; border-bottom-left-radius: 16px; }
+                .perf-ledger-table tr td:last-child { border-right: 1px solid #f0f0f5; border-top-right-radius: 16px; border-bottom-right-radius: 16px; }
+                .p-att-badge { font-size: 10px; padding: 4px 8px; border-radius: 6px; font-weight: 800; }
+                .p-att-badge.present { background: #e6f7ef; color: #00b14f; }
+                .p-att-badge.half-day { background: #fff7e6; color: #faad14; }
+                .p-att-badge.absent { background: #fff1f0; color: #ff4d4f; }
+                .p-health-flag { font-weight: 800; font-size: 12px; }
+                .p-health-flag.good { color: #00b14f; }
+                .p-health-flag.bad { color: #ff4d4f; }
 
-                .p-modal-body { padding: 24px; }
-
-                .perf-grade-card {
-                    display: flex;
-                    align-items: center;
-                    gap: 20px;
-                    background: #f8f9fa;
-                    padding: 24px;
-                    border-radius: 20px;
-                    margin-bottom: 24px;
-                    border: 1px solid #eee;
-                }
-                .grade-circle {
-                    width: 70px;
-                    height: 70px;
-                    border-radius: 50%;
-                    background: #00B14F11;
-                    border: 3px solid #00B14F;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 32px;
-                    font-weight: 900;
-                    color: #00B14F;
-                }
-                .g-label { display: block; font-size: 14px; color: #888; }
-                .g-status { margin: 4px 0 0; font-size: 26px; font-weight: 800; color: #333; }
-
-                .perf-stats-grid {
+                .compliance-grid {
                     display: grid;
-                    grid-template-columns: 1fr 1fr;
+                    grid-template-columns: repeat(2, 1fr);
                     gap: 16px;
-                    margin-bottom: 24px;
                 }
-                .p-stat-box {
-                    background: #f8f9fa;
-                    padding: 20px;
+                .comp-card {
+                    background: #fff;
                     border-radius: 20px;
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    border: 1px solid #eee;
-                }
-                .p-stat-icon {
-                    width: 36px;
-                    height: 36px;
-                    border-radius: 10px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    background: #eee;
-                }
-                .p-stat-icon.green { color: #00B14F; }
-                .p-stat-icon.red { color: #FA3E3E; }
-                .p-stat-icon.blue { color: #3B82F6; }
-                .p-stat-icon.yellow { color: #FFB800; }
-
-                .p-lbl { display: block; font-size: 12px; color: #888; font-weight: 600; }
-                .p-val { margin: 2px 0 0; font-size: 22px; font-weight: 800; }
-                .p-val.green { color: #00B14F; }
-                .p-val.red { color: #FA3E3E; }
-                .p-val.dark { color: #333; }
-
-                .perf-footer-metrics {
-                    display: flex;
-                    background: #f8f9fa;
-                    border-radius: 20px;
-                    padding: 20px;
-                    border: 1px solid #eee;
-                    margin-bottom: 24px;
-                }
-                .footer-metric-item { flex: 1; text-align: center; }
-                .f-lbl { display: block; font-size: 13px; color: #888; margin-bottom: 4px; }
-                .f-val { margin: 0; font-size: 24px; font-weight: 800; color: #00B14F; }
-                .divider { width: 1px; background: #ddd; margin: 0 20px; }
-
-                .p-attendance-preview {
-                    background: #f8f9fa;
-                    padding: 20px;
-                    border-radius: 20px;
-                    border: 1px solid #eee;
-                }
-                .p-attendance-preview h4 { margin: 0 0 16px; font-size: 14px; color: #888; }
-                .mini-github-grid { display: flex; flex-wrap: wrap; gap: 4px; }
-                .mini-cell { width: 12px; height: 12px; border-radius: 2px; }
-                .mini-cell.filled { background: #00B14F; }
-                .mini-cell.empty { background: #eee; }
-                .mini-hint { margin: 10px 0 0; font-size: 11px; color: #999; }
-
-                /* Compliance Section */
-                .compliance-section {
-                    margin-top: 24px;
-                }
-                .section-title {
-                    font-size: 12px;
-                    font-weight: 800;
-                    color: #999;
-                    margin-bottom: 16px;
-                    letter-spacing: 1px;
-                }
-                .compliance-list {
-                    background: #f8f9fa;
-                    border-radius: 20px;
-                    overflow: hidden;
-                    border: 1px solid #eee;
-                }
-                .compliance-item {
-                    padding: 20px 24px;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    border-bottom: 1px solid #eee;
-                }
-                .compliance-item:last-child { border-bottom: none; }
-                .doc-label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
-                .doc-status-text { font-size: 18px; font-weight: 800; color: #333; margin: 0; }
-                
-                .doc-actions { display: flex; align-items: center; gap: 16px; }
-                .view-link { font-size: 11px; color: #3B82F6; text-decoration: none; font-weight: 600; }
-                .status-badge-v2 {
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    padding: 6px 14px;
-                    border-radius: 8px;
-                    font-size: 12px;
-                    font-weight: 700;
-                }
-                .status-badge-v2.verified { background: rgba(0, 177, 79, 0.1); color: #00B14F; border: 1px solid rgba(0, 177, 79, 0.2); }
-                .status-badge-v2.pending { background: rgba(255, 184, 0, 0.1); color: #FFB800; border: 1px solid rgba(255, 184, 0, 0.2); }
-                .status-badge-v2.rejected { background: rgba(250, 62, 62, 0.1); color: #FA3E3E; border: 1px solid rgba(250, 62, 62, 0.2); }
-                .status-badge-v2.unverified { background: #eee; color: #888; }
-
-                .verify-btn-group { display: flex; gap: 4px; }
-                .v-btn {
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 8px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                    border: 1px solid #ddd;
-                    background: #eee;
-                    color: #333;
+                    border: 1px solid #f0f0f5;
+                    padding: 24px;
                     transition: all 0.2s;
                 }
-                .v-btn.approve:hover { background: #00B14F; color: white; border-color: #00B14F; }
-                .v-btn.reject:hover { background: #FA3E3E; color: white; border-color: #FA3E3E; }
+                .comp-card.verified { border-left: 6px solid #00b14f; }
+                .comp-card.unverified { border-left: 6px solid #ff4d4f; }
+                .comp-h { display: flex; gap: 16px; align-items: center; margin-bottom: 20px; }
+                .comp-icon { width: 44px; height: 44px; background: #f4f5f8; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #667; }
+                .comp-h .lbl { font-size: 15px; font-weight: 800; color: #1a1a1a; }
+                .status-badge { font-size: 9px; font-weight: 900; margin-top: 4px; display: inline-block; padding: 2px 6px; border-radius: 4px; }
+                .status-badge.verified { background: #e6f7ef; color: #00b14f; }
+                .status-badge.unverified { background: #fff1f0; color: #ff4d4f; }
+                .comp-body p { margin: 0 0 16px; font-size: 13px; color: #667; }
+                .comp-actions { display: flex; gap: 8px; }
+                .btn-sm { padding: 6px 12px; font-size: 11px; font-weight: 700; border-radius: 8px; cursor: pointer; border: 1px solid transparent; }
+                .btn-outline { background: #fff; border-color: #ddd; color: #667; }
+                .btn-primary { background: var(--primary); color: #fff; }
 
-                .perf-logs-container { animation: fadeIn 0.3s ease; }
-                .perf-filter-bar {
-                    display: flex;
-                    gap: 16px;
-                    align-items: flex-end;
-                    margin-bottom: 24px;
-                    background: #f8f9fa;
-                    padding: 16px;
-                    border-radius: 12px;
-                }
-                .p-date-input { display: flex; flex-direction: column; gap: 4px; }
-                .p-date-input label { font-size: 11px; color: #888; font-weight: 700; }
-                .p-date-input input {
-                    background: #fff;
-                    border: 1px solid #ddd;
-                    color: #333;
-                    padding: 8px;
-                    border-radius: 8px;
-                    font-size: 13px;
-                }
-                .perf-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                .perf-table th { text-align: left; padding: 12px; font-size: 11px; color: #888; text-transform: uppercase; border-bottom: 1px solid #eee; }
-                .perf-table td { padding: 16px 12px; font-size: 14px; border-bottom: 1px solid #f0f0f0; color: #444; }
-                .p-eff-bar { width: 60px; height: 4px; background: #eee; border-radius: 2px; margin-bottom: 4px; overflow: hidden; }
-                .p-eff-fill { height: 100%; background: #00B14F; }
-                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                .section-title { font-size: 12px; font-weight: 900; color: #99a; margin-bottom: 20px; letter-spacing: 1.5px; text-transform: uppercase; }
+                
+                .quality-audit { background: #f8f9fc; padding: 24px; border-radius: 20px; border: 1px solid #eef0f5; }
+                .incident-list { display: flex; flex-direction: column; gap: 12px; }
+                .incident-row { display: flex; align-items: center; gap: 16px; background: #fff; padding: 12px 16px; border-radius: 12px; border: 1px solid #f0f0f5; }
+                .i-type { display: flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 900; padding: 4px 8px; border-radius: 4px; min-width: 90px; }
+                .i-type.warn { background: #fffbe6; color: #faad14; }
+                .i-type.err { background: #fff1f0; color: #ff4d4f; }
+                .i-meta { display: flex; flex-direction: column; min-width: 100px; }
+                .i-meta strong { font-size: 13px; color: #1a1a1a; }
+                .i-meta span { font-size: 10px; color: #99a; }
+                .i-msg { font-size: 13px; color: #667; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                
+                .no-incidents { text-align: center; padding: 40px 20px; color: #99a; }
+                .no-incidents p { font-size: 14px; margin-top: 12px; max-width: 300px; margin-left: auto; margin-right: auto; }
+                .no-incidents svg { color: #00b14f; opacity: 0.5; }
+
+                .fade-in { animation: fadeIn 0.4s ease-out; }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
             `}</style>
         </div>
     );

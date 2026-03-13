@@ -795,9 +795,17 @@ exports.getAgentDetailedPerformance = async (req, res) => {
             : 0;
 
         // Calculate Specific Delivery Counts (Overall, Monthly, Today)
-        const todayStr = now.toISOString().split('T')[0];
-        const allDelivered = await Order.find({ deliveryAgent: agentId, status: 'delivered' }).select('createdAt');
+        const allOrders = await Order.find({ deliveryAgent: agentId }).select('status customerRating createdAt');
+        const allDeliveredCount = allOrders.filter(o => o.status === 'delivered').length;
+        const allFailedCount = allOrders.filter(o => ['cancelled', 'failed', 'refunded'].includes(o.status)).length;
         
+        const globalSuccessRate = allOrders.length > 0 ? Math.round((allDeliveredCount / (allDeliveredCount + allFailedCount || 1)) * 100) : 100;
+        
+        const ratingsArr = allOrders.filter(o => o.status === 'delivered' && o.customerRating?.score).map(o => o.customerRating.score);
+        const globalAvgRating = ratingsArr.length > 0 ? (ratingsArr.reduce((a, b) => a + b, 0) / ratingsArr.length).toFixed(1) : '5.0';
+
+        const calculatedGrade = globalSuccessRate > 95 ? 'A+' : globalSuccessRate > 85 ? 'A' : globalSuccessRate > 70 ? 'B' : 'C';
+
         // Calculate Working Hours (excluding breaks)
         const getNetHrs = (att) => {
             const shiftHrs = att.hours || 0;
@@ -818,7 +826,6 @@ exports.getAgentDetailedPerformance = async (req, res) => {
             if (attDate >= startOfMonth) hoursStats.monthly += netHrs;
             if (att.date === todayStr) hoursStats.today += netHrs;
             
-            // Update performanceMap with net hours if it exists
             if (performanceMap[att.date]) {
                 performanceMap[att.date].workingHours = netHrs.toFixed(1);
             }
@@ -830,12 +837,36 @@ exports.getAgentDetailedPerformance = async (req, res) => {
         hoursStats.today = hoursStats.today.toFixed(1);
 
         const deliveryCounts = {
-            overall: allDelivered.length,
-            monthly: allDelivered.filter(o => new Date(o.createdAt) >= startOfMonth).length,
-            today: allDelivered.filter(o => o.createdAt.toISOString().split('T')[0] === todayStr).length
+            overall: allDeliveredCount,
+            monthly: allOrders.filter(o => o.status === 'delivered' && new Date(o.createdAt) >= startOfMonth).length,
+            today: allOrders.filter(o => o.status === 'delivered' && o.createdAt.toISOString().split('T')[0] === todayStr).length
         };
 
+        // Calculate Avg Delivery Time (Only for Successful Deliveries)
+        const deliveredOrders = allOrders.filter(o => o.status === 'delivered' && o.actualDeliveryTime);
+        let totalDeliveryTime = 0;
+        deliveredOrders.forEach(o => {
+            const outTime = o.statusHistory.find(h => h.status === 'out_for_delivery')?.timestamp;
+            if (outTime) {
+                const diff = (new Date(o.actualDeliveryTime) - new Date(outTime)) / (1000 * 60); // mins
+                totalDeliveryTime += diff;
+            }
+        });
+        const avgDeliveryTime = deliveredOrders.length > 0 ? Math.round(totalDeliveryTime / deliveredOrders.length) : 0;
+
         const performanceLogs = Object.values(performanceMap).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        // Quality Audit: Get recent complaints or returns
+        const qualityAudit = await Order.find({
+            deliveryAgent: agentId,
+            $or: [
+                { 'complaint.isFiled': true },
+                { 'returnInfo.isReturned': true }
+            ]
+        })
+        .select('orderNumber createdAt complaint returnInfo customerRating')
+        .sort({ createdAt: -1 })
+        .limit(5);
 
         res.json({
             success: true,
@@ -843,7 +874,15 @@ exports.getAgentDetailedPerformance = async (req, res) => {
                 agent: {
                     name: agent.name,
                     employeeId: agent.employeeId,
-                    performance: agent.performance
+                    performance: {
+                        grade: calculatedGrade,
+                        onTimePercentage: globalSuccessRate,
+                        rating: globalAvgRating,
+                        avgDeliveryTime,
+                        failedDeliveries: allFailedCount
+                    },
+                    documents: agent.documents,
+                    qualityAudit
                 },
                 logs: performanceLogs,
                 attendanceStats: {
