@@ -794,6 +794,47 @@ exports.getAgentDetailedPerformance = async (req, res) => {
               }).length / Math.max(1, agent.attendance.filter(a => new Date(a.date) >= startOfMonth).length)) * 100)
             : 0;
 
+        // Calculate Specific Delivery Counts (Overall, Monthly, Today)
+        const todayStr = now.toISOString().split('T')[0];
+        const allDelivered = await Order.find({ deliveryAgent: agentId, status: 'delivered' }).select('createdAt');
+        
+        // Calculate Working Hours (excluding breaks)
+        const getNetHrs = (att) => {
+            const shiftHrs = att.hours || 0;
+            const breakHrs = (att.breakMinutes || 0) / 60;
+            return Math.max(0, shiftHrs - breakHrs);
+        };
+
+        const hoursStats = {
+            overall: 0,
+            monthly: 0,
+            today: 0
+        };
+
+        agent.attendance.forEach(att => {
+            const netHrs = getNetHrs(att);
+            hoursStats.overall += netHrs;
+            const attDate = new Date(att.date);
+            if (attDate >= startOfMonth) hoursStats.monthly += netHrs;
+            if (att.date === todayStr) hoursStats.today += netHrs;
+            
+            // Update performanceMap with net hours if it exists
+            if (performanceMap[att.date]) {
+                performanceMap[att.date].workingHours = netHrs.toFixed(1);
+            }
+        });
+
+        // Format to 1 decimal place
+        hoursStats.overall = hoursStats.overall.toFixed(1);
+        hoursStats.monthly = hoursStats.monthly.toFixed(1);
+        hoursStats.today = hoursStats.today.toFixed(1);
+
+        const deliveryCounts = {
+            overall: allDelivered.length,
+            monthly: allDelivered.filter(o => new Date(o.createdAt) >= startOfMonth).length,
+            today: allDelivered.filter(o => o.createdAt.toISOString().split('T')[0] === todayStr).length
+        };
+
         const performanceLogs = Object.values(performanceMap).sort((a, b) => new Date(b.date) - new Date(a.date));
 
         res.json({
@@ -808,7 +849,9 @@ exports.getAgentDetailedPerformance = async (req, res) => {
                 attendanceStats: {
                     overall: overallAttendance,
                     monthly: monthAttendance
-                }
+                },
+                deliveryCounts,
+                hoursStats
             }
         });
     } catch (error) {

@@ -456,14 +456,6 @@ const AdminDelivery = () => {
                                     <h2 className={`s-val ${viewingPerformance.performance?.grade === 'A' ? 'green' : 'yellow'}`}>{viewingPerformance.performance?.grade || 'A'}</h2>
                                 </div>
                                 <div className="s-metric">
-                                    <span className="s-lbl">SUCCESS RATE</span>
-                                    <h2 className="s-val">{viewingPerformance.performance?.onTimePercentage || 0}%</h2>
-                                </div>
-                                <div className="s-metric">
-                                    <span className="s-lbl">TOTAL DELIVERIES</span>
-                                    <h2 className="s-val">{viewingPerformance.totalDeliveries || 0}</h2>
-                                </div>
-                                <div className="s-metric">
                                     <span className="s-lbl">AVG RATING</span>
                                     <h2 className="s-val text-yellow">⭐ {viewingPerformance.rating?.average?.toFixed(1) || '5.0'}</h2>
                                 </div>
@@ -480,6 +472,44 @@ const AdminDelivery = () => {
                                     </h2>
                                 </div>
                             </div>
+                            
+                            <div className="perf-summary-bar secondary">
+                                <div className="s-metric blue">
+                                    <span className="s-lbl">ORDERS (TODAY)</span>
+                                    <h2 className="s-val">{detailedPerformance.deliveryCounts?.today || 0}</h2>
+                                </div>
+                                <div className="s-metric blue">
+                                    <span className="s-lbl">ORDERS (MONTHLY)</span>
+                                    <h2 className="s-val">{detailedPerformance.deliveryCounts?.monthly || 0}</h2>
+                                </div>
+                                <div className="s-metric blue">
+                                    <span className="s-lbl">ORDERS (OVERALL)</span>
+                                    <h2 className="s-val">{detailedPerformance.deliveryCounts?.overall || 0}</h2>
+                                </div>
+                                <div className="s-metric">
+                                    <span className="s-lbl">SUCCESS RATE</span>
+                                    <h2 className="s-val text-green">{viewingPerformance.performance?.onTimePercentage || 0}%</h2>
+                                </div>
+                            </div>
+                            
+                            <div className="perf-summary-bar tertiary">
+                                <div className="s-metric green-alt">
+                                    <span className="s-lbl">WORKING HRS (TODAY)</span>
+                                    <h2 className="s-val">{detailedPerformance.hoursStats?.today || '0.0'} <small>hrs</small></h2>
+                                </div>
+                                <div className="s-metric green-alt">
+                                    <span className="s-lbl">WORKING HRS (MONTHLY)</span>
+                                    <h2 className="s-val">{detailedPerformance.hoursStats?.monthly || '0.0'} <small>hrs</small></h2>
+                                </div>
+                                <div className="s-metric green-alt">
+                                    <span className="s-lbl">WORKING HRS (OVERALL)</span>
+                                    <h2 className="s-val">{detailedPerformance.hoursStats?.overall || '0.0'} <small>hrs</small></h2>
+                                </div>
+                                <div className="s-metric">
+                                    <span className="s-lbl">GLOBAL SUCCESS</span>
+                                    <h2 className="s-val text-green">{viewingPerformance.performance?.onTimePercentage || 0}%</h2>
+                                </div>
+                            </div>
 
                             {/* Main Performance Ledger */}
                             <div className="ledger-container">
@@ -489,7 +519,7 @@ const AdminDelivery = () => {
                                         <thead>
                                             <tr>
                                                 <th style={{ width: '100px' }}>Date</th>
-                                                <th>Online Time</th>
+                                                <th>Working Hrs</th>
                                                 <th>Attendance</th>
                                                 <th>Orders (D/T)</th>
                                                 <th>Quality (R/C)</th>
@@ -508,7 +538,7 @@ const AdminDelivery = () => {
                                                             <div className="d-day">{new Date(log.date).toLocaleDateString(undefined, { weekday: 'short' })}</div>
                                                         </td>
                                                         <td>
-                                                            <div style={{ fontWeight: 700, color: '#444' }}>{log.onlineHours || '0.0'} <small style={{ color: '#999' }}>hrs</small></div>
+                                                            <div style={{ fontWeight: 700, color: '#444' }}>{log.workingHours || '0.0'} <small style={{ color: '#999' }}>hrs</small></div>
                                                         </td>
                                                         <td>
                                                             <span className={`p-att-badge ${log.attendance}`}>
@@ -648,9 +678,17 @@ const AdminDelivery = () => {
                 }
                 .perf-summary-bar {
                     display: grid;
-                    grid-template-columns: repeat(6, 1fr);
+                    grid-template-columns: repeat(4, 1fr);
                     gap: 12px;
-                    margin: 24px 0;
+                    margin: 12px 0;
+                }
+                .s-metric.blue {
+                    background: #f0f7ff;
+                    border-color: #cce5ff;
+                }
+                .s-metric.green-alt {
+                    background: #f0fff4;
+                    border-color: #c6f6d5;
                 }
                 .s-metric {
                     background: #f8f9fa;
