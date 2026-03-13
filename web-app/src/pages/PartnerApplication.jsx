@@ -45,6 +45,12 @@ const PartnerApplication = () => {
         }
     });
 
+    const [files, setFiles] = useState({
+        aadhaar: null,
+        pan: null,
+        license: null
+    });
+
     useEffect(() => {
         const checkStatus = async () => {
             try {
@@ -82,6 +88,16 @@ const PartnerApplication = () => {
         }
     };
 
+    const handleFileChange = (e) => {
+        const { name, files } = e.target;
+        if (files && files[0]) {
+            setFiles(prev => ({
+                ...prev,
+                [name]: files[0]
+            }));
+        }
+    };
+
     const handleNext = () => {
         if (currentStep < STEPS.length - 1) setCurrentStep(currentStep + 1);
     };
@@ -95,6 +111,37 @@ const PartnerApplication = () => {
             setLoading(true);
             const res = await deliveryService.applyForPartner(formData);
             if (res.success) {
+                // Now upload files if they exist
+                const uploadPromises = [];
+                
+                if (files.aadhaar) {
+                    const fd = new FormData();
+                    fd.append('type', 'aadhaar');
+                    fd.append('number', formData.aadhaarNumber);
+                    fd.append('file', files.aadhaar);
+                    uploadPromises.push(deliveryService.uploadDocument(fd));
+                }
+                
+                if (files.pan) {
+                    const fd = new FormData();
+                    fd.append('type', 'pan');
+                    fd.append('number', formData.panNumber);
+                    fd.append('file', files.pan);
+                    uploadPromises.push(deliveryService.uploadDocument(fd));
+                }
+                
+                if (files.license) {
+                    const fd = new FormData();
+                    fd.append('type', 'license');
+                    fd.append('number', formData.licenseNumber);
+                    fd.append('file', files.license);
+                    uploadPromises.push(deliveryService.uploadDocument(fd));
+                }
+
+                if (uploadPromises.length > 0) {
+                    await Promise.all(uploadPromises);
+                }
+
                 toast.success('Application submitted successfully!');
                 setStatus('pending');
             } else {
@@ -234,9 +281,26 @@ const PartnerApplication = () => {
                             <input className="form-input" type="text" name="aadhaarNumber" value={formData.aadhaarNumber} onChange={handleInputChange} placeholder="Enter 12-digit Aadhaar Number" />
                         </div>
                         <div className="form-group">
+                            <label className="form-label">Upload Aadhaar Card (Image)</label>
+                            <input className="form-input" type="file" name="aadhaar" accept="image/*" onChange={handleFileChange} />
+                            {files.aadhaar && <small className="file-ready">✓ {files.aadhaar.name}</small>}
+                        </div>
+                        <div className="form-group">
                             <label className="form-label">PAN Card Number</label>
                             <input className="form-input" type="text" name="panNumber" value={formData.panNumber} onChange={handleInputChange} placeholder="Enter 10-character PAN" style={{ textTransform: 'uppercase' }} />
                         </div>
+                        <div className="form-group">
+                            <label className="form-label">Upload PAN Card (Image)</label>
+                            <input className="form-input" type="file" name="pan" accept="image/*" onChange={handleFileChange} />
+                            {files.pan && <small className="file-ready">✓ {files.pan.name}</small>}
+                        </div>
+                        {formData.vehicleType !== 'bicycle' && (
+                            <div className="form-group">
+                                <label className="form-label">Upload Driving License (Image)</label>
+                                <input className="form-input" type="file" name="license" accept="image/*" onChange={handleFileChange} />
+                                {files.license && <small className="file-ready">✓ {files.license.name}</small>}
+                            </div>
+                        )}
                     </div>
                 );
             case 3: // Bank Details

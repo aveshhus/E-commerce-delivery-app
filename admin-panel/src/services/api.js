@@ -49,6 +49,7 @@ export const adminAPI = {
     updateAgent: (id, data) => api.put(`/delivery/${id}`, data),
     deleteAgent: (id) => api.delete(`/delivery/${id}`),
     updateApplicationStatus: (id, data) => api.put(`/delivery/admin/application/${id}/status`, data),
+    verifyDocument: (agentId, data) => api.put(`/delivery/admin/documents/${agentId}/verify`, data),
     // Customers
     getCustomers: (params) => api.get('/admin/customers', { params }),
     // Offers

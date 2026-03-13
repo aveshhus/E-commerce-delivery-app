@@ -60,6 +60,15 @@ const deliveryService = {
     getAnnouncements: async () => {
         const response = await axios.get(`${API_URL}/delivery/announcements`, getAuthHeader());
         return response.data;
+    },
+    uploadDocument: async (formData) => {
+        const response = await axios.post(`${API_URL}/delivery/documents/upload`, formData, {
+            headers: { 
+                Authorization: `Bearer ${localStorage.getItem('km_token')}`,
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data;
     }
 };
 

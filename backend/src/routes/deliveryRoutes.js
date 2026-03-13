@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const deliveryController = require('../controllers/deliveryController');
 const { auth, authorize } = require('../middleware/auth');
+const upload = require('../middleware/upload');
 
 // General auth routes for applying
 router.post('/apply', auth, deliveryController.applyForPartner);
@@ -20,8 +21,10 @@ router.put('/check-out', auth, authorize('delivery'), deliveryController.checkOu
 router.get('/announcements', auth, authorize('delivery'), deliveryController.getAnnouncements);
 
 router.post('/report-issue', auth, authorize('delivery'), deliveryController.reportIssue);
+router.post('/documents/upload', auth, upload.single('file'), deliveryController.uploadDocument);
 router.get('/admin/issues', auth, authorize('admin', 'superadmin'), deliveryController.getIssueReports);
 router.put('/admin/issues/:id', auth, authorize('admin', 'superadmin'), deliveryController.updateIssueStatus);
+router.put('/admin/documents/:agentId/verify', auth, authorize('admin', 'superadmin'), deliveryController.verifyDocument);
 
 // Admin routes (Params routes must be last)
 router.get('/', auth, authorize('admin', 'superadmin'), deliveryController.getAgents);

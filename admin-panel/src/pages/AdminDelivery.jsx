@@ -94,6 +94,20 @@ const AdminDelivery = () => {
         } catch (err) { toast.error(err.message); }
     };
 
+    const handleVerifyDocument = async (agentId, docType, status) => {
+        try {
+            const res = await adminAPI.verifyDocument(agentId, { docType, status });
+            if (res.success) {
+                toast.success(`${docType.toUpperCase()} ${status}`);
+                // Update local state for viewingPerformance if it matches
+                if (viewingPerformance && viewingPerformance._id === agentId) {
+                    setViewingPerformance(res.data.agent);
+                }
+                fetchAgents();
+            }
+        } catch (err) { toast.error(err.message); }
+    };
+
     const openNew = () => { setEditing(null); setForm({ name: '', phone: '', email: '', vehicleType: 'bike', vehicleNumber: '', dailyTarget: 20 }); setShowModal(true); };
     const openEdit = (a) => { setEditing(a._id); setForm({ name: a.name, phone: a.phone, email: a.email || '', vehicleType: a.vehicleType, vehicleNumber: a.vehicleNumber || '', dailyTarget: a.dailyTarget || 20 }); setShowModal(true); };
 
@@ -464,6 +478,63 @@ const AdminDelivery = () => {
                                 </div>
                             </div>
 
+                            {/* Compliance & Documents Section */}
+                            <div className="compliance-section">
+                                <h4 className="section-title">COMPLIANCE & DOCUMENTS</h4>
+                                <div className="compliance-list">
+                                    {[
+                                        { id: 'aadhaar', label: 'Aadhaar Card', key: 'aadhaar' },
+                                        { id: 'license', label: 'Driving License', key: 'license' },
+                                        { id: 'pan', label: 'PAN Card', key: 'pan' },
+                                        { id: 'bank', label: 'Bank Account', key: 'bank', isLinked: true }
+                                    ].map(doc => {
+                                        const docData = viewingPerformance.documents?.[doc.key] || {};
+                                        const status = docData.status || 'unverified';
+                                        const isVerified = status === 'verified';
+                                        
+                                        return (
+                                            <div key={doc.id} className="compliance-item">
+                                                <div className="doc-info">
+                                                    <span className="doc-label">{doc.label}</span>
+                                                    <div className="doc-status-group">
+                                                        <h4 className="doc-status-text">{isVerified ? (doc.isLinked ? 'Linked' : 'Verified') : status.toUpperCase()}</h4>
+                                                        {docData.number && <small className="doc-number">{docData.number}</small>}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="doc-actions">
+                                                    {docData.file && (
+                                                        <a href={`http://${window.location.hostname}:5000${docData.file}`} target="_blank" rel="noreferrer" className="view-link">View File</a>
+                                                    )}
+                                                    <div className={`status-badge-v2 ${status}`}>
+                                                        <CheckCircle size={14} />
+                                                        <span>{isVerified ? (doc.isLinked ? 'Linked' : 'Verified') : status === 'pending' ? 'Pending' : 'Verify'}</span>
+                                                    </div>
+                                                    {!isVerified && (
+                                                        <div className="verify-btn-group">
+                                                            <button 
+                                                                className="v-btn approve" 
+                                                                onClick={() => handleVerifyDocument(viewingPerformance._id, doc.key, 'verified')}
+                                                                title="Approve"
+                                                            >
+                                                                <CheckCircle size={14} />
+                                                            </button>
+                                                            <button 
+                                                                className="v-btn reject" 
+                                                                onClick={() => handleVerifyDocument(viewingPerformance._id, doc.key, 'rejected')}
+                                                                title="Reject"
+                                                            >
+                                                                <XCircle size={14} />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
                             {/* Attendance Preview */}
                             <div className="p-attendance-preview">
                                 <h4>Attendance Consistency</h4>
@@ -598,6 +669,70 @@ const AdminDelivery = () => {
                 .mini-cell.filled { background: #00B14F; }
                 .mini-cell.empty { background: #252525; }
                 .mini-hint { margin: 10px 0 0; font-size: 11px; color: #666; }
+
+                /* Compliance Section */
+                .compliance-section {
+                    margin-top: 24px;
+                }
+                .section-title {
+                    font-size: 12px;
+                    font-weight: 800;
+                    color: #666;
+                    margin-bottom: 16px;
+                    letter-spacing: 1px;
+                }
+                .compliance-list {
+                    background: #1a1a1a;
+                    border-radius: 20px;
+                    overflow: hidden;
+                    border: 1px solid #2a2a2a;
+                }
+                .compliance-item {
+                    padding: 20px 24px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-bottom: 1px solid #2a2a2a;
+                }
+                .compliance-item:last-child { border-bottom: none; }
+                .doc-label { font-size: 12px; color: #888; display: block; margin-bottom: 4px; }
+                .doc-status-text { font-size: 18px; font-weight: 800; color: #fff; margin: 0; }
+                .doc-number { font-size: 11px; color: #555; font-family: monospace; }
+                
+                .doc-actions { display: flex; align-items: center; gap: 16px; }
+                .view-link { font-size: 11px; color: #3B82F6; text-decoration: none; font-weight: 600; }
+                .view-link:hover { text-decoration: underline; }
+
+                .status-badge-v2 {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 6px 14px;
+                    border-radius: 8px;
+                    font-size: 12px;
+                    font-weight: 700;
+                }
+                .status-badge-v2.verified { background: rgba(0, 177, 79, 0.1); color: #00B14F; border: 1px solid rgba(0, 177, 79, 0.2); }
+                .status-badge-v2.pending { background: rgba(255, 184, 0, 0.1); color: #FFB800; border: 1px solid rgba(255, 184, 0, 0.2); }
+                .status-badge-v2.rejected { background: rgba(250, 62, 62, 0.1); color: #FA3E3E; border: 1px solid rgba(250, 62, 62, 0.2); }
+                .status-badge-v2.unverified { background: #252525; color: #666; }
+
+                .verify-btn-group { display: flex; gap: 4px; }
+                .v-btn {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    border: 1px solid #333;
+                    background: #252525;
+                    color: #fff;
+                    transition: all 0.2s;
+                }
+                .v-btn.approve:hover { background: #00B14F; color: white; border-color: #00B14F; }
+                .v-btn.reject:hover { background: #FA3E3E; color: white; border-color: #FA3E3E; }
             `}</style>
         </div>
     );

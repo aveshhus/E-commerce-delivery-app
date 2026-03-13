@@ -91,6 +91,37 @@ const deliveryAgentSchema = new mongoose.Schema({
         enum: ['pending', 'approved', 'rejected'],
         default: 'pending'
     },
+    documents: {
+        aadhaar: {
+            number: { type: String, trim: true },
+            file: String,
+            status: { type: String, enum: ['unverified', 'pending', 'verified', 'rejected'], default: 'unverified' },
+            verifiedAt: Date,
+            rejectionReason: String
+        },
+        pan: {
+            number: { type: String, trim: true },
+            file: String,
+            status: { type: String, enum: ['unverified', 'pending', 'verified', 'rejected'], default: 'unverified' },
+            verifiedAt: Date,
+            rejectionReason: String
+        },
+        license: {
+            number: { type: String, trim: true },
+            file: String,
+            status: { type: String, enum: ['unverified', 'pending', 'verified', 'rejected'], default: 'unverified' },
+            verifiedAt: Date,
+            rejectionReason: String
+        },
+        bank: {
+            accountNumber: { type: String, trim: true },
+            ifscCode: { type: String, trim: true },
+            bankName: { type: String, trim: true },
+            status: { type: String, enum: ['unverified', 'pending', 'verified', 'rejected'], default: 'unverified' },
+            verifiedAt: Date,
+            rejectionReason: String
+        }
+    },
     aadhaarNumber: { type: String, trim: true },
     panNumber: { type: String, trim: true },
     bankDetails: {

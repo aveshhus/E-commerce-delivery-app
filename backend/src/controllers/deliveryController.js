@@ -601,3 +601,84 @@ exports.updateIssueStatus = async (req, res) => {
 };
 
 
+
+// Agent uploads a document
+exports.uploadDocument = async (req, res) => {
+    try {
+        const { type, number } = req.body; // type: 'aadhaar', 'pan', 'license', 'bank'
+        const agent = await DeliveryAgent.findOne({ user: req.user._id });
+
+        if (!agent) {
+            return res.status(404).json({ success: false, message: 'Agent not found' });
+        }
+
+        const docData = {
+            status: 'pending',
+            verifiedAt: null,
+            rejectionReason: null
+        };
+
+        if (req.file) {
+            docData.file = `/uploads/${req.file.filename}`;
+        }
+
+        if (type === 'bank') {
+            const { accountNumber, ifscCode, bankName } = req.body;
+            agent.documents.bank = {
+                ...agent.documents.bank,
+                accountNumber,
+                ifscCode,
+                bankName,
+                status: 'pending'
+            };
+            // Also update legacy bankDetails
+            agent.bankDetails = { accountNumber, ifscCode, bankName };
+        } else {
+            if (!agent.documents[type]) {
+                return res.status(400).json({ success: false, message: 'Invalid document type' });
+            }
+            agent.documents[type] = {
+                ...agent.documents[type],
+                ...docData,
+                number: number || agent.documents[type].number
+            };
+            // Update legacy fields
+            if (type === 'aadhaar') agent.aadhaarNumber = number || agent.aadhaarNumber;
+            if (type === 'pan') agent.panNumber = number || agent.panNumber;
+            if (type === 'license') agent.licenseNumber = number || agent.licenseNumber;
+        }
+
+        await agent.save();
+        res.json({ success: true, message: 'Document uploaded for verification', data: { agent } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Admin verifies a document
+exports.verifyDocument = async (req, res) => {
+    try {
+        const { agentId } = req.params;
+        const { docType, status, rejectionReason } = req.body; // docType: 'aadhaar', 'pan', 'license', 'bank'
+
+        const agent = await DeliveryAgent.findById(agentId);
+        if (!agent) return res.status(404).json({ success: false, message: 'Agent not found' });
+
+        if (!agent.documents[docType]) {
+            return res.status(400).json({ success: false, message: 'Invalid document type' });
+        }
+
+        agent.documents[docType].status = status;
+        if (status === 'verified') {
+            agent.documents[docType].verifiedAt = new Date();
+            agent.documents[docType].rejectionReason = null;
+        } else if (status === 'rejected') {
+            agent.documents[docType].rejectionReason = rejectionReason;
+        }
+
+        await agent.save();
+        res.json({ success: true, message: `Document ${status} successfully`, data: { agent } });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
