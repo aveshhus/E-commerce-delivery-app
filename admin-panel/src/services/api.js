@@ -50,6 +50,7 @@ export const adminAPI = {
     deleteAgent: (id) => api.delete(`/delivery/${id}`),
     updateApplicationStatus: (id, data) => api.put(`/delivery/admin/application/${id}/status`, data),
     verifyDocument: (agentId, data) => api.put(`/delivery/admin/documents/${agentId}/verify`, data),
+    getAgentPerformance: (agentId, params) => api.get(`/delivery/admin/performance/${agentId}`, { params }),
     // Customers
     getCustomers: (params) => api.get('/admin/customers', { params }),
     // Offers

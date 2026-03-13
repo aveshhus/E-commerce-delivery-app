@@ -24,6 +24,9 @@ const AdminDelivery = () => {
     const [showAnnModal, setShowAnnModal] = useState(false);
     const [viewingLogs, setViewingLogs] = useState(null);
     const [viewingPerformance, setViewingPerformance] = useState(null);
+    const [detailedPerformance, setDetailedPerformance] = useState({ logs: [], agent: null });
+    const [perfDateRange, setPerfDateRange] = useState({ start: '', end: '' });
+    const [perfTab, setPerfTab] = useState('overview'); // 'overview' or 'logs'
     const [annForm, setAnnForm] = useState({ title: '', content: '', targetAudience: 'delivery' });
     const [form, setForm] = useState({ name: '', phone: '', email: '', vehicleType: 'bike', vehicleNumber: '', dailyTarget: 20 });
 
@@ -99,7 +102,6 @@ const AdminDelivery = () => {
             const res = await adminAPI.verifyDocument(agentId, { docType, status });
             if (res.success) {
                 toast.success(`${docType.toUpperCase()} ${status}`);
-                // Update local state for viewingPerformance if it matches
                 if (viewingPerformance && viewingPerformance._id === agentId) {
                     setViewingPerformance(res.data.agent);
                 }
@@ -107,6 +109,24 @@ const AdminDelivery = () => {
             }
         } catch (err) { toast.error(err.message); }
     };
+
+    const fetchDetailedPerformance = async (agentId) => {
+        try {
+            const res = await adminAPI.getAgentPerformance(agentId, {
+                startDate: perfDateRange.start,
+                endDate: perfDateRange.end
+            });
+            if (res.success) {
+                setDetailedPerformance(res.data);
+            }
+        } catch (err) { console.error(err); }
+    };
+
+    useEffect(() => {
+        if (viewingPerformance) {
+            fetchDetailedPerformance(viewingPerformance._id);
+        }
+    }, [viewingPerformance, perfDateRange]);
 
     const openNew = () => { setEditing(null); setForm({ name: '', phone: '', email: '', vehicleType: 'bike', vehicleNumber: '', dailyTarget: 20 }); setShowModal(true); };
     const openEdit = (a) => { setEditing(a._id); setForm({ name: a.name, phone: a.phone, email: a.email || '', vehicleType: a.vehicleType, vehicleNumber: a.vehicleNumber || '', dailyTarget: a.dailyTarget || 20 }); setShowModal(true); };
@@ -414,146 +434,150 @@ const AdminDelivery = () => {
                         <div className="p-modal-header">
                             <div>
                                 <h3>Agent Performance Intelligence</h3>
-                                <p>Real-time metrics for {viewingPerformance.name}</p>
+                                <div style={{ display: 'flex', gap: '16px', marginTop: '12px' }}>
+                                    <button 
+                                        className={`p-tab-btn ${perfTab === 'overview' ? 'active' : ''}`} 
+                                        onClick={() => setPerfTab('overview')}
+                                    >Overview</button>
+                                    <button 
+                                        className={`p-tab-btn ${perfTab === 'logs' ? 'active' : ''}`} 
+                                        onClick={() => setPerfTab('logs')}
+                                    >Activity Log</button>
+                                </div>
                             </div>
                             <button className="close-btn" onClick={() => setViewingPerformance(null)}><X size={20} /></button>
                         </div>
 
                         <div className="p-modal-body">
-                            {/* Main Performance Grade Card */}
-                            <div className="perf-grade-card">
-                                <div className="grade-circle">
-                                    <span>{viewingPerformance.performance?.grade || 'A'}</span>
-                                </div>
-                                <div className="grade-info">
-                                    <span className="g-label">Performance Grade</span>
-                                    <h2 className="g-status">
-                                        {viewingPerformance.performance?.grade === 'A' ? 'Excellent Work' :
-                                            viewingPerformance.performance?.grade === 'B' ? 'Good Standing' :
-                                                viewingPerformance.performance?.grade === 'C' ? 'Needs Improvement' : 'Critical Warning'}
-                                    </h2>
-                                </div>
-                            </div>
+                            {perfTab === 'overview' ? (
+                                <>
+                                    <div className="perf-grade-card">
+                                        <div className="grade-circle">
+                                            <span>{viewingPerformance.performance?.grade || 'A'}</span>
+                                        </div>
+                                        <div className="grade-info">
+                                            <span className="g-label">Performance Grade</span>
+                                            <h2 className="g-status">
+                                                {viewingPerformance.performance?.grade === 'A' ? 'Excellent Work' :
+                                                    viewingPerformance.performance?.grade === 'B' ? 'Good Standing' :
+                                                        viewingPerformance.performance?.grade === 'C' ? 'Needs Improvement' : 'Critical Warning'}
+                                            </h2>
+                                        </div>
+                                    </div>
 
-                            <div className="perf-stats-grid">
-                                <div className="p-stat-box">
-                                    <div className="p-stat-icon green"><CheckCircle size={18} /></div>
-                                    <div className="p-stat-content">
-                                        <span className="p-lbl">On-Time %</span>
-                                        <h3 className="p-val green">{viewingPerformance.performance?.onTimePercentage || 0}%</h3>
-                                    </div>
-                                </div>
-                                <div className="p-stat-box">
-                                    <div className="p-stat-icon red"><XCircle size={18} /></div>
-                                    <div className="p-stat-content">
-                                        <span className="p-lbl">Failed / Cancelled</span>
-                                        <h3 className="p-val red">{viewingPerformance.performance?.failedDeliveriesPercentage || 0}%</h3>
-                                    </div>
-                                </div>
-                                <div className="p-stat-box">
-                                    <div className="p-stat-icon blue"><Clock size={18} /></div>
-                                    <div className="p-stat-content">
-                                        <span className="p-lbl">Avg Delivery Time</span>
-                                        <h3 className="p-val dark">24 mins</h3>
-                                    </div>
-                                </div>
-                                <div className="p-stat-box">
-                                    <div className="p-stat-icon yellow">⭐</div>
-                                    <div className="p-stat-content">
-                                        <span className="p-lbl">Customer Rating</span>
-                                        <h3 className="p-val dark">{viewingPerformance.rating?.average?.toFixed(1) || '5.0'} <small style={{ fontSize: '10px', opacity: 0.5 }}>({viewingPerformance.rating?.count || 0})</small></h3>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="perf-footer-metrics">
-                                <div className="footer-metric-item">
-                                    <span className="f-lbl">Complaints Count</span>
-                                    <h4 className="f-val">{viewingPerformance.performance?.complaintsCount || 0}</h4>
-                                </div>
-                                <div className="divider"></div>
-                                <div className="footer-metric-item">
-                                    <span className="f-lbl">Damaged / Returned</span>
-                                    <h4 className="f-val">{viewingPerformance.performance?.returnedCount || 0}</h4>
-                                </div>
-                            </div>
-
-                            {/* Compliance & Documents Section */}
-                            <div className="compliance-section">
-                                <h4 className="section-title">COMPLIANCE & DOCUMENTS</h4>
-                                <div className="compliance-list">
-                                    {[
-                                        { id: 'aadhaar', label: 'Aadhaar Card', key: 'aadhaar' },
-                                        { id: 'license', label: 'Driving License', key: 'license' },
-                                        { id: 'pan', label: 'PAN Card', key: 'pan' },
-                                        { id: 'bank', label: 'Bank Account', key: 'bank', isLinked: true }
-                                    ].map(doc => {
-                                        const docData = viewingPerformance.documents?.[doc.key] || {};
-                                        const status = docData.status || 'unverified';
-                                        const isVerified = status === 'verified';
-                                        
-                                        return (
-                                            <div key={doc.id} className="compliance-item">
-                                                <div className="doc-info">
-                                                    <span className="doc-label">{doc.label}</span>
-                                                    <div className="doc-status-group">
-                                                        <h4 className="doc-status-text">{isVerified ? (doc.isLinked ? 'Linked' : 'Verified') : status.toUpperCase()}</h4>
-                                                        {docData.number && <small className="doc-number">{docData.number}</small>}
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="doc-actions">
-                                                    {docData.file && (
-                                                        <a href={`http://${window.location.hostname}:5000${docData.file}`} target="_blank" rel="noreferrer" className="view-link">View File</a>
-                                                    )}
-                                                    <div className={`status-badge-v2 ${status}`}>
-                                                        <CheckCircle size={14} />
-                                                        <span>{isVerified ? (doc.isLinked ? 'Linked' : 'Verified') : status === 'pending' ? 'Pending' : 'Verify'}</span>
-                                                    </div>
-                                                    {!isVerified && (
-                                                        <div className="verify-btn-group">
-                                                            <button 
-                                                                className="v-btn approve" 
-                                                                onClick={() => handleVerifyDocument(viewingPerformance._id, doc.key, 'verified')}
-                                                                title="Approve"
-                                                            >
-                                                                <CheckCircle size={14} />
-                                                            </button>
-                                                            <button 
-                                                                className="v-btn reject" 
-                                                                onClick={() => handleVerifyDocument(viewingPerformance._id, doc.key, 'rejected')}
-                                                                title="Reject"
-                                                            >
-                                                                <XCircle size={14} />
-                                                            </button>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                    <div className="perf-stats-grid">
+                                        <div className="p-stat-box">
+                                            <div className="p-stat-icon green"><CheckCircle size={18} /></div>
+                                            <div className="p-stat-content">
+                                                <span className="p-lbl">On-Time %</span>
+                                                <h3 className="p-val green">{viewingPerformance.performance?.onTimePercentage || 0}%</h3>
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
+                                        </div>
+                                        <div className="p-stat-box">
+                                            <div className="p-stat-icon red"><XCircle size={18} /></div>
+                                            <div className="p-stat-content">
+                                                <span className="p-lbl">Failed / Cancelled</span>
+                                                <h3 className="p-val red">{viewingPerformance.performance?.failedDeliveriesPercentage || 0}%</h3>
+                                            </div>
+                                        </div>
+                                        <div className="p-stat-box">
+                                            <div className="p-stat-icon blue"><Clock size={18} /></div>
+                                            <div className="p-stat-content">
+                                                <span className="p-lbl">Avg Delivery Time</span>
+                                                <h3 className="p-val dark">24 mins</h3>
+                                            </div>
+                                        </div>
+                                        <div className="p-stat-box">
+                                            <div className="p-stat-icon yellow">⭐</div>
+                                            <div className="p-stat-content">
+                                                <span className="p-lbl">Customer Rating</span>
+                                                <h3 className="p-val dark">{viewingPerformance.rating?.average?.toFixed(1) || '5.0'}</h3>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                            {/* Attendance Preview */}
-                            <div className="p-attendance-preview">
-                                <h4>Attendance Consistency</h4>
-                                <div className="mini-github-grid">
-                                    {(() => {
-                                        const now = new Date();
-                                        return [...Array(28)].map((_, i) => {
-                                            const d = new Date();
-                                            d.setDate(now.getDate() - (27 - i)); // iterate forward from 28 days ago
-                                            const dStr = d.getFullYear() + '-' +
-                                                String(d.getMonth() + 1).padStart(2, '0') + '-' +
-                                                String(d.getDate()).padStart(2, '0');
-                                            const hasRec = viewingPerformance.attendance?.some(a => a.date === dStr);
-                                            return <div key={i} className={`mini-cell ${hasRec ? 'filled' : 'empty'}`}></div>;
-                                        });
-                                    })()}
+                                    <div className="compliance-section">
+                                        <h4 className="section-title">COMPLIANCE & DOCUMENTS</h4>
+                                        <div className="compliance-list">
+                                            {[
+                                                { id: 'aadhaar', label: 'Aadhaar Card', key: 'aadhaar' },
+                                                { id: 'license', label: 'Driving License', key: 'license' },
+                                                { id: 'pan', label: 'PAN Card', key: 'pan' },
+                                                { id: 'bank', label: 'Bank Account', key: 'bank', isLinked: true }
+                                            ].map(doc => {
+                                                const docData = viewingPerformance.documents?.[doc.key] || {};
+                                                const status = docData.status || 'unverified';
+                                                const isVerified = status === 'verified';
+                                                
+                                                return (
+                                                    <div key={doc.id} className="compliance-item">
+                                                        <div className="doc-info">
+                                                            <span className="doc-label">{doc.label}</span>
+                                                            <h4 className="doc-status-text">{isVerified ? (doc.isLinked ? 'Linked' : 'Verified') : status.toUpperCase()}</h4>
+                                                        </div>
+                                                        <div className="doc-actions">
+                                                            {docData.file && <a href={`http://${window.location.hostname}:5000${docData.file}`} target="_blank" rel="noreferrer" className="view-link">View</a>}
+                                                            {!isVerified && (
+                                                                <div className="verify-btn-group">
+                                                                    <button className="v-btn approve" onClick={() => handleVerifyDocument(viewingPerformance._id, doc.key, 'verified')}><CheckCircle size={14} /></button>
+                                                                    <button className="v-btn reject" onClick={() => handleVerifyDocument(viewingPerformance._id, doc.key, 'rejected')}><XCircle size={14} /></button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="perf-logs-container">
+                                    <div className="perf-filter-bar">
+                                        <div className="p-date-input">
+                                            <label>From</label>
+                                            <input type="date" value={perfDateRange.start} onChange={e => setPerfDateRange({ ...perfDateRange, start: e.target.value })} />
+                                        </div>
+                                        <div className="p-date-input">
+                                            <label>To</label>
+                                            <input type="date" value={perfDateRange.end} onChange={e => setPerfDateRange({ ...perfDateRange, end: e.target.value })} />
+                                        </div>
+                                        <button className="btn btn-primary" onClick={() => fetchDetailedPerformance(viewingPerformance._id)}>Filter</button>
+                                    </div>
+
+                                    <table className="perf-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Orders</th>
+                                                <th>Earnings</th>
+                                                <th>Attendance</th>
+                                                <th>Efficiency</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {detailedPerformance.logs.map((log, i) => (
+                                                <tr key={i}>
+                                                    <td>{new Date(log.date).toLocaleDateString()}</td>
+                                                    <td><strong>{log.orders}</strong> pkts</td>
+                                                    <td>₹{log.earnings}</td>
+                                                    <td>
+                                                        <span className={`p-att-badge ${log.attendance}`}>
+                                                            {log.attendance.toUpperCase()}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div className="p-eff-bar">
+                                                            <div className="p-eff-fill" style={{ width: `${(log.onTime / (log.orders || 1)) * 100}%` }}></div>
+                                                        </div>
+                                                        <small>{Math.round((log.onTime / (log.orders || 1)) * 100)}% On-time</small>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                            {detailedPerformance.logs.length === 0 && <tr><td colSpan="5" style={{ textAlign: 'center', padding: '40px' }}>No logs found for selected period</td></tr>}
+                                        </tbody>
+                                    </table>
                                 </div>
-                                <p className="mini-hint">Showing last 28 days activity</p>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -561,13 +585,28 @@ const AdminDelivery = () => {
 
             <style>{`
                 .performance-modal {
-                    background: #121212; /* Dark theme as requested */
+                    background: #121212;
                     color: white;
                     width: 100%;
-                    max-width: 500px;
+                    max-width: 800px;
                     border-radius: 24px;
                     overflow: hidden;
                     box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+                }
+                .p-tab-btn {
+                    background: transparent;
+                    border: none;
+                    color: #666;
+                    font-size: 13px;
+                    font-weight: 700;
+                    padding: 4px 0;
+                    cursor: pointer;
+                    border-bottom: 2px solid transparent;
+                    transition: all 0.2s;
+                }
+                .p-tab-btn.active {
+                    color: #00B14F;
+                    border-bottom-color: #00B14F;
                 }
                 .p-modal-header {
                     padding: 24px;
@@ -733,6 +772,38 @@ const AdminDelivery = () => {
                 }
                 .v-btn.approve:hover { background: #00B14F; color: white; border-color: #00B14F; }
                 .v-btn.reject:hover { background: #FA3E3E; color: white; border-color: #FA3E3E; }
+
+                /* Logs View Styling */
+                .perf-logs-container { animation: fadeIn 0.3s ease; }
+                .perf-filter-bar {
+                    display: flex;
+                    gap: 16px;
+                    align-items: flex-end;
+                    margin-bottom: 24px;
+                    background: #1a1a1a;
+                    padding: 16px;
+                    border-radius: 12px;
+                }
+                .p-date-input { display: flex; flex-direction: column; gap: 4px; }
+                .p-date-input label { font-size: 11px; color: #666; font-weight: 700; }
+                .p-date-input input {
+                    background: #252525;
+                    border: 1px solid #333;
+                    color: white;
+                    padding: 8px;
+                    border-radius: 8px;
+                    font-size: 13px;
+                }
+                .perf-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                .perf-table th { text-align: left; padding: 12px; font-size: 11px; color: #666; text-transform: uppercase; border-bottom: 1px solid #333; }
+                .perf-table td { padding: 16px 12px; font-size: 14px; border-bottom: 1px solid #222; }
+                .p-att-badge { font-size: 10px; padding: 4px 8px; border-radius: 4px; font-weight: 800; }
+                .p-att-badge.present { background: rgba(0, 177, 79, 0.1); color: #00B14F; }
+                .p-att-badge.half-day { background: rgba(255, 184, 0, 0.1); color: #FFB800; }
+                .p-att-badge.absent { background: rgba(250, 62, 62, 0.1); color: #FA3E3E; }
+                .p-eff-bar { width: 60px; height: 4px; background: #333; border-radius: 2px; margin-bottom: 4px; overflow: hidden; }
+                .p-eff-fill { height: 100%; background: #00B14F; }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
             `}</style>
         </div>
     );

@@ -682,3 +682,82 @@ exports.verifyDocument = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// Admin gets detailed performance for a specific agent with date filters
+exports.getAgentDetailedPerformance = async (req, res) => {
+    try {
+        const { agentId } = req.params;
+        const { startDate, endDate } = req.query;
+
+        const agent = await DeliveryAgent.findById(agentId);
+        if (!agent) return res.status(404).json({ success: false, message: 'Agent not found' });
+
+        const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
+        const end = endDate ? new Date(endDate) : new Date();
+        end.setHours(23, 59, 59, 999);
+
+        // Fetch orders in range
+        const orders = await Order.find({
+            deliveryAgent: agentId,
+            createdAt: { $gte: start, $lte: end }
+        });
+
+        // Generate daily summary
+        const performanceMap = {};
+        
+        // Initialize map with attendance dates in range
+        agent.attendance.forEach(att => {
+            const attDate = new Date(att.date);
+            if (attDate >= start && attDate <= end) {
+                performanceMap[att.date] = {
+                    date: att.date,
+                    orders: 0,
+                    earnings: 0,
+                    attendance: att.status,
+                    hours: att.hours || 0,
+                    onTime: 0
+                };
+            }
+        });
+
+        // Aggregate orders into the map
+        orders.forEach(order => {
+            const dateStr = new Date(order.createdAt).toISOString().split('T')[0];
+            if (!performanceMap[dateStr]) {
+                performanceMap[dateStr] = {
+                    date: dateStr,
+                    orders: 0,
+                    earnings: 0,
+                    attendance: 'absent',
+                    hours: 0,
+                    onTime: 0
+                };
+            }
+            
+            performanceMap[dateStr].orders += 1;
+            performanceMap[dateStr].earnings += (order.deliveryCharge || 20); 
+            if (order.status === 'delivered') {
+                if (order.actualDeliveryTime && order.createdAt) {
+                    const duration = (new Date(order.actualDeliveryTime) - new Date(order.createdAt)) / 60000;
+                    if (duration <= 45) performanceMap[dateStr].onTime += 1;
+                }
+            }
+        });
+
+        const performanceLogs = Object.values(performanceMap).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        res.json({
+            success: true,
+            data: {
+                agent: {
+                    name: agent.name,
+                    employeeId: agent.employeeId,
+                    performance: agent.performance
+                },
+                logs: performanceLogs
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
