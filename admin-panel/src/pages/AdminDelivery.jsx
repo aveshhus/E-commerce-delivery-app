@@ -433,151 +433,139 @@ const AdminDelivery = () => {
                     <div className="performance-modal" onClick={e => e.stopPropagation()}>
                         <div className="p-modal-header">
                             <div>
-                                <h3>Agent Performance Intelligence</h3>
-                                <div style={{ display: 'flex', gap: '16px', marginTop: '12px' }}>
-                                    <button 
-                                        className={`p-tab-btn ${perfTab === 'overview' ? 'active' : ''}`} 
-                                        onClick={() => setPerfTab('overview')}
-                                    >Overview</button>
-                                    <button 
-                                        className={`p-tab-btn ${perfTab === 'logs' ? 'active' : ''}`} 
-                                        onClick={() => setPerfTab('logs')}
-                                    >Activity Log</button>
+                                <h3 style={{ margin: 0, fontSize: '20px' }}>Rider Performance Audit</h3>
+                                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                    Reviewing records for <strong>{viewingPerformance.name}</strong> ({viewingPerformance.employeeId})
                                 </div>
                             </div>
-                            <button className="close-btn" onClick={() => setViewingPerformance(null)}><X size={20} /></button>
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                <div className="p-date-filters">
+                                    <input type="date" value={perfDateRange.start} onChange={e => setPerfDateRange({ ...perfDateRange, start: e.target.value })} title="Start Date" />
+                                    <span>to</span>
+                                    <input type="date" value={perfDateRange.end} onChange={e => setPerfDateRange({ ...perfDateRange, end: e.target.value })} title="End Date" />
+                                </div>
+                                <button className="close-btn" onClick={() => setViewingPerformance(null)}><X size={20} /></button>
+                            </div>
                         </div>
 
-                        <div className="p-modal-body">
-                            {perfTab === 'overview' ? (
-                                <>
-                                    <div className="perf-grade-card">
-                                        <div className="grade-circle">
-                                            <span>{viewingPerformance.performance?.grade || 'A'}</span>
-                                        </div>
-                                        <div className="grade-info">
-                                            <span className="g-label">Performance Grade</span>
-                                            <h2 className="g-status">
-                                                {viewingPerformance.performance?.grade === 'A' ? 'Excellent Work' :
-                                                    viewingPerformance.performance?.grade === 'B' ? 'Good Standing' :
-                                                        viewingPerformance.performance?.grade === 'C' ? 'Needs Improvement' : 'Critical Warning'}
-                                            </h2>
-                                        </div>
-                                    </div>
+                        <div className="p-modal-body" style={{ padding: '0 24px 24px' }}>
+                            {/* Dashboard Highlights */}
+                            <div className="perf-summary-bar">
+                                <div className="s-metric">
+                                    <span className="s-lbl">LIFETIME GRADE</span>
+                                    <h2 className={`s-val ${viewingPerformance.performance?.grade === 'A' ? 'green' : 'yellow'}`}>{viewingPerformance.performance?.grade || 'A'}</h2>
+                                </div>
+                                <div className="s-metric">
+                                    <span className="s-lbl">SUCCESS RATE</span>
+                                    <h2 className="s-val">{viewingPerformance.performance?.onTimePercentage || 0}%</h2>
+                                </div>
+                                <div className="s-metric">
+                                    <span className="s-lbl">TOTAL DELIVERIES</span>
+                                    <h2 className="s-val">{viewingPerformance.totalDeliveries || 0}</h2>
+                                </div>
+                                <div className="s-metric">
+                                    <span className="s-lbl">AVG RATING</span>
+                                    <h2 className="s-val text-yellow">⭐ {viewingPerformance.rating?.average?.toFixed(1) || '5.0'}</h2>
+                                </div>
+                            </div>
 
-                                    <div className="perf-stats-grid">
-                                        <div className="p-stat-box">
-                                            <div className="p-stat-icon green"><CheckCircle size={18} /></div>
-                                            <div className="p-stat-content">
-                                                <span className="p-lbl">On-Time %</span>
-                                                <h3 className="p-val green">{viewingPerformance.performance?.onTimePercentage || 0}%</h3>
-                                            </div>
-                                        </div>
-                                        <div className="p-stat-box">
-                                            <div className="p-stat-icon red"><XCircle size={18} /></div>
-                                            <div className="p-stat-content">
-                                                <span className="p-lbl">Failed / Cancelled</span>
-                                                <h3 className="p-val red">{viewingPerformance.performance?.failedDeliveriesPercentage || 0}%</h3>
-                                            </div>
-                                        </div>
-                                        <div className="p-stat-box">
-                                            <div className="p-stat-icon blue"><Clock size={18} /></div>
-                                            <div className="p-stat-content">
-                                                <span className="p-lbl">Avg Delivery Time</span>
-                                                <h3 className="p-val dark">24 mins</h3>
-                                            </div>
-                                        </div>
-                                        <div className="p-stat-box">
-                                            <div className="p-stat-icon yellow">⭐</div>
-                                            <div className="p-stat-content">
-                                                <span className="p-lbl">Customer Rating</span>
-                                                <h3 className="p-val dark">{viewingPerformance.rating?.average?.toFixed(1) || '5.0'}</h3>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="compliance-section">
-                                        <h4 className="section-title">COMPLIANCE & DOCUMENTS</h4>
-                                        <div className="compliance-list">
-                                            {[
-                                                { id: 'aadhaar', label: 'Aadhaar Card', key: 'aadhaar' },
-                                                { id: 'license', label: 'Driving License', key: 'license' },
-                                                { id: 'pan', label: 'PAN Card', key: 'pan' },
-                                                { id: 'bank', label: 'Bank Account', key: 'bank', isLinked: true }
-                                            ].map(doc => {
-                                                const docData = viewingPerformance.documents?.[doc.key] || {};
-                                                const status = docData.status || 'unverified';
-                                                const isVerified = status === 'verified';
-                                                
-                                                return (
-                                                    <div key={doc.id} className="compliance-item">
-                                                        <div className="doc-info">
-                                                            <span className="doc-label">{doc.label}</span>
-                                                            <h4 className="doc-status-text">{isVerified ? (doc.isLinked ? 'Linked' : 'Verified') : status.toUpperCase()}</h4>
-                                                        </div>
-                                                        <div className="doc-actions">
-                                                            {docData.file && <a href={`http://${window.location.hostname}:5000${docData.file}`} target="_blank" rel="noreferrer" className="view-link">View</a>}
-                                                            {!isVerified && (
-                                                                <div className="verify-btn-group">
-                                                                    <button className="v-btn approve" onClick={() => handleVerifyDocument(viewingPerformance._id, doc.key, 'verified')}><CheckCircle size={14} /></button>
-                                                                    <button className="v-btn reject" onClick={() => handleVerifyDocument(viewingPerformance._id, doc.key, 'rejected')}><XCircle size={14} /></button>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="perf-logs-container">
-                                    <div className="perf-filter-bar">
-                                        <div className="p-date-input">
-                                            <label>From</label>
-                                            <input type="date" value={perfDateRange.start} onChange={e => setPerfDateRange({ ...perfDateRange, start: e.target.value })} />
-                                        </div>
-                                        <div className="p-date-input">
-                                            <label>To</label>
-                                            <input type="date" value={perfDateRange.end} onChange={e => setPerfDateRange({ ...perfDateRange, end: e.target.value })} />
-                                        </div>
-                                        <button className="btn btn-primary" onClick={() => fetchDetailedPerformance(viewingPerformance._id)}>Filter</button>
-                                    </div>
-
-                                    <table className="perf-table">
+                            {/* Main Performance Ledger */}
+                            <div className="ledger-container">
+                                <h4 className="section-title">DAILY PERFORMANCE LEDGER</h4>
+                                <div className="table-responsive">
+                                    <table className="perf-ledger-table">
                                         <thead>
                                             <tr>
                                                 <th>Date</th>
-                                                <th>Orders</th>
+                                                <th>Status</th>
+                                                <th>Orders (D/T)</th>
+                                                <th>Success %</th>
                                                 <th>Earnings</th>
-                                                <th>Attendance</th>
-                                                <th>Efficiency</th>
+                                                <th>Performance Score</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {detailedPerformance.logs.map((log, i) => (
-                                                <tr key={i}>
-                                                    <td>{new Date(log.date).toLocaleDateString()}</td>
-                                                    <td><strong>{log.orders}</strong> pkts</td>
-                                                    <td>₹{log.earnings}</td>
-                                                    <td>
-                                                        <span className={`p-att-badge ${log.attendance}`}>
-                                                            {log.attendance.toUpperCase()}
-                                                        </span>
-                                                    </td>
-                                                    <td>
-                                                        <div className="p-eff-bar">
-                                                            <div className="p-eff-fill" style={{ width: `${(log.onTime / (log.orders || 1)) * 100}%` }}></div>
-                                                        </div>
-                                                        <small>{Math.round((log.onTime / (log.orders || 1)) * 100)}% On-time</small>
+                                            {detailedPerformance.logs.map((log, i) => {
+                                                const successRate = Math.round((log.delivered / (log.orders || 1)) * 100);
+                                                return (
+                                                    <tr key={i}>
+                                                        <td>
+                                                            <div className="d-date">{new Date(log.date).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}</div>
+                                                            <div className="d-day">{new Date(log.date).toLocaleDateString(undefined, { weekday: 'short' })}</div>
+                                                        </td>
+                                                        <td>
+                                                            <span className={`p-att-badge ${log.attendance}`}>
+                                                                {log.attendance?.toUpperCase() || 'ABSENT'}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <span className="text-green" style={{ fontWeight: 700 }}>{log.delivered || 0}</span>
+                                                            <span style={{ opacity: 0.4, margin: '0 4px' }}>/</span>
+                                                            <span style={{ fontWeight: 600 }}>{log.orders || 0}</span>
+                                                        </td>
+                                                        <td>
+                                                            <div className="success-cell">
+                                                                <span className={successRate > 90 ? 'text-green' : successRate > 70 ? 'text-yellow' : 'text-red'}>
+                                                                    {successRate}%
+                                                                </span>
+                                                            </div>
+                                                        </td>
+                                                        <td><strong className="text-white">₹{log.earnings}</strong></td>
+                                                        <td>
+                                                            <div className="p-score-container">
+                                                                <div className="p-score-bar">
+                                                                    <div 
+                                                                        className={`p-score-fill ${successRate > 90 ? 'bg-green' : 'bg-yellow'}`} 
+                                                                        style={{ width: `${successRate}%` }}
+                                                                    ></div>
+                                                                </div>
+                                                                <small>{successRate > 90 ? 'EXCELLENT' : 'GOOD'}</small>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                            {detailedPerformance.logs.length === 0 && (
+                                                <tr>
+                                                    <td colSpan="6" style={{ textAlign: 'center', padding: '60px', color: '#666' }}>
+                                                        No activity recorded for this date range.
                                                     </td>
                                                 </tr>
-                                            ))}
-                                            {detailedPerformance.logs.length === 0 && <tr><td colSpan="5" style={{ textAlign: 'center', padding: '40px' }}>No logs found for selected period</td></tr>}
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
-                            )}
+                            </div>
+
+                            {/* Compliance Section as Collapsible or Footer */}
+                            <div className="compliance-mini-section">
+                                <h4 className="section-title">DOCUMENTS & COMPLIANCE</h4>
+                                <div className="compliance-grid">
+                                    {[
+                                        { id: 'aadhaar', label: 'Aadhaar', key: 'aadhaar' },
+                                        { id: 'license', label: 'License', key: 'license' },
+                                        { id: 'pan', label: 'PAN Card', key: 'pan' },
+                                        { id: 'bank', label: 'Bank / Payout', key: 'bank' }
+                                    ].map(doc => {
+                                        const docData = viewingPerformance.documents?.[doc.key] || {};
+                                        const status = docData.status || 'unverified';
+                                        return (
+                                            <div key={doc.id} className={`mini-doc ${status}`}>
+                                                <div className="m-doc-info">
+                                                    <span className="m-label">{doc.label}</span>
+                                                    <span className="m-status">{status.toUpperCase()}</span>
+                                                </div>
+                                                <div className="m-doc-actions">
+                                                    {docData.file && <a href={`http://${window.location.hostname}:5000${docData.file}`} target="_blank" rel="noreferrer">VIEW</a>}
+                                                    {status !== 'verified' && (
+                                                        <button onClick={() => handleVerifyDocument(viewingPerformance._id, doc.key, 'verified')}>VERIFY</button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -588,25 +576,12 @@ const AdminDelivery = () => {
                     background: #121212;
                     color: white;
                     width: 100%;
-                    max-width: 800px;
+                    max-width: 900px;
                     border-radius: 24px;
                     overflow: hidden;
                     box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-                }
-                .p-tab-btn {
-                    background: transparent;
-                    border: none;
-                    color: #666;
-                    font-size: 13px;
-                    font-weight: 700;
-                    padding: 4px 0;
-                    cursor: pointer;
-                    border-bottom: 2px solid transparent;
-                    transition: all 0.2s;
-                }
-                .p-tab-btn.active {
-                    color: #00B14F;
-                    border-bottom-color: #00B14F;
+                    max-height: 90vh;
+                    overflow-y: auto;
                 }
                 .p-modal-header {
                     padding: 24px;
@@ -615,7 +590,83 @@ const AdminDelivery = () => {
                     justify-content: space-between;
                     align-items: center;
                     border-bottom: 1px solid #333;
+                    position: sticky;
+                    top: 0;
+                    z-index: 10;
                 }
+                .p-date-filters {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    background: #252525;
+                    padding: 6px 12px;
+                    border-radius: 12px;
+                    border: 1px solid #333;
+                }
+                .p-date-filters input {
+                    background: transparent;
+                    border: none;
+                    color: #fff;
+                    font-size: 12px;
+                    outline: none;
+                    cursor: pointer;
+                }
+                .p-date-filters span {
+                    color: #666;
+                    font-size: 11px;
+                    font-weight: 700;
+                }
+                .perf-summary-bar {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 16px;
+                    margin: 24px 0;
+                }
+                .s-metric {
+                    background: #1a1a1a;
+                    padding: 16px;
+                    border-radius: 16px;
+                    border: 1px solid #333;
+                    text-align: center;
+                }
+                .s-lbl { font-size: 10px; color: #666; font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px; }
+                .s-val { font-size: 24px; font-weight: 900; margin: 0; color: #fff; }
+                .s-val.green { color: #00B14F; }
+                .s-val.yellow { color: #FFB800; }
+                .text-yellow { color: #FFB800; }
+                
+                .perf-ledger-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+                .perf-ledger-table th { text-align: left; padding: 12px; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
+                .perf-ledger-table td { background: #1a1a1a; padding: 16px 12px; font-size: 13px; }
+                .perf-ledger-table tr td:first-child { border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+                .perf-ledger-table tr td:last-child { border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+                
+                .d-date { font-weight: 800; color: #fff; font-size: 14px; }
+                .d-day { font-size: 11px; color: #666; font-weight: 700; text-transform: uppercase; }
+                
+                .text-green { color: #00B14F; }
+                .text-red { color: #FA3E3E; }
+                .bg-green { background: #00B14F; }
+                .bg-yellow { background: #FFB800; }
+                
+                .p-score-container { display: flex; flex-direction: column; gap: 4px; }
+                .p-score-bar { width: 80px; height: 6px; background: #333; border-radius: 3px; overflow: hidden; }
+                .p-score-fill { height: 100%; transition: width 0.3s ease; }
+                .p-score-container small { font-size: 9px; font-weight: 900; color: #666; }
+                
+                .compliance-mini-section { margin-top: 32px; border-top: 1px solid #333; padding-top: 24px; }
+                .compliance-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+                .mini-doc { background: #1a1a1a; padding: 12px; border-radius: 12px; border: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+                .mini-doc.verified { border-left: 3px solid #00B14F; }
+                .mini-doc.unverified { border-left: 3px solid #FA3E3E; }
+                .m-doc-info { display: flex; flex-direction: column; }
+                .m-label { font-size: 11px; font-weight: 800; color: #fff; }
+                .m-status { font-size: 9px; font-weight: 900; color: #666; }
+                .mini-doc.verified .m-status { color: #00B14F; }
+                
+                .m-doc-actions { display: flex; gap: 8px; }
+                .m-doc-actions a, .m-doc-actions button { background: #333; border: none; color: #fff; font-size: 9px; font-weight: 900; padding: 4px 8px; border-radius: 4px; cursor: pointer; text-decoration: none; }
+                .m-doc-actions button { background: #00B14F; }
                 .p-modal-header h3 { margin: 0; font-size: 18px; color: #fff; }
                 .p-modal-header p { margin: 4px 0 0; font-size: 13px; color: #888; }
                 .close-btn { background: none; border: none; color: #666; cursor: pointer; }

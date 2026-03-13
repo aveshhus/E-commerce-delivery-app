@@ -735,6 +735,12 @@ exports.getAgentDetailedPerformance = async (req, res) => {
             }
             
             performanceMap[dateStr].orders += 1;
+            if (order.status === 'delivered') {
+                performanceMap[dateStr].delivered = (performanceMap[dateStr].delivered || 0) + 1;
+            } else if (['cancelled', 'failed', 'returned'].includes(order.status)) {
+                performanceMap[dateStr].failed = (performanceMap[dateStr].failed || 0) + 1;
+            }
+            
             performanceMap[dateStr].earnings += (order.deliveryCharge || 20); 
             if (order.status === 'delivered') {
                 if (order.actualDeliveryTime && order.createdAt) {
@@ -742,6 +748,12 @@ exports.getAgentDetailedPerformance = async (req, res) => {
                     if (duration <= 45) performanceMap[dateStr].onTime += 1;
                 }
             }
+        });
+
+        // Add defaults for missing delivered/failed
+        Object.values(performanceMap).forEach(log => {
+            if (!log.delivered) log.delivered = 0;
+            if (!log.failed) log.failed = 0;
         });
 
         const performanceLogs = Object.values(performanceMap).sort((a, b) => new Date(b.date) - new Date(a.date));
